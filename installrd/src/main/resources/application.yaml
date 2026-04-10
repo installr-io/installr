@@ -1,0 +1,119 @@
+# quarkus configuration
+quarkus:
+    http:
+        port: 9316
+        access-log:
+            enabled: true
+            pattern: combined
+
+    log:
+        level: WARN
+        console:
+            stderr: true
+            format: '%-5p [%X{namespace}] %s%e%n'
+            enabled: false
+
+        handler:
+            console:
+                "console-log-handler":
+                    format: '%-5p %s%e%n'
+                    stderr: false
+
+        category:
+            "console-log":
+                level: INFO
+                handlers: console-log-handler
+                use-parent-handlers: false
+            "io.installr":
+                level: ${installrd.log.level}
+                min-level: TRACE
+
+    banner:
+        enabled: false
+
+    package:
+        jar:
+            add-runner-suffix: false
+            type: fast-jar
+
+    devservices:
+        enabled: false
+
+    ## this is the default data store used by installrd to store transaction and package logs
+    datasource:
+        db-kind: h2
+        jdbc:
+            url: jdbc:h2:${installrd.config.location}/installrd;AUTO_SERVER=TRUE;RETENTION_TIME=0;COMPRESS=true;
+            acquisition-timeout: 120s
+
+    hibernate-orm:
+        schema-management:
+            strategy: validate
+        mapping:
+            format:
+                global: ignore
+
+    index-dependency:
+        lib-installrd:
+            group-id: "io.installr"
+            artifact-id: "installr-lib-installrd"
+        lib-deployer:
+            group-id: "io.installr"
+            artifact-id: "installr-lib-deployer"
+        lib-registry:
+            group-id: "io.installr"
+            artifact-id: "installr-lib-registry"
+
+installrd:
+    config:
+        location: ${HOME}/.installrd
+    log:
+        level: INFO
+
+"%dev":
+    quarkus:
+        log:
+            console:
+                enabled: true
+
+            handler:
+                console:
+                    "access-log-handler":
+                        format: "%s%n"
+                        stderr: false
+
+            category:
+                "io.quarkus.http.access-log":
+                    level: INFO
+                    handlers: access-log-handler
+                    use-parent-handlers: false
+                "io.installr":
+                    level: DEBUG
+                    min-level: DEBUG
+
+"%prod":
+    quarkus:
+        log:
+            category:
+                "console-log":
+                    use-parent-handlers: true
+                
+        package:
+            jar:
+                type: uber-jar
+                user-configured-ignored-entries:
+                    - META-INF/maven/org.jctools/jctools-core/pom.properties
+                    - META-INF/maven/org.jctools/jctools-core/pom.xml
+                    - META-INF/kotlin-project-structure-metadata.json
+                    - META-INF/versions/9/OSGI-INF/MANIFEST.MF
+                    - META-INF/groovy-release-info.properties
+                    - META-INF/AL2.0
+                    - META-INF/LGPL2.1
+                    - META-INF/quarkus-config-doc/quarkus-config-model-version
+                    - META-INF/quarkus-config-doc/quarkus-config-model.json
+
+    smallrye:
+        config:
+            ## read build properties
+            locations: META-INF/build.properties
+

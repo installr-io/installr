@@ -1,0 +1,31 @@
+##
+## Installr Daemon Test Configuration
+##
+package-cache:
+    directory: ${installrd.config.location}/.pkg-cache
+    expires-after: 0s
+
+deployer:
+    "application/vnd.io.installr.*":
+        type: NoOpDeployer
+
+    "application/vnd.io.installr.http-test":
+        type: HttpDeployer
+        config:
+            url: http://localhost:9321/deployer-mock
+            auth:
+                type: api-key
+                key-name: "x-auth-token"
+                value-provider:
+                    type: "header-value"
+                    header-name: "x-auth-token"
+
+repositories:
+    - id: test-repository
+      name: "Pretty name for test-repository"
+      url: http://localhost:9321/repositories/test-repository
+      enabled: true
+
+namespaces:
+    - name: Namespace1
+    - name: Namespace2

@@ -1,0 +1,6 @@
+## This file represents a set auf default values delivered with package 'test-package'
+
+value: foo
+other: bar
+
+third-value: baz

@@ -1,0 +1,153 @@
+/*
+ * Installr.io
+ *
+ * Copyright (c) 2025-present Dorian Vallant
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+package io.installr.installrd.transaction;
+
+import java.time.Instant;
+import java.util.UUID;
+
+import io.installr.installrd.Installrd;
+import io.installr.installrd.logstore.EventLog;
+import io.installr.installrd.logstore.TransactionLog;
+import io.installr.installrd.namespace.LockException;
+import io.installr.installrd.namespace.Namespace;
+import io.installr.lib.installrd.event.Event;
+import io.installr.lib.installrd.event.EventLogRecord;
+import io.installr.lib.installrd.event.Events;
+import io.installr.lib.installrd.event.Status;
+import io.installr.lib.installrd.transaction.TransactionLogRecord;
+import io.installr.lib.installrd.transaction.TransactionStatus;
+import io.quarkus.arc.Arc;
+import io.smallrye.mutiny.subscription.MultiEmitter;
+import lombok.extern.jbosslog.JBossLog;
+
+@JBossLog
+public class Transaction {
+
+    private final Namespace namespace;
+    private final TransactionLog txLog;
+    private final EventLog eventLog;
+    private UUID transactionId;
+    private Status transactionStatus;
+    private MultiEmitter<? super Event> emitter;
+
+    Transaction( Namespace namespace ) {
+        this.namespace = namespace;
+        this.txLog = Arc.container().instance( TransactionLog.class ).get();
+        this.eventLog = Arc.container().instance( EventLog.class ).get();
+    }
+
+    UUID acquire() {
+        if ( isActive() ) {
+            log.errorf( "Namespace '%s' is locked by TX '%s'.", namespace.name(), transactionId );
+            throw new LockException();
+        }
+        return this.transactionId = UUID.randomUUID();
+    }
+
+    public Namespace namespace() {
+        return namespace;
+    }
+
+    public void begin( MultiEmitter<? super Event> emitter ) {
+        this.emitter = emitter;
+        log.debug( "Starting transaction..." );
+        txLog.put(
+            new TransactionLogRecord(
+                transactionId,
+                namespace.name(),
+                Instant.now(),
+                null,
+                TransactionStatus.InProgress,
+                Installrd.version().getVersion()
+            )
+        );
+        log.debugf( "Transaction with id %s started.", transactionId );
+        emitEvent( new Events.TransactionStarted( transactionId ) );
+    }
+
+    public void end() {
+        if ( transactionStatus == null ) {
+            transactionStatus = Status.Success;
+        }
+        log.debugf( "Ending transaction with id %s.", transactionId );
+        checkActive();
+        try {
+            final TransactionLogRecord txLogRecord = txLog.get( transactionId );
+            txLogRecord.setEndTimestamp( Instant.now() );
+            txLogRecord.setStatus( TransactionStatus.fromEventStatus( transactionStatus ) );
+            txLog.put( txLogRecord );
+            emitEvent( new Events.TransactionFinished( transactionId, transactionStatus ) );
+            emitter.complete();
+        }
+        finally {
+            log.debugf( "Transaction '%s' finished with status '%s'.", transactionId, transactionStatus );
+            transactionId = null;
+            transactionStatus = null;
+            emitter = null;
+        }
+    }
+
+    private void checkActive() {
+        if ( !isActive() ) {
+            throw new IllegalStateException( "No active transaction found." );
+        }
+    }
+
+    public boolean isActive() {
+        return transactionId != null;
+    }
+
+    public void emitEvent( Event event ) {
+        checkActive();
+        eventLog.put( new EventLogRecord( null, namespace.name(), transactionId, event ) );
+        emitter.emit( event );
+        if ( event.status().type() == Status.Type.Fatal ) {
+            transactionStatus = event.status();
+        }
+        else if ( transactionStatus == null || transactionStatus.type().ordinal() < Status.Type.Failed.ordinal() ) {
+            this.transactionStatus = event.status();
+        }
+    }
+
+    public UUID id() {
+        return transactionId;
+    }
+
+    public void cancel() {
+        checkActive();
+        this.transactionStatus = Status.Canceled;
+    }
+
+    public boolean isCanceled() {
+        return this.transactionStatus == Status.Canceled;
+    }
+
+    public void fail( Throwable t ) {
+        transactionStatus = Status.Failed( t.toString() );
+        log.error( t.toString() );
+        log.debugf( t, "Stacktrace" );
+    }
+
+    public void reset( Throwable t ) {
+        transactionId = null;
+        log.error( "Transaction reset called!" );
+        log.error( t.toString() );
+        log.debugf( t, "Stacktrace" );
+    }
+
+}

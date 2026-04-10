@@ -1,0 +1,28 @@
+<configuration>
+    <appender name="STANDARD_LOG_APPENDER" class="ch.qos.logback.classic.sift.SiftingAppender">
+        <discriminator class="ch.qos.logback.classic.sift.MDCBasedDiscriminator">
+            <key>namespace</key>
+            <defaultValue>installrd</defaultValue>
+        </discriminator>
+        <sift>
+            <appender name="FILE-${namespace}" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <file>${installrd.config.location}/logs/${namespace}.log</file>
+                <append>true</append>
+                <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                    <!-- daily rollover -->
+                    <fileNamePattern>${installrd.config.location}/logs/${namespace}-%d{yyyy-MM-dd}.log</fileNamePattern>
+                    <!-- keep 30 days -->
+                    <maxHistory>30</maxHistory>
+                </rollingPolicy>
+
+                <layout class="ch.qos.logback.classic.PatternLayout">
+                    <pattern>%d{yyyy-MM-dd}T%d{HH:mm:ss.SSSX} | %X{client:-127.0.0.1} | %highlight(%-5level) | %logger{0} | %msg%n</pattern>
+                </layout>
+            </appender>
+        </sift>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="STANDARD_LOG_APPENDER" />
+    </root>
+</configuration>

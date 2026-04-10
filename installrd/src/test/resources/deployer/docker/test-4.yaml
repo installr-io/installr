@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+    test-srv:
+        image: nginx:1.29
+        deploy:
+            replicas: 2
+            restart_policy:
+                condition: none
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost"]
+            interval: 10s
+            start_interval: 1s
+            timeout: 1s
+            retries: 1

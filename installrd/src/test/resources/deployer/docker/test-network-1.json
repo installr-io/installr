@@ -1,0 +1,6 @@
+{
+    "Name": "${namespace}-test-network-1",
+    "CheckDuplicate": true,
+    "Driver": "overlay",
+    "Attachable": true
+}

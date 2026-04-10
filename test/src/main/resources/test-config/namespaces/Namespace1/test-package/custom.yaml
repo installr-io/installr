@@ -1,0 +1,3 @@
+## This file represents a custom configuration for package 'test-package'
+
+value: foo-overwritten

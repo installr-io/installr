@@ -1,0 +1,15 @@
+[Unit]
+Description=${project.description}
+After=syslog.target network.target
+
+[Service]
+Type=simple
+ExecStart=${installrd-bin.directory}/${project.build.finalName}
+Restart=on-failure
+SuccessExitStatus=143
+
+User=${installrd-user}
+Group=${installrd-user}
+
+[Install]
+WantedBy=multi-user.target

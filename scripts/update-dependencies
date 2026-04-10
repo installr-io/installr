@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -e
+
+if ! [[ $1 =~ ^(major|minor|patch)$ ]]; then
+    echo "usage: $0 <major | minor | patch>";
+    exit 1
+fi
+CATEGORY=$1
+shift
+
+if [[ ${CATEGORY} == "major" ]]; then
+    UPDATE_OPTS="-DallowMajorUpdates=true -DallowMinorUpdates=true -DallowIncrementalUpdates=true"
+elif [[ ${CATEGORY} == "minor" ]]; then
+    UPDATE_OPTS="-DallowMajorUpdates=false -DallowMinorUpdates=true -DallowIncrementalUpdates=true"
+elif [[ ${CATEGORY} == "patch" ]]; then
+    UPDATE_OPTS="-DallowMajorUpdates=false -DallowMinorUpdates=false -DallowIncrementalUpdates=true"
+fi
+
+VERSIONS_PLUGIN_ARGS=(
+    -DallowSnapshots=false
+    -DgenerateBackupPoms=false
+    -Dmaven.version.ignore='.*[-_\.](alpha|Alpha|ALPHA|b|beta|Beta|BETA|rc|‌​RC|M|EA)[-_\.]?[0-9]*'
+    ${UPDATE_OPTS}
+)
+VERSIONS_PLUGIN_GOAL=update-properties
+
+mvn versions:${VERSIONS_PLUGIN_GOAL} \
+    ${VERSIONS_PLUGIN_ARGS[@]} \
+    ${@}

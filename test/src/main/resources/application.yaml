@@ -1,0 +1,54 @@
+quarkus:
+    http:
+        host-enabled: true
+        port: 9321
+        test-port: 9321
+        access-log:
+            enabled: true 
+
+    log:
+        level: WARN
+        console:
+            stderr: true
+        handler:
+            console:
+                "access-log-handler":
+                    format: "%s%n"
+                    stderr: false
+        category:
+            "io.quarkus.http.access-log":
+                level: INFO
+                handlers: access-log-handler
+                use-parent-handlers: false
+            "io.installr":
+                level: TRACE
+                min-level: TRACE
+
+    package:
+        main-class: TestMain
+        jar:
+            type: fast-jar
+
+    datasource:
+        db-kind: h2
+        jdbc:
+            url: jdbc:h2:./target/test-db
+
+    hibernate-orm:
+        schema-management:
+            strategy: drop-and-create
+
+    index-dependency:
+        installrd:
+            group-id: "io.installr"
+            artifact-id: "installrd"
+        lib-installrd:
+            group-id: "io.installr"
+            artifact-id: "installr-lib-installrd"
+        lib-registry:
+            group-id: "io.installr"
+            artifact-id: "installr-lib-registry"
+
+installrd:
+    config:
+        location: ./target/classes/test-config

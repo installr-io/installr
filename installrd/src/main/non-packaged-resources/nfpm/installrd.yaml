@@ -1,0 +1,61 @@
+name: ${project.artifactId}
+arch: all # = noarch
+platform: linux
+version: ${project.version}
+release: 1
+
+maintainer: ${maintainer.name} <${maintainer.email}>
+description: ${project.description}
+vendor: ${project.organization.name}
+homepage: ${project.organization.url}
+license: AGPL-3.0-only
+
+depends:
+    - java-21-openjdk-headless
+
+contents:
+    - dst: ${installrd-bin.directory}
+      type: dir
+      file_info:
+          mode: 0755
+          owner: ${installrd-user}
+          group: ${installrd-user}
+
+    - src: installrd/target/${project.build.finalName} 
+      dst: ${installrd-bin.directory}/${project.build.finalName}
+      file_info:
+          mode: 0750
+          owner: ${installrd-user}
+          group: ${installrd-user}
+
+    - src: installrd/target/non-packaged-resources/systemd/installrd.service
+      dst: /usr/lib/systemd/system/installrd.service
+      file_info:
+          mode: 0644
+          owner: root
+          group: root
+
+    - dst: /home/${installrd-user}/.installrd
+      type: dir
+      file_info:
+          mode: 0775
+          owner: ${installrd-user}
+          group: ${installrd-user}
+
+    - src: installrd/target/non-packaged-resources/config/
+      dst: /home/${installrd-user}/.installrd/
+      type: config|noreplace
+      file_info:
+          mode: 0664
+          owner: ${installrd-user}
+          group: ${installrd-user}
+
+scripts:
+    preinstall: installrd/target/non-packaged-resources/rpm/pre-install.sh
+    postinstall: installrd/target/non-packaged-resources/rpm/post-install.sh
+    preremove: installrd/target/non-packaged-resources/rpm/pre-remove.sh
+    postremove: installrd/target/non-packaged-resources/rpm/post-remove.sh
+
+rpm:
+    signature:
+        key_file: secret.key

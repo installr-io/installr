@@ -1,0 +1,45 @@
+/*
+ * Installr.io
+ *
+ * Copyright (c) 2025-present Dorian Vallant
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+package io.installr.installrd;
+
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+
+import io.installr.lib.installrd.controller.InstallController;
+import io.quarkus.rest.client.reactive.ClientExceptionMapper;
+import jakarta.ws.rs.core.Response;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@RegisterRestClient( baseUri = "http://localhost:9321" )
+public interface InstallrClient extends InstallController {
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    static class ErrorResponse {
+        private String message;
+    }
+
+    @ClientExceptionMapper
+    static RuntimeException toException( Response response ) {
+        final ErrorResponse entity = response.readEntity( ErrorResponse.class );
+        return new RuntimeException( entity.getMessage() );
+    }
+
+}

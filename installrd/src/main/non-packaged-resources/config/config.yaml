@@ -1,0 +1,38 @@
+##
+## Example configuration
+##
+
+# ## configure package cache
+# package-cache:
+#     directory: ${installrd.config.location}/.pkg-cache
+#     expires-after: 1h
+
+# ## configure deployers
+# deployer:
+#     ## deploy Docker Swarm descriptors
+#     "application/vnd.io.installr.docker-stack":
+#         type: DockerStackDeployer
+
+#     ## deploy Docker Network descriptors
+#     "application/vnd.io.installr.docker-network":
+#         type: DockerNetworkDeployer
+
+#     ## deploy Keycloak resources via 'kcd' running on localhost
+#     "application/vnd.io.installr.kc-*":
+#         type: HttpDeployer
+#         config:
+#             url: http://localhost:8080
+
+#     ## deploy binary files to /tmp/local-files
+#     "application/vnd.io.installr.binary":
+#         type: LocalFileDeployer
+#         config:
+#             directory: /tmp/local-files
+
+# ## configure your package repositories
+# repositories:
+#     - id: demo-repository
+#       name: "Demo Applications"
+#       url: http://localhost:9317/repositories/demo
+#       package-cache:
+#           expires-after: 1s

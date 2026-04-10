@@ -1,0 +1,97 @@
+name: Release installr/d
+
+on:
+    push:
+        tags:
+            - "[0-9]+.[0-9]+.[0-9]"
+
+jobs:
+    build-and-package:
+        permissions:
+            contents: read
+            packages: write
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: Set up JDK 21
+              uses: actions/setup-java@v5
+              with:
+                  java-version: "21"
+                  distribution: "temurin"
+                  server-id: "installr-io-maven-repo"
+
+            - name: Setup docker swarm
+              run: docker swarm init
+
+            - name: Build
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: mvn -B clean deploy
+
+            - name: Prepare GPG signing key
+              env:
+                  GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
+              run: |
+                echo -n "$GPG_SIGNING_KEY" | base64 --decode > secret.key
+
+            - name: Generate RPM
+              env:
+                  GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+              run: |
+                docker run --rm -v ${PWD}:/tmp/build -w /tmp/build -e NFPM_PASSPHRASE=${GPG_PASSPHRASE} \
+                    goreleaser/nfpm package \
+                    --config /tmp/build/installrd/target/non-packaged-resources/nfpm/installrd.yaml   \
+                    --target /tmp/build/installrd/target \
+                    --packager rpm
+
+            - name: Upload RPM
+              uses: actions/upload-artifact@v6
+              with:
+                  name: installrd-rpm
+                  path: installrd/target/installrd-*.rpm
+                  if-no-files-found: error
+                  overwrite: true
+
+            - name: Cleanup GPG signing key
+              env:
+                  GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+              run: rm secret.key
+
+    verify-rpm:
+        needs: build-and-package
+        runs-on: ubuntu-latest
+        container:
+            image: fedora:43
+        steps:
+            - name: Download RPM
+              uses: actions/download-artifact@v8
+              with:
+                  name: installrd-rpm
+
+            - name: Install RPM
+              run: dnf -y install ./installrd-*.rpm
+
+    create-release:
+        needs: verify-rpm
+        permissions:
+            contents: write
+        runs-on: ubuntu-latest
+        steps:
+            - name: Download RPM
+              uses: actions/download-artifact@v8
+              with:
+                  name: installrd-rpm
+
+            - name: Release
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  tag: ${{ github.ref_name }}
+              run: |
+                gh release create \
+                    --repo="$GITHUB_REPOSITORY" \
+                    --title="${tag}" \
+                    --generate-notes \
+                    --fail-on-no-commits \
+                    --verify-tag \
+                    "$tag" ./installrd-*.rpm

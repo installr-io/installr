@@ -1,0 +1,9 @@
+source: package-sources
+target: target/packages
+contentAssignments:
+    - pathPattern: docker/**
+      mediaType: application/vnd.io.installr.docker
+      encoding: UTF-8
+      order: 1
+    - pathPattern: sql/**
+      mediaType: application/vnd.io.installr.sql
