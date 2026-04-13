@@ -118,6 +118,7 @@ public class DeploymentService {
             return spec;
         }
         catch ( Throwable t ) {
+            log.debugf( t, "STACKTRACE" );
             if ( t instanceof DeploymentWarning ) {
                 throw t;
             }
