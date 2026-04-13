@@ -118,3 +118,8 @@ The following deployers are currently planned:
 ## License
 
 `Installr` is licensed under the **GNU Affero General Public License (AGPL)**, with the exception of all libraries located under `lib/`, which are licensed under the **GNU Lesser General Public License (LGPL)**.
+
+---
+
+## Installation
+👉 See the [Installation & Setup Guide](INSTALL.md) for setup instructions.
