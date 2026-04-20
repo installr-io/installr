@@ -35,15 +35,15 @@ public class LocalFileDeployer implements Deployer {
     }
 
     @Override
-    public void deploy( DeploymentSpec deployment ) throws DeploymentException {
+    public void deploy( DeploymentSpec spec ) throws DeploymentException {
         try {
             final Path target = config.getDirectory();
             if ( !Files.exists( target ) ) {
                 Files.createDirectories( target );
             }
 
-            final Path file = target.resolve( deployment.getName() );
-            final byte[] data = deployment.getData();
+            final Path file = target.resolve( spec.getName() );
+            final byte[] data = spec.getData();
             Files.write( file, data );
             if ( FileUtil.isExecutable( data ) ) {
                 FileUtil.chmod( file, 754 );
@@ -55,10 +55,10 @@ public class LocalFileDeployer implements Deployer {
     }
 
     @Override
-    public void undeploy( DeploymentSpec deployment ) throws DeploymentException {
+    public void undeploy( DeploymentSpec spec ) throws DeploymentException {
         try {
             Files.deleteIfExists(
-                config.getDirectory().resolve( deployment.getName() )
+                config.getDirectory().resolve( spec.getName() )
             );
         }
         catch ( IOException ex ) {

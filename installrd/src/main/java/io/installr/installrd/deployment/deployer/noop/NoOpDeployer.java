@@ -26,11 +26,11 @@ public class NoOpDeployer implements Deployer {
     public static final Deployer INSTANCE = new NoOpDeployer();
 
     @Override
-    public void deploy( DeploymentSpec deployment ) throws DeploymentException {
+    public void deploy( DeploymentSpec spec ) throws DeploymentException {
     }
 
     @Override
-    public void undeploy( DeploymentSpec deployment ) throws DeploymentException {
+    public void undeploy( DeploymentSpec spec ) throws DeploymentException {
     }
 
 }

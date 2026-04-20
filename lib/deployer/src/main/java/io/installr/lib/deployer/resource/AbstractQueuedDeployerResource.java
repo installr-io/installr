@@ -38,17 +38,17 @@ public abstract class AbstractQueuedDeployerResource implements DeployerResource
     }
 
     @Override
-    public RestResponse<DeploymentResponse> deploy( DeploymentSpec deployment ) {
+    public RestResponse<DeploymentResponse> deploy( DeploymentSpec spec ) {
         checkDeployer();
-        deployer.deploy( deployment );
-        return RestResponse.accepted( deployer.status( deployment.getName() ) );
+        deployer.deploy( spec );
+        return RestResponse.accepted( deployer.status( spec.getName() ) );
     }
 
     @Override
-    public RestResponse<DeploymentResponse> undeploy( DeploymentSpec deployment ) {
+    public RestResponse<DeploymentResponse> undeploy( DeploymentSpec spec ) {
         checkDeployer();
-        deployer.undeploy( deployment );
-        return RestResponse.accepted( deployer.status( deployment.getName() ) );
+        deployer.undeploy( spec );
+        return RestResponse.accepted( deployer.status( spec.getName() ) );
     }
 
     @Override

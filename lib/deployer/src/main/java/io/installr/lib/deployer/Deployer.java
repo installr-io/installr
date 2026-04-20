@@ -19,8 +19,8 @@ package io.installr.lib.deployer;
 
 public interface Deployer {
 
-    void deploy( DeploymentSpec deployment ) throws DeploymentException;
+    void deploy( DeploymentSpec spec ) throws DeploymentException;
 
-    void undeploy( DeploymentSpec deployment ) throws DeploymentException;
+    void undeploy( DeploymentSpec spec ) throws DeploymentException;
 
 }

@@ -39,13 +39,13 @@ class LocalFileDeployerTest {
         assertFalse( Files.exists( file ), "file should not exist before deploy" );
 
         try {
-            final DeploymentSpec deployment = new DeploymentSpec();
-            deployment.setName( filename );
-            deployment.setMediaType( "application/vnd.io.installr.binary" );
-            deployment.setData( "#!/bin/bash\n\necho 'Hello World'\n".getBytes() );
+            final DeploymentSpec spec = new DeploymentSpec();
+            spec.setName( filename );
+            spec.setMediaType( "application/vnd.io.installr.binary" );
+            spec.setData( "#!/bin/bash\n\necho 'Hello World'\n".getBytes() );
 
             final LocalFileDeployer deployer = new LocalFileDeployer( new LocalFileDeployerConfig( target ) );
-            deployer.deploy( deployment );
+            deployer.deploy( spec );
 
             assertTrue( Files.exists( file ), "File should exist after deploy" );
             assertTrue( FileUtil.isExecutable( Files.readAllBytes( file ) ), "File should be executable" );
@@ -67,12 +67,12 @@ class LocalFileDeployerTest {
         assertTrue( Files.exists( file ), "File should exist before undeploy" );
 
         try {
-            final DeploymentSpec deployment = new DeploymentSpec();
-            deployment.setName( filename );
-            deployment.setMediaType( "application/vnd.io.installr.binary" );
+            final DeploymentSpec spec = new DeploymentSpec();
+            spec.setName( filename );
+            spec.setMediaType( "application/vnd.io.installr.binary" );
 
             final LocalFileDeployer deployer = new LocalFileDeployer( new LocalFileDeployerConfig( target ) );
-            deployer.undeploy( deployment );
+            deployer.undeploy( spec );
 
             assertFalse( Files.exists( file ), "File should not exist after undeploy" );
         }

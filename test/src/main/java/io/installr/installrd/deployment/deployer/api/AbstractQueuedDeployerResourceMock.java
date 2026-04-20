@@ -38,12 +38,12 @@ public class AbstractQueuedDeployerResourceMock extends AbstractQueuedDeployerRe
         }
 
         @Override
-        protected void doDeploy( DeploymentSpec deployment ) throws DeploymentException {
+        protected void doDeploy( DeploymentSpec spec ) throws DeploymentException {
             ThreadUtil.sleep( DEPLOY_TIME );
         }
 
         @Override
-        protected void doUndeploy( DeploymentSpec deployment ) throws DeploymentException {
+        protected void doUndeploy( DeploymentSpec spec ) throws DeploymentException {
         }
     }
 

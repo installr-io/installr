@@ -47,8 +47,8 @@ public class DockerNetworkDeployer extends AbstractDockerDeployer {
     }
 
     @Override
-    public void deploy( DeploymentSpec deployment ) throws DeploymentException {
-        final NetworkCreateRequest networkSpec = readNetworkSpec( deployment );
+    public void deploy( DeploymentSpec spec ) throws DeploymentException {
+        final NetworkCreateRequest networkSpec = readNetworkSpec( spec );
         if ( existsNetwork( networkSpec ) ) {
             throw new DeploymentWarning( "Network '%s' already exists.", networkSpec.getName() );
         }
@@ -58,15 +58,15 @@ public class DockerNetworkDeployer extends AbstractDockerDeployer {
     }
 
     @Override
-    public void undeploy( DeploymentSpec deployment ) throws DeploymentException {
-        client.rmNetwork( readNetworkSpec( deployment ).getName() );
+    public void undeploy( DeploymentSpec spec ) throws DeploymentException {
+        client.rmNetwork( readNetworkSpec( spec ).getName() );
     }
 
-    private NetworkCreateRequest readNetworkSpec( DeploymentSpec deployment ) throws DeploymentException {
+    private NetworkCreateRequest readNetworkSpec( DeploymentSpec spec ) throws DeploymentException {
         try {
-            final String json = new String( deployment.getData() );
+            final String json = new String( spec.getData() );
             return jsonMapper
-                .readValue( interpolator.interpolate( json, deployment.getEnv() ), NetworkCreateRequest.class );
+                .readValue( interpolator.interpolate( json, spec.getEnv() ), NetworkCreateRequest.class );
         }
         catch ( IOException ex ) {
             throw new DeploymentException( ex.toString() );

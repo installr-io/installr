@@ -51,7 +51,7 @@ public class DeployerMockServer implements DeployerResource {
     HttpHeaders httpHeaders;
 
     @Override
-    public RestResponse<DeploymentResponse> deploy( @Valid DeploymentSpec deployment ) {
+    public RestResponse<DeploymentResponse> deploy( @Valid DeploymentSpec spec ) {
         ThreadUtil.sleep( new Random().nextLong( 500, 1000 ) );
         final String token = getToken();
         if ( token == null || token.isBlank() ) {
@@ -60,7 +60,7 @@ public class DeployerMockServer implements DeployerResource {
                     .build()
             );
         }
-        if ( !token.equals( deployment.getEnv().get( "namespace" ) ) ) {
+        if ( !token.equals( spec.getEnv().get( "namespace" ) ) ) {
             return RestResponse.ok(
                 DeploymentResponse.builder().status( DeploymentStatus.Failed ).message( "Invalid token: " + token )
                     .build()
@@ -84,7 +84,7 @@ public class DeployerMockServer implements DeployerResource {
     }
 
     @Override
-    public RestResponse<DeploymentResponse> undeploy( @Valid DeploymentSpec deployment ) {
+    public RestResponse<DeploymentResponse> undeploy( @Valid DeploymentSpec spec ) {
         throw new UnsupportedOperationException( "'DeployerMockserver.status' not implemented." );
     }
 
