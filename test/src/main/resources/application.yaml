@@ -37,6 +37,9 @@ quarkus:
     hibernate-orm:
         schema-management:
             strategy: drop-and-create
+        mapping:
+            format:
+                global: ignore
 
     index-dependency:
         installrd:
