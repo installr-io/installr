@@ -10,19 +10,25 @@ quarkus:
         level: WARN
         console:
             stderr: true
-            format: '%-5p [%X{namespace}] %s%e%n'
-            enabled: false
+            format: ${installrd.log.format}
 
         handler:
             console:
                 "console-log-handler":
                     format: '%-5p %s%e%n'
                     stderr: false
-
+                "access-log-handler":
+                    format: "%s%n"
+                    stderr: false
+            
         category:
             "console-log":
                 level: INFO
                 handlers: console-log-handler
+                use-parent-handlers: false
+            "io.quarkus.http.access-log":
+                level: INFO
+                handlers: access-log-handler
                 use-parent-handlers: false
             "io.installr":
                 level: ${installrd.log.level}
@@ -69,24 +75,17 @@ installrd:
         location: ${HOME}/.installrd
     log:
         level: INFO
+        format: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}  %-5p [%c{1}] %s%e%n"
+        sifting-logger:
+            log-dir: ${installrd.config.location}/logs
+            discriminator:
+                key: 'namespace'
+                default-value: 'installrd'
 
 "%dev":
     quarkus:
         log:
-            console:
-                enabled: true
-
-            handler:
-                console:
-                    "access-log-handler":
-                        format: "%s%n"
-                        stderr: false
-
             category:
-                "io.quarkus.http.access-log":
-                    level: INFO
-                    handlers: access-log-handler
-                    use-parent-handlers: false
                 "io.installr":
                     level: DEBUG
                     min-level: DEBUG
@@ -94,10 +93,14 @@ installrd:
 "%prod":
     quarkus:
         log:
-            category:
-                "console-log":
-                    use-parent-handlers: true
-                
+            console:
+                filter: "sifting-log-file-filter"
+
+            handler:
+                console:
+                    "access-log-handler":
+                        filter: "sifting-log-file-filter"
+
         package:
             jar:
                 type: uber-jar
@@ -117,3 +120,7 @@ installrd:
             ## read build properties
             locations: META-INF/build.properties
 
+    installrd:
+        log:
+            sifting-logger:
+                enabled: true

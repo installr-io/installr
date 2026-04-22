@@ -108,7 +108,6 @@
         <groovy.version>4.0.31</groovy.version>
         <installr-code-format.version>0.2.0-SNAPSHOT</installr-code-format.version>
         <lombok.version>1.18.44</lombok.version>
-        <quarkus-logging-logback.version>1.1.2</quarkus-logging-logback.version>
         <semver4j.version>6.0.0</semver4j.version>
 
         <!-- maven-deploy-plugin -->
@@ -145,11 +144,6 @@
                 <groupId>commons-codec</groupId>
                 <artifactId>commons-codec</artifactId>
                 <version>${commons-codec.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.quarkiverse.logging.logback</groupId>
-                <artifactId>quarkus-logging-logback</artifactId>
-                <version>${quarkus-logging-logback.version}</version>
             </dependency>
             <dependency>
                 <groupId>de.gesellix</groupId>

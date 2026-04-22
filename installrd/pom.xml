@@ -83,10 +83,6 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-jdbc-h2</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.quarkiverse.logging.logback</groupId>
-            <artifactId>quarkus-logging-logback</artifactId>
-        </dependency>
 
         <!-- our own dependencies -->
         <dependency>
@@ -224,36 +220,6 @@
                         <maven.home>${maven.home}</maven.home>
                     </systemPropertyVariables>
                 </configuration>
-            </plugin>
-            <!--
-                quarkus-logging-logback and slf4j-jboss-logmanager bring their own org.slf4j.spi.SLF4JServiceProvider 
-                (service loader) providers and the quarkus-maven-plugin does merge them when building an uber-jar.
-                This leads to "Multiple bindings" warning from slf4j. To prevent this we patch the jar after build
-                with a version of org.slf4j.spi.SLF4JServiceProvider that has only one binding.
-            -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>patch-uber-jar</id>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <phase>package</phase>
-                        <configuration>
-                            <executable>jar</executable>
-                            <workingDirectory>${project.build.directory}</workingDirectory>
-                            <arguments>
-                                <argument>-uf</argument>
-                                <argument>${project.build.finalName}.jar</argument>
-                                <argument>-C</argument>
-                                <argument>${project.basedir}/src/main/resources</argument>
-                                <argument>META-INF/services/org.slf4j.spi.SLF4JServiceProvider</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

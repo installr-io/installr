@@ -35,6 +35,14 @@ contents:
           owner: root
           group: root
 
+    - src: installrd/target/non-packaged-resources/logrotate/installrd
+      dst: /etc/logrotate.d/installrd
+      type: config|noreplace
+      file_info:
+          mode: 0644
+          owner: root
+          group: root
+
     - dst: /home/${installrd-user}/.installrd
       type: dir
       file_info:

@@ -1,0 +1,11 @@
+/home/installr/.installrd/logs/*.log {
+    daily
+    rotate 30
+    compress
+    missingok
+    notifempty
+    create 0640 installr installr
+    dateext
+    dateformat -%Y-%m-%d
+    sharedscripts
+}
