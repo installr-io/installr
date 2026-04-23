@@ -30,17 +30,22 @@ import de.gesellix.docker.remote.api.IPAM;
 import de.gesellix.docker.remote.api.Network;
 import de.gesellix.docker.remote.api.NetworkCreateRequest;
 import io.installr.installrd.deployment.DeploymentWarning;
+import io.installr.installrd.deployment.deployer.BuiltInDeployer;
 import io.installr.installrd.util.interpolation.EnvironmentInterpolator;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentSpec;
+import jakarta.enterprise.context.Dependent;
 
+@Dependent
+@BuiltInDeployer( "DockerNetworkDeployer" )
 public class DockerNetworkDeployer extends AbstractDockerDeployer {
 
-    private final EnvironmentInterpolator interpolator;
-    private final JsonMapper jsonMapper;
+    private EnvironmentInterpolator interpolator;
+    private JsonMapper jsonMapper;
 
-    public DockerNetworkDeployer( DockerDeployerConfig config ) {
-        super( config );
+    @Override
+    public void init( DockerDeployerConfig config ) {
+        super.init( config );
         this.interpolator = new EnvironmentInterpolator();
         this.jsonMapper = new JsonMapper();
         jsonMapper.addMixIn( NetworkCreateRequest.class, NetworkCreateRequestMixIn.class );

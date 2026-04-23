@@ -38,21 +38,26 @@ import de.gesellix.docker.remote.api.Task;
 import de.gesellix.docker.remote.api.TaskState;
 import de.gesellix.docker.remote.api.TaskStatus;
 import de.gesellix.docker.remote.api.core.ClientException;
+import io.installr.installrd.deployment.deployer.BuiltInDeployer;
 import io.installr.installrd.util.PeriodicEvaluator;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentSpec;
+import jakarta.enterprise.context.Dependent;
 import lombok.extern.jbosslog.JBossLog;
 
+@Dependent
+@BuiltInDeployer( "DockerStackDeployer" )
 @JBossLog
 public class DockerStackDeployer extends AbstractDockerDeployer {
 
     private static final String MEM_REGEX = "\\d+([.]\\d+)?[KkMmGg]";
 
-    private final DeployConfigReader reader;
-    private final DeployStackOptions options;
+    private DeployConfigReader reader;
+    private DeployStackOptions options;
 
-    public DockerStackDeployer( DockerDeployerConfig config ) {
-        super( config );
+    @Override
+    public void init( DockerDeployerConfig config ) {
+        super.init( config );
         this.reader = new DeployConfigReader( this.client );
         this.options = new DeployStackOptions();
         this.options.setSendRegistryAuth( true );

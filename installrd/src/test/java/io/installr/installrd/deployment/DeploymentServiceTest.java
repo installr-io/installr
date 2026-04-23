@@ -20,8 +20,10 @@ package io.installr.installrd.deployment;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import java.lang.annotation.Annotation;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -36,8 +38,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import io.installr.installrd.config.InstallrdConfiguration;
 import io.installr.installrd.config.InstallrdConfiguration.DeployerConfiguration;
+import io.installr.installrd.deployment.deployer.local.LocalFileDeployer;
+import io.installr.installrd.deployment.deployer.noop.NoOpDeployer;
 import io.installr.installrd.plugin.PluginLoader;
+import io.installr.lib.deployer.ConfigurableDeployer;
 import io.installr.lib.deployer.DeploymentSpec;
+import jakarta.enterprise.inject.Instance;
 
 @ExtendWith( MockitoExtension.class )
 class DeploymentServiceTest {
@@ -51,11 +57,18 @@ class DeploymentServiceTest {
     @Mock
     PluginLoader pluginLoader;
 
+    @Mock
+    Instance<Object> allBeans;
+
+    @Mock
+    Instance<Object> selectedInstance;
+
     @InjectMocks
     DeploymentService service;
 
     @Test
     void deploy_should_route_to_noop_deployer() {
+        whenBuiltInDeployerFound( new NoOpDeployer() );
         when( config.deployerConfigurations() ).thenReturn(
             Map.of(
                 NOOP_MEDIA_TYPE,
@@ -69,6 +82,7 @@ class DeploymentServiceTest {
 
     @Test
     void undeploy_should_route_to_noop_deployer() {
+        whenBuiltInDeployerFound( new NoOpDeployer() );
         when( config.deployerConfigurations() ).thenReturn(
             Map.of(
                 NOOP_MEDIA_TYPE,
@@ -82,6 +96,7 @@ class DeploymentServiceTest {
 
     @Test
     void deploy_should_route_to_local_file_deployer( @TempDir Path tempDir ) {
+        whenBuiltInDeployerFound( new LocalFileDeployer() );
         when( config.deployerConfigurations() ).thenReturn(
             Map.of(
                 BINARY_MEDIA_TYPE,
@@ -109,6 +124,7 @@ class DeploymentServiceTest {
 
     @Test
     void init_should_throw_when_deployer_type_is_unknown_and_no_plugins_present() {
+        whenBuiltInDeployerNotFound();
         when( config.deployerConfigurations() ).thenReturn(
             Map.of(
                 NOOP_MEDIA_TYPE,
@@ -122,6 +138,7 @@ class DeploymentServiceTest {
 
     @Test
     void deploy_should_support_wildcard_media_type_matching() {
+        whenBuiltInDeployerFound( new NoOpDeployer() );
         when( config.deployerConfigurations() ).thenReturn(
             Map.of(
                 "application/vnd.io.installr.*",
@@ -131,6 +148,18 @@ class DeploymentServiceTest {
         service.init();
 
         assertDoesNotThrow( () -> service.deploy( spec( "application/vnd.io.installr.binary" ) ) );
+    }
+
+    @SuppressWarnings( "rawtypes" )
+    private void whenBuiltInDeployerFound( ConfigurableDeployer deployer ) {
+        when( allBeans.select( any( Annotation.class ) ) ).thenReturn( selectedInstance );
+        when( selectedInstance.isUnsatisfied() ).thenReturn( false );
+        when( selectedInstance.get() ).thenReturn( deployer );
+    }
+
+    private void whenBuiltInDeployerNotFound() {
+        when( allBeans.select( any( Annotation.class ) ) ).thenReturn( selectedInstance );
+        when( selectedInstance.isUnsatisfied() ).thenReturn( true );
     }
 
     private DeploymentSpec spec( String mediaType ) {

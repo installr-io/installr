@@ -19,6 +19,7 @@ package io.installr.installrd.deployment.deployer.local;
 
 import java.nio.file.Path;
 
+import io.installr.lib.deployer.DeployerConfig;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,7 +27,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LocalFileDeployerConfig {
+public class LocalFileDeployerConfig implements DeployerConfig {
 
     private Path directory;
 

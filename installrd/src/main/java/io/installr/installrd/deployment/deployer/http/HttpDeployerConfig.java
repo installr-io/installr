@@ -18,10 +18,11 @@
 package io.installr.installrd.deployment.deployer.http;
 
 import io.installr.installrd.common.http.HttpClientConfig;
+import io.installr.lib.deployer.DeployerConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode( callSuper = false )
-public class HttpDeployerConfig extends HttpClientConfig {
+public class HttpDeployerConfig extends HttpClientConfig implements DeployerConfig {
 }

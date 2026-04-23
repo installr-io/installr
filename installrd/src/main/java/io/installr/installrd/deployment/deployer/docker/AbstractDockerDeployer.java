@@ -19,16 +19,22 @@ package io.installr.installrd.deployment.deployer.docker;
 
 import de.gesellix.docker.client.DockerClient;
 import de.gesellix.docker.client.DockerClientImpl;
-import io.installr.lib.deployer.Deployer;
+import io.installr.lib.deployer.ConfigurableDeployer;
 
-abstract class AbstractDockerDeployer implements Deployer {
+abstract class AbstractDockerDeployer implements ConfigurableDeployer<DockerDeployerConfig> {
 
-    final DockerDeployerConfig config;
-    final DockerClient client;
+    DockerDeployerConfig config;
+    DockerClient client;
 
-    AbstractDockerDeployer( DockerDeployerConfig config ) {
+    @Override
+    public Class<DockerDeployerConfig> getConfigType() {
+        return DockerDeployerConfig.class;
+    }
+
+    @Override
+    public void init( DockerDeployerConfig config ) {
         this.config = config;
-        this.client = new DockerClientImpl( this.config.getHost() );
+        this.client = new DockerClientImpl( config.getHost() );
     }
 
 }

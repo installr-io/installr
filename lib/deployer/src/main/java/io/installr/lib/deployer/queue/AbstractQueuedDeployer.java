@@ -20,9 +20,9 @@ package io.installr.lib.deployer.queue;
 import java.time.Duration;
 
 import io.installr.lib.deployer.Deployer;
-import io.installr.lib.deployer.DeploymentSpec;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentResponse;
+import io.installr.lib.deployer.DeploymentSpec;
 
 public abstract class AbstractQueuedDeployer implements Deployer {
 

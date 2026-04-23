@@ -23,21 +23,31 @@ import org.jboss.resteasy.reactive.RestResponse;
 
 import io.installr.installrd.common.http.HttpClientBuilder;
 import io.installr.installrd.deployment.DeploymentWarning;
-import io.installr.lib.deployer.Deployer;
+import io.installr.installrd.deployment.deployer.BuiltInDeployer;
+import io.installr.lib.deployer.ConfigurableDeployer;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentResponse;
 import io.installr.lib.deployer.DeploymentSpec;
+import jakarta.enterprise.context.Dependent;
 import lombok.extern.jbosslog.JBossLog;
 
+@Dependent
+@BuiltInDeployer( "HttpDeployer" )
 @JBossLog
-public class HttpDeployer implements Deployer {
+public class HttpDeployer implements ConfigurableDeployer<HttpDeployerConfig> {
 
-    private final HttpDeployerConfig config;
-    private final HttpDeployerClient client;
+    private HttpDeployerConfig config;
+    private HttpDeployerClient client;
 
-    public HttpDeployer( HttpDeployerConfig config ) {
+    @Override
+    public Class<HttpDeployerConfig> getConfigType() {
+        return HttpDeployerConfig.class;
+    }
+
+    @Override
+    public void init( HttpDeployerConfig config ) {
         this.config = config;
-        this.client = HttpClientBuilder.build( config, HttpDeployerClient.class );
+        this.client = HttpClientBuilder.build( this.config, HttpDeployerClient.class );
     }
 
     @Override

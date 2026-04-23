@@ -21,12 +21,13 @@ import java.time.Duration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.installr.lib.deployer.DeployerConfig;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class DockerDeployerConfig {
+public class DockerDeployerConfig implements DeployerConfig {
 
     private String host = "unix:///var/run/docker.sock";
 

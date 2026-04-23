@@ -24,22 +24,19 @@ import java.util.stream.Collectors;
 
 import io.installr.installrd.config.InstallrdConfiguration;
 import io.installr.installrd.config.InstallrdConfiguration.DeployerConfiguration;
-import io.installr.installrd.deployment.deployer.docker.DockerDeployerConfig;
-import io.installr.installrd.deployment.deployer.docker.DockerNetworkDeployer;
-import io.installr.installrd.deployment.deployer.docker.DockerStackDeployer;
-import io.installr.installrd.deployment.deployer.http.HttpDeployer;
-import io.installr.installrd.deployment.deployer.http.HttpDeployerConfig;
-import io.installr.installrd.deployment.deployer.local.LocalFileDeployer;
-import io.installr.installrd.deployment.deployer.local.LocalFileDeployerConfig;
-import io.installr.installrd.deployment.deployer.noop.NoOpDeployer;
+import io.installr.installrd.deployment.deployer.BuiltInDeployerLiteral;
 import io.installr.installrd.plugin.PluginLoader;
 import io.installr.installrd.util.PropertyMapUtil;
+import io.installr.lib.deployer.ConfigurableDeployer;
 import io.installr.lib.deployer.Deployer;
+import io.installr.lib.deployer.DeployerConfig;
 import io.installr.lib.deployer.DeployerPlugin;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentSpec;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import lombok.extern.jbosslog.JBossLog;
 
@@ -53,7 +50,16 @@ public class DeploymentService {
     @Inject
     PluginLoader pluginLoader;
 
-    private Map<String, Deployer> deployerMap;
+    // Instance<Object> is intentional: CDI type resolution is invariant, so Instance<ConfigurableDeployer<X>>
+    // would only match beans whose type parameter is exactly X. Since each built-in deployer uses its own
+    // config subtype (e.g. ConfigurableDeployer<DockerDeployerConfig>), a typed injection point would make
+    // most deployers invisible. Instance<Object> with @Any is the CDI-standard approach for programmatic
+    // lookup of heterogeneous beans — filtering is done via the @BuiltInDeployer qualifier in initDeployer().
+    @Inject
+    @Any
+    Instance<Object> allBeans;
+
+    private Map<String, ConfigurableDeployer<?>> deployerMap;
 
     @PostConstruct
     void init() {
@@ -63,43 +69,48 @@ public class DeploymentService {
             .collect( Collectors.toMap( Map.Entry::getKey, this::mapToDeployer ) );
     }
 
-    private Deployer mapToDeployer( Map.Entry<String, DeployerConfiguration> entry ) {
+    private ConfigurableDeployer<?> mapToDeployer( Map.Entry<String, DeployerConfiguration> entry ) {
         final DeployerConfiguration config = entry.getValue();
-        switch ( config.type() ) {
-            case "NoOpDeployer":
-                return new NoOpDeployer();
-            case "LocalFileDeployer":
-                return new LocalFileDeployer(
-                    PropertyMapUtil.readPropertyMap( config.config(), LocalFileDeployerConfig.class )
-                );
-            case "HttpDeployer":
-                return new HttpDeployer(
-                    PropertyMapUtil.readPropertyMap( config.config(), HttpDeployerConfig.class )
-                );
-            case "DockerStackDeployer":
-                return new DockerStackDeployer(
-                    PropertyMapUtil.readPropertyMap( config.config(), DockerDeployerConfig.class )
-                );
-            case "DockerNetworkDeployer":
-                return new DockerNetworkDeployer(
-                    PropertyMapUtil.readPropertyMap( config.config(), DockerDeployerConfig.class )
-                );
-            default:
-                return findDeployer( config.type(), entry.getKey(), config.config() );
+        final Instance<Object> selected = allBeans.select( new BuiltInDeployerLiteral( config.type() ) );
+
+        if ( !selected.isUnsatisfied() ) {
+            return initDeployer( selected.get(), config.config() );
         }
+        return findExternalDeployer( config.type(), entry.getKey(), config.config() );
     }
 
-    private DeployerPlugin findDeployer( String deployerName, String mediaType, Map<String, String> config ) {
-        final Optional<Map<String, DeployerPlugin>> plugins = pluginLoader.getDeployers();
+    @SuppressWarnings( "unchecked" )
+    private <C extends DeployerConfig> ConfigurableDeployer<C> initDeployer(
+        Object bean, Map<String, String> rawConfig
+    ) {
+        final ConfigurableDeployer<C> deployer = (ConfigurableDeployer<C>)bean;
+        deployer.init( deserializeConfig( deployer, rawConfig ) );
+        return deployer;
+    }
+
+    private <C extends DeployerConfig> C deserializeConfig(
+        ConfigurableDeployer<C> deployer, Map<String, String> rawConfig
+    ) {
+        final Class<C> configType = deployer.getConfigType();
+        if ( configType == null ) {
+            return null;
+        }
+        return PropertyMapUtil.readPropertyMap( rawConfig, configType );
+    }
+
+    private DeployerPlugin<DeployerConfig> findExternalDeployer(
+        String deployerName, String mediaType, Map<String, String> config
+    ) {
+        final Optional<Map<String, DeployerPlugin<DeployerConfig>>> plugins = pluginLoader.getDeployers();
         if ( !plugins.isPresent() ) {
             throw new IllegalStateException( String.format( "No deployer found for media-type '%s'.", mediaType ) );
         }
-        final Map<String, DeployerPlugin> deployers = plugins.get();
+        final Map<String, DeployerPlugin<DeployerConfig>> deployers = plugins.get();
         if ( !deployers.containsKey( deployerName ) ) {
             throw new IllegalStateException( "Deployer not found: " + deployerName );
         }
-        final DeployerPlugin deployer = deployers.get( deployerName );
-        deployer.init( config );
+        final DeployerPlugin<DeployerConfig> deployer = deployers.get( deployerName );
+        deployer.init( deserializeConfig( deployer, config ) );
         return deployer;
     }
 

@@ -58,6 +58,16 @@ public class DockerStackDeployerTest {
         return spec;
     }
 
+    DockerStackDeployer deployer() {
+        return deployer( new DockerDeployerConfig() );
+    }
+
+    DockerStackDeployer deployer( DockerDeployerConfig config ) {
+        final DockerStackDeployer deployer = new DockerStackDeployer();
+        deployer.init( config );
+        return deployer;
+    }
+
     void randomSleep() {
         // To prevent 'invalid pool request: Pool overlaps with other one on this address space' we randomly wait a
         // bit before we start deploying a new stack
@@ -66,7 +76,7 @@ public class DockerStackDeployerTest {
 
     @Test
     void deploy_should_throw_exception_when_image_was_not_found() {
-        final DockerStackDeployer deployer = new DockerStackDeployer( new DockerDeployerConfig() );
+        final DockerStackDeployer deployer = deployer();
         final DeploymentSpec spec = genSpec( "test-1" );
         try {
             randomSleep();
@@ -83,7 +93,7 @@ public class DockerStackDeployerTest {
 
     @Test
     void deploy_should_throw_exception_when_container_start_fails() {
-        final DockerStackDeployer deployer = new DockerStackDeployer( new DockerDeployerConfig() );
+        final DockerStackDeployer deployer = deployer();
         final DeploymentSpec spec = genSpec( "test-2" );
         try {
             randomSleep();
@@ -102,7 +112,7 @@ public class DockerStackDeployerTest {
     void deploy_should_throw_exception_when_not_all_services_are_running() {
         final DockerDeployerConfig config = new DockerDeployerConfig();
         config.setPollingTimeout( Duration.ofSeconds( 5 ) );
-        final DockerStackDeployer deployer = new DockerStackDeployer( config );
+        final DockerStackDeployer deployer = deployer( config );
         final DeploymentSpec spec = genSpec( "test-3" );
         try {
             randomSleep();
@@ -122,7 +132,7 @@ public class DockerStackDeployerTest {
 
     @Test
     void deploy_should_be_successful_when_all_tasks_running() {
-        final DockerStackDeployer deployer = new DockerStackDeployer( new DockerDeployerConfig() );
+        final DockerStackDeployer deployer = deployer();
         final DeploymentSpec spec = genSpec( "test-4" );
         try {
             randomSleep();
