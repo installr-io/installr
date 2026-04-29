@@ -37,7 +37,6 @@ import de.gesellix.docker.remote.api.Service;
 import de.gesellix.docker.remote.api.Task;
 import de.gesellix.docker.remote.api.TaskState;
 import de.gesellix.docker.remote.api.TaskStatus;
-import de.gesellix.docker.remote.api.core.ClientException;
 import io.installr.installrd.deployment.deployer.BuiltInDeployer;
 import io.installr.installrd.util.PeriodicEvaluator;
 import io.installr.lib.deployer.DeploymentException;
@@ -77,9 +76,7 @@ public class DockerStackDeployer extends AbstractDockerDeployer {
             "/tmp", // fixme
             env == null ? new HashMap<>() : env
         );
-        handleClientException(
-            () -> client.stackDeploy( stack, stackConfig, options )
-        );
+        client.stackDeploy( stack, stackConfig, options );
         final boolean running = new PeriodicEvaluator<>( () -> taskStateStream( stack ), checkAllTasksRunning() )
             .withInterval( config.getPollingInterval() )
             .withTimeout( config.getPollingTimeout() )
@@ -97,9 +94,7 @@ public class DockerStackDeployer extends AbstractDockerDeployer {
         // determine all task IDs
         final List<String> taskIds = taskStream( stack ).map( Task::getID ).toList();
         // remove stack
-        handleClientException(
-            () -> client.stackRm( stack )
-        );
+        client.stackRm( stack );
         // and check if all tasks have been removed
         final boolean successful = new PeriodicEvaluator<>( () -> taskIds.stream(), checkAllTasksRemoved() )
             .withInterval( config.getPollingInterval() )
@@ -171,16 +166,6 @@ public class DockerStackDeployer extends AbstractDockerDeployer {
                 bytes = 0;
         }
         return String.valueOf( bytes );
-    }
-
-    private void handleClientException( Runnable runnable ) throws DeploymentException {
-        try {
-            runnable.run();
-        }
-        catch ( ClientException ex ) {
-            // toString() returns the message body
-            throw new DeploymentException( ex.toString() );
-        }
     }
 
     private Stream<TaskState> taskStateStream( final String stackName ) {

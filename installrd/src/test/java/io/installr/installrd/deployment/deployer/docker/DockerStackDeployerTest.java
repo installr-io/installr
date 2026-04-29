@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.net.SocketException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -141,6 +142,21 @@ public class DockerStackDeployerTest {
         finally {
             deployer.undeploy( spec );
         }
+    }
+
+    @Test
+    void translateException_should_return_meaningful_message_when_socket_unreachable() {
+        final DockerDeployerConfig config = new DockerDeployerConfig();
+        config.setHost( "unix:///nonexistent/docker.sock" );
+        final DockerStackDeployer deployer = deployer( config );
+
+        final RuntimeException socketError = new RuntimeException( new SocketException( "No such file or directory" ) );
+        final DeploymentException result = deployer.translateException( socketError );
+
+        assertTrue(
+            result.getMessage().contains( "Cannot connect to Docker" ),
+            "Expected meaningful message, got: " + result.getMessage()
+        );
     }
 
 }

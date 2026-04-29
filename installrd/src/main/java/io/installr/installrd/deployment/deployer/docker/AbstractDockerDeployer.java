@@ -17,9 +17,14 @@
  */
 package io.installr.installrd.deployment.deployer.docker;
 
+import java.net.SocketException;
+
 import de.gesellix.docker.client.DockerClient;
 import de.gesellix.docker.client.DockerClientImpl;
+import de.gesellix.docker.remote.api.core.ClientException;
+import io.installr.installrd.util.ExceptionUtil;
 import io.installr.lib.deployer.ConfigurableDeployer;
+import io.installr.lib.deployer.DeploymentException;
 
 abstract class AbstractDockerDeployer implements ConfigurableDeployer<DockerDeployerConfig> {
 
@@ -35,6 +40,21 @@ abstract class AbstractDockerDeployer implements ConfigurableDeployer<DockerDepl
     public void init( DockerDeployerConfig config ) {
         this.config = config;
         this.client = new DockerClientImpl( config.getHost() );
+    }
+
+    @Override
+    public DeploymentException translateException( Throwable ex ) {
+        if ( ex instanceof ClientException ) {
+            // toString() returns the message body
+            return new DeploymentException( ex.toString() );
+        }
+        if ( ExceptionUtil.isCausedBy( ex, SocketException.class ) ) {
+            return new DeploymentException(
+                "Cannot connect to Docker socket at '%s'.",
+                config.getHost()
+            );
+        }
+        return ConfigurableDeployer.super.translateException( ex );
     }
 
 }

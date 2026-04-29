@@ -21,6 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.lang.annotation.Annotation;
@@ -42,6 +44,8 @@ import io.installr.installrd.deployment.deployer.local.LocalFileDeployer;
 import io.installr.installrd.deployment.deployer.noop.NoOpDeployer;
 import io.installr.installrd.plugin.PluginLoader;
 import io.installr.lib.deployer.ConfigurableDeployer;
+import io.installr.lib.deployer.DeployerConfig;
+import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentSpec;
 import jakarta.enterprise.inject.Instance;
 
@@ -134,6 +138,30 @@ class DeploymentServiceTest {
         when( pluginLoader.getDeployers() ).thenReturn( Optional.empty() );
 
         assertThrows( IllegalStateException.class, () -> service.init() );
+    }
+
+    @Test
+    @SuppressWarnings( "unchecked" )
+    void deploy_should_delegate_to_translateException_for_runtime_exceptions() {
+        final ConfigurableDeployer<DeployerConfig> deployer = mock( ConfigurableDeployer.class );
+        final RuntimeException runtimeError = new RuntimeException( "low-level error" );
+        final DeploymentException translated = new DeploymentException( "translated message" );
+
+        when( deployer.getConfigType() ).thenReturn( null );
+        doThrow( runtimeError ).when( deployer ).deploy( any() );
+        when( deployer.translateException( runtimeError ) ).thenReturn( translated );
+
+        whenBuiltInDeployerFound( deployer );
+        when( config.deployerConfigurations() ).thenReturn(
+            Map.of( NOOP_MEDIA_TYPE, deployerConfig( "MockDeployer", Map.of() ) )
+        );
+        service.init();
+
+        final DeploymentException ex = assertThrows(
+            DeploymentException.class,
+            () -> service.deploy( spec( NOOP_MEDIA_TYPE ) )
+        );
+        assertTrue( ex.getMessage().contains( "translated message" ) );
     }
 
     @Test

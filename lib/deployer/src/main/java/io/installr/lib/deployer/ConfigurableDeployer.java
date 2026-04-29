@@ -23,4 +23,8 @@ public interface ConfigurableDeployer<C extends DeployerConfig> extends Deployer
 
     void init( C config );
 
+    default DeploymentException translateException( Throwable ex ) {
+        return new DeploymentException( ex.getMessage() != null ? ex.getMessage() : ex.toString() );
+    }
+
 }

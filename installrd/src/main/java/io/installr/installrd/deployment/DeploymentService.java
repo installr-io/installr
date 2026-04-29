@@ -28,7 +28,6 @@ import io.installr.installrd.deployment.deployer.BuiltInDeployerLiteral;
 import io.installr.installrd.plugin.PluginLoader;
 import io.installr.installrd.util.PropertyMapUtil;
 import io.installr.lib.deployer.ConfigurableDeployer;
-import io.installr.lib.deployer.Deployer;
 import io.installr.lib.deployer.DeployerConfig;
 import io.installr.lib.deployer.DeployerPlugin;
 import io.installr.lib.deployer.DeploymentException;
@@ -122,26 +121,25 @@ public class DeploymentService {
         return handleError( spec, deployer -> deployer.undeploy( spec ) );
     }
 
-    private DeploymentSpec handleError( DeploymentSpec spec, Consumer<Deployer> consumer ) {
-        final Deployer deployer = getDeployer( spec );
+    private DeploymentSpec handleError( DeploymentSpec spec, Consumer<ConfigurableDeployer<?>> consumer ) {
+        final ConfigurableDeployer<?> deployer = getDeployer( spec );
         try {
             consumer.accept( deployer );
             return spec;
         }
         catch ( Throwable t ) {
             log.debugf( t, "STACKTRACE" );
-            if ( t instanceof DeploymentWarning ) {
-                throw t;
+            if ( t instanceof DeploymentWarning dw ) {
+                throw dw;
             }
-            throw new DeploymentException(
-                "[%s] %s",
-                deployer.getClass().getSimpleName(),
-                t.getMessage() == null ? t.toString() : t.getMessage()
-            );
+            final DeploymentException de = t instanceof DeploymentException existing
+                ? existing
+                : deployer.translateException( t );
+            throw new DeploymentException( "[%s] %s", deployer.getClass().getSimpleName(), de.getMessage() );
         }
     }
 
-    private Deployer getDeployer( DeploymentSpec spec ) {
+    private ConfigurableDeployer<?> getDeployer( DeploymentSpec spec ) {
         final MediaTypeMatcher matcher = MediaTypeMatcher.matcher(
             deployerMap.keySet(),
             spec.getMediaType()
@@ -149,7 +147,7 @@ public class DeploymentService {
         if ( !matcher.matches() ) {
             throw new MediaTypeNotSupportedException( spec.getMediaType() );
         }
-        final Deployer deployer = deployerMap.get( matcher.mediaType() );
+        final ConfigurableDeployer<?> deployer = deployerMap.get( matcher.mediaType() );
         log.debugf( "media-type: '%s'", spec.getMediaType() );
         log.debug( deployer );
         return deployer;
