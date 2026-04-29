@@ -21,15 +21,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
+import io.installr.installrd.util.MapUtil;
 import io.installr.lib.pkg.Package;
 import io.installr.lib.pkg.PackageId;
-import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.SmallRyeConfig;
 import io.smallrye.config.SmallRyeConfigBuilder;
-import io.smallrye.config.WithParentName;
 import io.smallrye.config.source.yaml.YamlConfigSource;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.SneakyThrows;
@@ -63,44 +61,28 @@ public class PackageConfigReader {
             log.debugf( "readFile: not found: %s", file );
             return Map.of();
         }
+        final YamlConfigSource yamlSource = new YamlConfigSource( file.toUri().toURL() );
         final SmallRyeConfig config = new SmallRyeConfigBuilder()
             .addDefaultInterceptors()
-            .withSources( new YamlConfigSource( file.toUri().toURL() ) )
+            .withSources( yamlSource )
             .withValidateUnknown( false )
-            .withMapping( PackageConfig.class )
             .withDefaultValues( env )
             .build();
-        return config.getConfigMapping( PackageConfig.class )
-            .map()
-            .entrySet()
-            .stream()
-            .collect( Collectors.toMap( this::transformKey, this::transformValue ) );
+        return MapUtil.flatten( resolve( yamlSource, config, env ) );
     }
 
-    private String transformKey( Map.Entry<String, PackageConfig.OptionalString> keySet ) {
-        return keySet.getKey().replace( "-", "_" );
-    }
-
-    private String transformValue( Map.Entry<String, PackageConfig.OptionalString> keySet ) {
-        final Optional<String> value = keySet.getValue().value();
-        if ( value.isEmpty() ) {
-            return "";
-        }
-        return value.get();
-    }
-
-    @ConfigMapping
-    interface PackageConfig {
-
-        @WithParentName
-        // 'Map<String, Optional<String>> map();'' doesn't work, so we use an intermediate type...
-        Map<String, OptionalString> map();
-
-        interface OptionalString {
-            @WithParentName
-            Optional<String> value();
-        }
-
+    private Map<String, String> resolve( YamlConfigSource yamlSource, SmallRyeConfig config, Map<String, String> env ) {
+        return yamlSource.getProperties().keySet().stream()
+            .collect(
+                Collectors.toMap(
+                    key -> key,
+                    key -> {
+                        final String defVal = env
+                            .getOrDefault( key, env.getOrDefault( MapUtil.toSnakeCase( key ), "" ) );
+                        return config.getOptionalValue( key, String.class ).orElse( defVal );
+                    }
+                )
+            );
     }
 
 }

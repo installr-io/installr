@@ -93,4 +93,30 @@ class PackageConfigReaderIT {
         assertEquals( "bar", allVals.get( "other" ) );
     }
 
+    @Test
+    void readDefaults_should_read_hierarchical_values() throws InvalidPackageIdException {
+        Map<String, String> allVals = packageConfigReader.readAll(
+            namespaceLocation( TEST_NAMESPACE ),
+            Map.of(),
+            PackageId.valueOf( TEST_PACKAGE )
+        );
+        assertEquals( "1", allVals.get( "hierarchical.value.one" ) );
+        assertEquals( "2", allVals.get( "hierarchical.value.two" ) );
+        assertEquals( "3", allVals.get( "hierarchical_other" ) );
+        assertEquals( "1", allVals.get( "hierarchical_value_one" ) );
+        assertEquals( "2", allVals.get( "hierarchical_value_two" ) );
+        assertEquals( "3", allVals.get( "hierarchical_other" ) );
+    }
+
+    @Test
+    void readDefaults_should_substitute_known_keys() throws InvalidPackageIdException {
+        Map<String, String> allVals = packageConfigReader.readAll(
+            namespaceLocation( TEST_NAMESPACE ),
+            Map.of(),
+            PackageId.valueOf( TEST_PACKAGE )
+        );
+        assertEquals( "foo-sub", allVals.get( "value-substitution" ) );
+        assertEquals( "foo-sub", allVals.get( "value_substitution" ) );
+    }
+
 }
