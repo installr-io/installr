@@ -36,7 +36,6 @@ import de.gesellix.docker.client.DockerClient;
 import de.gesellix.docker.client.DockerClientImpl;
 import de.gesellix.docker.remote.api.Network;
 import io.installr.installrd.deployment.DeploymentWarning;
-import io.installr.installrd.deployment.deployer.docker.DockerDeployerConfig;
 import io.installr.lib.deployer.DeploymentSpec;
 import lombok.SneakyThrows;
 

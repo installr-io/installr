@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+    name: co-whoami-service
+spec:
+    type: ClusterIP
+    ports:
+        - port: 80
+          protocol: TCP
+          targetPort: 80
+    selector:
+        app.kubernetes.io/instance: co-whoami-1.0.0-d34db33f
+status: {}

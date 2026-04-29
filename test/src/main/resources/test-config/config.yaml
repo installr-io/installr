@@ -20,6 +20,9 @@ deployer:
                     type: "header-value"
                     header-name: "x-auth-token"
 
+    "application/vnd.io.installr.kubernetes":
+        type: KubernetesDeployer
+
 repositories:
     - id: test-repository
       name: "Pretty name for test-repository"

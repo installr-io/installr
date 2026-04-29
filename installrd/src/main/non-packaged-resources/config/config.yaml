@@ -17,6 +17,11 @@
 #     "application/vnd.io.installr.docker-network":
 #         type: DockerNetworkDeployer
 
+#     ## deploy Kubernetes descriptors
+#     "application/vnd.io.installr.kubernetes":
+#         ## configuration is done via ~/.kube/config
+#         type: KubernetesDeployer
+
 #     ## deploy Keycloak resources via 'kcd' running on localhost
 #     "application/vnd.io.installr.kc-*":
 #         type: HttpDeployer

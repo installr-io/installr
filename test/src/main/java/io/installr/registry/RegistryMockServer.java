@@ -55,7 +55,7 @@ public class RegistryMockServer implements RepositoryResource {
 
     private static final List<ContentAssignment> DUMMY_ASSIGNMENTS = List.of(
         new ContentAssignment( "http/**", InstallrPackager.MEDIA_TYPE_PREFIX + "http-test", "UTF-8", 1 ),
-        new ContentAssignment( "**", InstallrPackager.MEDIA_TYPE_PREFIX + "unknown", "UTF-8", 999 )
+        new ContentAssignment( "sql/**", InstallrPackager.MEDIA_TYPE_PREFIX + "sql", "UTF-8", 1 )
     );
 
     private Map<String, Repository> repositories;

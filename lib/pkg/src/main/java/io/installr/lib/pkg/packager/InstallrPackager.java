@@ -90,6 +90,12 @@ public class InstallrPackager {
                 "application/vnd.io.installr.docker-stack",
                 "UTF-8",
                 10
+            ),
+            new ContentAssignment(
+                "kubernetes/**",
+                "application/vnd.io.installr.kubernetes",
+                "UTF-8",
+                10
             )
         );
     }
