@@ -47,6 +47,7 @@ import io.installr.installrd.pkg.resolver.ResolverResult;
 import io.installr.installrd.pkg.resolver.ResolverStatus;
 import io.installr.installrd.plugin.PluginLoader;
 import io.installr.installrd.transaction.Transaction;
+import io.installr.installrd.util.MapUtil;
 import io.installr.lib.deployer.DeploymentSpec;
 import io.installr.lib.installrd.event.Events;
 import io.installr.lib.installrd.event.Status;
@@ -251,7 +252,7 @@ public class InstallService {
         env.put( "namespace", tx.namespace().name() );
         env.putAll( packageConfigReader.readAll( tx.namespace().location(), env, packageId ) );
         log.debug( "environment:" );
-        env.forEach( ( k, v ) -> log.debugf( "  %s = %s", k, v ) );
+        MapUtil.dump( log, env );
 
         // install new items
         tx.emitEvent( new Events.PackageInstallationStarted( packageId, packageIdx, contentsToInstall.size() ) );

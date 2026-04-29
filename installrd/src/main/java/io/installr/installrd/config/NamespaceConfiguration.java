@@ -22,13 +22,20 @@ import java.util.Map;
 import java.util.Optional;
 
 import io.installr.installrd.config.InstallrdConfiguration.RepositoryConfiguration;
+import io.installr.installrd.util.MapUtil;
 import io.smallrye.config.ConfigMapping;
+import io.smallrye.config.WithName;
 
 @ConfigMapping
 public interface NamespaceConfiguration {
 
     Optional<List<RepositoryConfiguration>> repositories();
 
-    Map<String, String> env();
+    default Map<String, String> env() {
+        return MapUtil.flatten( rawEnv() );
+    }
+
+    @WithName( "env" )
+    Map<String, String> rawEnv();
 
 }
