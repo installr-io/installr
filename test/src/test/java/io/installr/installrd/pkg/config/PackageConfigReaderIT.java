@@ -119,4 +119,14 @@ class PackageConfigReaderIT {
         assertEquals( "foo-sub", allVals.get( "value_substitution" ) );
     }
 
+    @Test
+    void read_should_overwrite_default_value_by_namespace_env() throws InvalidPackageIdException {
+        Map<String, String> allVals = packageConfigReader.readAll(
+            namespaceLocation( TEST_NAMESPACE ),
+            Map.of( "globally-overwritten", "by-namespace-env" ),
+            PackageId.valueOf( TEST_PACKAGE )
+        );
+        assertEquals( "by-namespace-env", allVals.get( "globally-overwritten" ) );
+    }
+
 }

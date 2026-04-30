@@ -40,6 +40,7 @@ public class PackageConfigReader {
     public Map<String, String> readAll( Path namespaceLocation, Map<String, String> env, PackageId packageId ) {
         Map<String, String> all = new HashMap<>();
         all.putAll( readDefaults( namespaceLocation, env, packageId ) );
+        all.putAll( env );
         all.putAll( readCustom( namespaceLocation, env, packageId ) );
         return all;
     }
@@ -68,18 +69,16 @@ public class PackageConfigReader {
             .withValidateUnknown( false )
             .withDefaultValues( env )
             .build();
-        return MapUtil.flatten( resolve( yamlSource, config, env ) );
+        return MapUtil.flatten( resolve( yamlSource, config ) );
     }
 
-    private Map<String, String> resolve( YamlConfigSource yamlSource, SmallRyeConfig config, Map<String, String> env ) {
+    private Map<String, String> resolve( YamlConfigSource yamlSource, SmallRyeConfig config ) {
         return yamlSource.getProperties().keySet().stream()
             .collect(
                 Collectors.toMap(
                     key -> key,
                     key -> {
-                        final String defVal = env
-                            .getOrDefault( key, env.getOrDefault( MapUtil.toSnakeCase( key ), "" ) );
-                        return config.getOptionalValue( key, String.class ).orElse( defVal );
+                        return config.getOptionalValue( key, String.class ).orElse( "" );
                     }
                 )
             );

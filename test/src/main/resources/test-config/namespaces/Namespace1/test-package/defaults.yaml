@@ -12,3 +12,5 @@ hierarchical:
     other: 3
 
 value-substitution: ${value}-sub
+
+globally-overwritten: default-value
