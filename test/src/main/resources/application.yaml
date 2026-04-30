@@ -10,6 +10,7 @@ quarkus:
         level: WARN
         console:
             stderr: true
+            enabled: true
         handler:
             console:
                 "access-log-handler":

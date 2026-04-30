@@ -19,6 +19,7 @@ package io.installr.installrd.pkg.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -127,6 +128,18 @@ class PackageConfigReaderIT {
             PackageId.valueOf( TEST_PACKAGE )
         );
         assertEquals( "by-namespace-env", allVals.get( "globally-overwritten" ) );
+    }
+
+    @Test
+    void read_should_throw_when_value_is_REQUIRED_but_not_for_empty() throws InvalidPackageIdException {
+        assertThrows(
+            MissingConfigurationException.class,
+            () -> packageConfigReader.readAll(
+                namespaceLocation( TEST_NAMESPACE ),
+                Map.of(),
+                PackageId.valueOf( "test-package-with-required-values:0.1.0" )
+            )
+        );
     }
 
 }

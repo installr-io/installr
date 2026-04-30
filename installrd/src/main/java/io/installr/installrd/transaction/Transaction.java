@@ -138,7 +138,7 @@ public class Transaction {
     }
 
     public void fail( Throwable t ) {
-        transactionStatus = Status.Failed( t.toString() );
+        transactionStatus = Status.Failed( t );
         log.error( t.toString() );
         log.debugf( t, "Stacktrace" );
     }

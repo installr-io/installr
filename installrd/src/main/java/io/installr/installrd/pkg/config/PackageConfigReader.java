@@ -20,6 +20,7 @@ package io.installr.installrd.pkg.config;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -42,7 +43,8 @@ public class PackageConfigReader {
         all.putAll( readDefaults( namespaceLocation, env, packageId ) );
         all.putAll( env );
         all.putAll( readCustom( namespaceLocation, env, packageId ) );
-        return all;
+        checkRequired( all );
+        return MapUtil.flatten( all );
     }
 
     public Map<String, String> readDefaults( Path namespaceLocation, Map<String, String> env, PackageId packageId ) {
@@ -58,6 +60,7 @@ public class PackageConfigReader {
         Path namespaceLocation, Map<String, String> env, String packagename, String filename
     ) {
         final Path file = namespaceLocation.resolve( Path.of( packagename, filename ) );
+        log.debugf( "reading '%s'...", file );
         if ( !Files.exists( file ) ) {
             log.debugf( "readFile: not found: %s", file );
             return Map.of();
@@ -69,19 +72,30 @@ public class PackageConfigReader {
             .withValidateUnknown( false )
             .withDefaultValues( env )
             .build();
-        return MapUtil.flatten( resolve( yamlSource, config ) );
+        return resolve( yamlSource, config );
     }
 
     private Map<String, String> resolve( YamlConfigSource yamlSource, SmallRyeConfig config ) {
         return yamlSource.getProperties().keySet().stream()
             .collect(
                 Collectors.toMap(
-                    key -> key,
+                    key -> key.toLowerCase(),
                     key -> {
                         return config.getOptionalValue( key, String.class ).orElse( "" );
                     }
                 )
             );
+    }
+
+    private void checkRequired( Map<String, String> all ) {
+        final List<String> requiredKeys = all.entrySet().stream()
+            .filter( entry -> entry.getValue().equals( "REQUIRED" ) )
+            .map( Map.Entry::getKey )
+            .sorted()
+            .toList();
+        if ( !requiredKeys.isEmpty() ) {
+            throw new MissingConfigurationException( requiredKeys );
+        }
     }
 
 }
