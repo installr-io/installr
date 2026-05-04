@@ -33,16 +33,16 @@ jobs:
               env:
                   GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
               run: |
-                echo -n "$GPG_SIGNING_KEY" | base64 --decode > secret.key
+                echo -n "$GPG_SIGNING_KEY" | base64 --decode > installrd/secret.key
 
             - name: Generate RPM
               env:
                   GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
               run: |
-                docker run --rm -v ${PWD}:/tmp/build -w /tmp/build -e NFPM_PASSPHRASE=${GPG_PASSPHRASE} \
+                docker run --rm -v ${PWD}/installrd:/tmp/build -w /tmp/build -e NFPM_PASSPHRASE=${GPG_PASSPHRASE} \
                     goreleaser/nfpm package \
-                    --config /tmp/build/installrd/target/non-packaged-resources/nfpm/installrd.yaml   \
-                    --target /tmp/build/installrd/target \
+                    --config /tmp/build/target/non-packaged-resources/nfpm/installrd.yaml   \
+                    --target /tmp/build/target \
                     --packager rpm
 
             - name: Upload RPM
@@ -56,7 +56,7 @@ jobs:
             - name: Cleanup GPG signing key
               env:
                   GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-              run: rm secret.key
+              run: rm -f installrd/secret.key
 
     verify-rpm:
         needs: build-and-package
