@@ -28,6 +28,20 @@ contents:
           owner: ${installrd-user}
           group: ${installrd-user}
 
+    - dst: ${installrd-doc.directory}
+      type: dir
+      file_info:
+          mode: 0755
+          owner: ${installrd-user}
+          group: ${installrd-user}
+
+    - src: target/generated-sources/license/THIRD-PARTY.txt
+      dst: ${installrd-doc.directory}/THIRD-PARTY.txt
+      file_info:
+          mode: 0644
+          owner: ${installrd-user}
+          group: ${installrd-user}
+
     - src: target/non-packaged-resources/systemd/installrd.service
       dst: /usr/lib/systemd/system/installrd.service
       file_info:

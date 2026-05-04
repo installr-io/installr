@@ -51,6 +51,7 @@
             ${project.build.directory}/non-packaged-resources
         </non-packaged-resources.target.directory>
         <installrd-bin.directory>/opt/installr-io/bin</installrd-bin.directory>
+        <installrd-doc.directory>/opt/installr-io/share/doc/installrd</installrd-doc.directory>
         <installrd-user>installr</installrd-user>
 	<?SORTPOM RESUME?>
 
@@ -176,6 +177,19 @@
             </resource>
         </resources>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>check-dependency-licenses</id>
+                        <goals>
+                            <goal>add-third-party</goal>
+                        </goals>
+                        <phase>verify</phase>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
