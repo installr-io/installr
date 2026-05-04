@@ -17,6 +17,9 @@
  */
 package io.installr.installrd.transaction;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -31,6 +34,7 @@ import io.installr.lib.installrd.event.Events;
 import io.installr.lib.installrd.event.Status;
 import io.installr.lib.installrd.transaction.TransactionLogRecord;
 import io.installr.lib.installrd.transaction.TransactionStatus;
+import io.installr.lib.util.FileUtil;
 import io.quarkus.arc.Arc;
 import io.smallrye.mutiny.subscription.MultiEmitter;
 import lombok.extern.jbosslog.JBossLog;
@@ -44,6 +48,7 @@ public class Transaction {
     private UUID transactionId;
     private Status transactionStatus;
     private MultiEmitter<? super Event> emitter;
+    private Path tmpPath;
 
     Transaction( Namespace namespace ) {
         this.namespace = namespace;
@@ -99,6 +104,10 @@ public class Transaction {
             transactionId = null;
             transactionStatus = null;
             emitter = null;
+            if ( tmpPath != null ) {
+                FileUtil.rmdir( tmpPath );
+                tmpPath = null;
+            }
         }
     }
 
@@ -148,6 +157,17 @@ public class Transaction {
         log.error( "Transaction reset called!" );
         log.error( t.toString() );
         log.debugf( t, "Stacktrace" );
+    }
+
+    public Path tmpDir() throws IOException {
+        checkActive();
+        // Create a temporary path for this transaction, which can be used e.g. to extract archives.
+        // The temporary path will be removed when the transaction ends.
+        if ( tmpPath == null ) {
+            tmpPath = Path.of( "/tmp" ).resolve( UUID.randomUUID().toString() );
+            Files.createDirectory( tmpPath );
+        }
+        return tmpPath;
     }
 
 }

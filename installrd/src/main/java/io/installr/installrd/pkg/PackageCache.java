@@ -227,7 +227,7 @@ public class PackageCache {
                 .resolve( "packages" );
             FileUtil.mkdir( dest );
             repoClient.downloadPackage( dest, pkg.getPackageInfo().getPackageId() );
-            final Path pkgDir = pkg.extractArchive();
+            final Path pkgDir = pkg.extractArchive( dest );
             Files.delete( pkg.getLocalPath() );
             pkg.setLocalPath( pkgDir );
             status = Status.Success;

@@ -18,6 +18,7 @@
 package io.installr.installrd.install;
 
 import static io.installr.installrd.util.Partials.not;
+import static io.installr.installrd.util.Partials.toFunction;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -93,7 +94,7 @@ public class InstallService {
     }
 
     public void installFile( Transaction tx, List<String> files ) {
-        install( tx, Action.Install, () -> resolvePackagesFromFiles( files ) );
+        install( tx, Action.Install, () -> resolvePackagesFromFiles( tx, files ) );
     }
 
     public void reinstall( Transaction tx, List<PackageId> packageIds ) {
@@ -101,15 +102,15 @@ public class InstallService {
     }
 
     public void reinstallFile( Transaction tx, List<String> files ) {
-        install( tx, Action.ReInstall, () -> resolvePackagesFromFiles( files ) );
+        install( tx, Action.ReInstall, () -> resolvePackagesFromFiles( tx, files ) );
     }
 
-    private List<ResolverResult> resolvePackagesFromFiles( List<String> files ) {
+    private List<ResolverResult> resolvePackagesFromFiles( Transaction tx, List<String> files ) {
         return packageResolver.resolve(
             files.stream()
                 .map( this::toPath )
                 .map( this::toPackage )
-                .map( this::extractPackage )
+                .map( toFunction( this::extractPackage, tx ) )
                 .collect(
                     Collectors.toMap(
                         k -> k.getPackageInfo().getPackageId(),
@@ -389,8 +390,9 @@ public class InstallService {
     }
 
     @SneakyThrows
-    private Package extractPackage( Package pkg ) {
-        final Path archive = pkg.extractArchive();
+    private Package extractPackage( Transaction tx, Package pkg ) {
+        final Path archive = pkg.extractArchive( tx.tmpDir() );
+        pkg.setLocalPath( archive );
         log.debugf( "Extracted package '%s' to '%s'.", pkg, archive );
         return pkg;
     }
