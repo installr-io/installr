@@ -19,7 +19,7 @@
 
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.installr</groupId>
@@ -31,6 +31,14 @@
         <name>Installr.io</name>
         <url>https://installr.io</url>
     </organization>
+
+    <licenses>
+        <license>
+            <name>GNU Affero General Public License v3.0</name>
+            <url>https://www.gnu.org/licenses/agpl-3.0.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
     <modules>
         <module>code-format</module>
@@ -61,7 +69,7 @@
         <!-- maintainer info -->
         <maintainer.name>Dorian Vallant</maintainer.name>
         <maintainer.email>dorian@installr.io</maintainer.email>
-        
+
         <!-- compiler and project setup -->
         <failsafe.useModulePath>false</failsafe.useModulePath>
         <maven.compiler.release>21</maven.compiler.release>

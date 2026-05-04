@@ -19,7 +19,7 @@
 
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -33,7 +33,16 @@
     <description>Installrd - A multi-purpose package installr</description>
     <url>https://installr.io</url>
 
+    <licenses>
+        <license>
+            <name>GNU Affero General Public License v3.0</name>
+            <url>https://www.gnu.org/licenses/agpl-3.0.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
     <properties>
+        <?SORTPOM IGNORE?>
         <!-- packaging -->
         <non-packaged-resources.source.directory>
             ${project.basedir}/src/main/non-packaged-resources
@@ -43,6 +52,7 @@
         </non-packaged-resources.target.directory>
         <installrd-bin.directory>/opt/installr-io/bin</installrd-bin.directory>
         <installrd-user>installr</installrd-user>
+	<?SORTPOM RESUME?>
 
         <!-- skip install & deploy -->
         <maven.install.skip>true</maven.install.skip>
@@ -123,8 +133,10 @@
             <artifactId>docker-client</artifactId>
         </dependency>
         <dependency>
+            <?SORTPOM IGNORE?>
             <groupId>org.apache.groovy</groupId>
             <artifactId>groovy</artifactId> <!-- needed by docker-client -->
+	    <?SORTPOM RESUME?>
         </dependency>
 
         <!-- test dependencies -->
@@ -259,6 +271,7 @@
                         </goals>
                         <phase>package</phase>
                         <configuration>
+                            <?SORTPOM IGNORE?>
                             <target>
                                 <concat binary="yes" destfile="${project.build.directory}/${project.build.finalName}"
                                     eol="unix">
@@ -272,6 +285,7 @@
                                 </exec>
                                 <chmod file="${project.build.directory}/${project.build.finalName}" perm="0750" />
                             </target>
+			    <?SORTPOM RESUME?>
                         </configuration>
                     </execution>
                 </executions>
