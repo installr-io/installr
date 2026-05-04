@@ -266,6 +266,10 @@
                                         files="${non-packaged-resources.target.directory}/stub.sh" />
                                     <filelist dir="${project.build.directory}" files="${project.build.finalName}.jar" />
                                 </concat>
+                                <exec executable="scripts/adjust_zip_offsets.py" failonerror="true">
+                                    <arg value="${project.build.directory}/${project.build.finalName}"/>
+                                    <arg value="1583"/> <!-- size of stub.sh -->
+                                </exec>
                                 <chmod file="${project.build.directory}/${project.build.finalName}" perm="0750" />
                             </target>
                         </configuration>
