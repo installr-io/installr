@@ -22,6 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import static org.mockito.Mockito.lenient;
+
+import java.lang.reflect.Field;
 import java.net.SocketException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,14 +34,22 @@ import java.util.Map;
 import java.util.Random;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.semver4j.Semver;
 
+import io.installr.installrd.config.InstallrdConfiguration;
 import io.installr.installrd.util.ThreadUtil;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentSpec;
 import lombok.SneakyThrows;
 
+@ExtendWith( MockitoExtension.class )
 public class DockerStackDeployerTest {
+
+    @Mock
+    InstallrdConfiguration installrdConfig;
 
     @SneakyThrows
     byte[] readDescriptor( String name ) {
@@ -63,9 +74,14 @@ public class DockerStackDeployerTest {
         return deployer( new DockerDeployerConfig() );
     }
 
+    @SneakyThrows
     DockerStackDeployer deployer( DockerDeployerConfig config ) {
+        lenient().when( installrdConfig.location() ).thenReturn( Path.of( "/tmp" ) );
         final DockerStackDeployer deployer = new DockerStackDeployer();
         deployer.init( config );
+        final Field field = DockerStackDeployer.class.getDeclaredField( "installrdConfig" );
+        field.setAccessible( true );
+        field.set( deployer, installrdConfig );
         return deployer;
     }
 

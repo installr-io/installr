@@ -37,17 +37,22 @@ import de.gesellix.docker.remote.api.Service;
 import de.gesellix.docker.remote.api.Task;
 import de.gesellix.docker.remote.api.TaskState;
 import de.gesellix.docker.remote.api.TaskStatus;
+import io.installr.installrd.config.InstallrdConfiguration;
 import io.installr.installrd.deployment.deployer.BuiltInDeployer;
 import io.installr.installrd.util.PeriodicEvaluator;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentSpec;
 import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
 import lombok.extern.jbosslog.JBossLog;
 
 @Dependent
 @BuiltInDeployer( "DockerStackDeployer" )
 @JBossLog
 public class DockerStackDeployer extends AbstractDockerDeployer {
+
+    @Inject
+    InstallrdConfiguration installrdConfig;
 
     private static final String MEM_REGEX = "\\d+([.]\\d+)?[KkMmGg]";
 
@@ -73,7 +78,7 @@ public class DockerStackDeployer extends AbstractDockerDeployer {
         final DeployStackConfig stackConfig = reader.loadCompose(
             stack,
             new ByteArrayInputStream( spec.getData() ),
-            "/tmp", // fixme
+            installrdConfig.location().toAbsolutePath().toString(),
             env == null ? new HashMap<>() : env
         );
         client.stackDeploy( stack, stackConfig, options );
