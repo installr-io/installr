@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 
 import org.semver4j.Semver;
 
+import io.installr.installrd.config.InstallrdConfiguration;
 import io.installr.installrd.deployment.DeploymentService;
 import io.installr.installrd.deployment.DeploymentWarning;
 import io.installr.installrd.pkg.PackageCache;
@@ -88,6 +89,9 @@ public class InstallService {
 
     @Inject
     DeploymentService deploymentService;
+
+    @Inject
+    InstallrdConfiguration installrdConfig;
 
     public void install( Transaction tx, List<PackageId> packageIds ) {
         install( tx, Action.Install, () -> packageResolver.resolve( packageIds ) );
@@ -292,6 +296,10 @@ public class InstallService {
         final List<PackageContent> contentsToUpdate = new ArrayList<>( pkg.getPackageInfo().getContents() );
         contentsToUpdate.removeAll( contentsToInstall );
         contentsToUpdate.stream()
+            .filter(
+                // consider only items matching the configured selectors
+                item -> matchesSelector( item.getLabels(), installrdConfig.selector() )
+            )
             .map(
                 item -> installedItems.get( item.getPath() )
             )
@@ -314,12 +322,17 @@ public class InstallService {
     private List<PackageContent> filterContents(
         final Package pkg, Action action, Map<String, ItemLogRecord> installedItems
     ) {
+        final Map<String, String> selector = installrdConfig.selector();
         return pkg.getPackageInfo()
             .getContents()
             .stream()
             .filter(
                 newItem -> {
                     log.tracef( "%s:", newItem.getPath() );
+                    if ( !matchesSelector( newItem.getLabels(), selector ) ) {
+                        log.tracef( "=> labels %s do not match selector %s => skip", newItem.getLabels(), selector );
+                        return false;
+                    }
                     final ItemLogRecord installedItem = installedItems.get( newItem.getPath() );
                     if ( installedItem == null ) {
                         log.trace( "=> installedItem == null (=> not yet installed)" );
@@ -343,6 +356,17 @@ public class InstallService {
                 }
             )
             .toList();
+    }
+
+    boolean matchesSelector( Map<String, String> labels, Map<String, String> selector ) {
+        if ( labels == null || labels.isEmpty() ) {
+            return true; // item without labels is always relevant
+        }
+        if ( selector == null || selector.isEmpty() ) {
+            return true; // no selector configured => install everything
+        }
+        return selector.entrySet().stream()
+            .allMatch( entry -> entry.getValue().equals( labels.get( entry.getKey() ) ) );
     }
 
     private DeploymentSpec toDeploymentSpec( PackageContent content, Package pkg, final Map<String, String> env )

@@ -18,6 +18,7 @@
 package io.installr.lib.pkg.packager;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -35,5 +36,24 @@ public class ContentAssignment {
     String mediaType;
     String encoding = StandardCharsets.UTF_8.displayName();
     Integer order = 999;
+    Map<String, String> labels;
+
+    public ContentAssignment( @NonNull String pathPattern, @NonNull String mediaType ) {
+        this.pathPattern = pathPattern;
+        this.mediaType = mediaType;
+    }
+
+    public ContentAssignment( @NonNull String pathPattern, @NonNull String mediaType, String encoding ) {
+        this.pathPattern = pathPattern;
+        this.mediaType = mediaType;
+        this.encoding = encoding;
+    }
+
+    public ContentAssignment( @NonNull String pathPattern, @NonNull String mediaType, String encoding, Integer order ) {
+        this.pathPattern = pathPattern;
+        this.mediaType = mediaType;
+        this.encoding = encoding;
+        this.order = order;
+    }
 
 }

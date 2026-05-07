@@ -175,6 +175,11 @@ public class InstallrdConfiguration implements InstallrdConfigurationMapping {
         return Optional.of( effectiveRepositoryList );
     }
 
+    @Override
+    public Map<String, String> selector() {
+        return installrdConfig.selector();
+    }
+
     @SneakyThrows
     public List<NamespaceDefinition> namespaceDefinitions() {
         final Path namespaceLocation = locationFor( LocationType.Namespace );

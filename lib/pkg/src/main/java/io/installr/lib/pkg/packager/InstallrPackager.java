@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.codec.digest.DigestUtils;
@@ -77,25 +78,29 @@ public class InstallrPackager {
                 "docker/*.network.json",
                 "application/vnd.io.installr.docker-network",
                 "UTF-8",
-                5
+                5,
+                Map.of( "platform", "docker-swarm" )
             ),
             new ContentAssignment(
                 "docker/**/*.network.json",
                 "application/vnd.io.installr.docker-network",
                 "UTF-8",
-                5
+                5,
+                Map.of( "platform", "docker-swarm" )
             ),
             new ContentAssignment(
                 "docker/**",
                 "application/vnd.io.installr.docker-stack",
                 "UTF-8",
-                10
+                10,
+                Map.of( "platform", "docker-swarm" )
             ),
             new ContentAssignment(
                 "kubernetes/**",
                 "application/vnd.io.installr.kubernetes",
                 "UTF-8",
-                10
+                10,
+                Map.of( "platform", "kubernetes" )
             )
         );
     }
@@ -134,6 +139,7 @@ public class InstallrPackager {
         content.setMediaType( contentAssignment.getMediaType() );
         content.setEncoding( contentAssignment.getEncoding() );
         content.setOrder( contentAssignment.getOrder() );
+        content.setLabels( contentAssignment.getLabels() );
         return content;
     }
 
