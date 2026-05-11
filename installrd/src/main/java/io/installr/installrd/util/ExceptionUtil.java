@@ -17,6 +17,10 @@
  */
 package io.installr.installrd.util;
 
+import java.util.concurrent.Callable;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 public final class ExceptionUtil {
 
     private ExceptionUtil() {
@@ -29,6 +33,17 @@ public final class ExceptionUtil {
             }
         }
         return false;
+    }
+
+    public static <T> Supplier<T> wrap( Callable<T> callable, Function<Exception, RuntimeException> translator ) {
+        return () -> {
+            try {
+                return callable.call();
+            }
+            catch ( Exception ex ) {
+                throw translator.apply( ex );
+            }
+        };
     }
 
 }

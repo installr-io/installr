@@ -17,6 +17,10 @@
  */
 package io.installr.installrd.deployment.deployer.http;
 
+import java.time.Duration;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import io.installr.installrd.common.http.HttpClientConfig;
 import io.installr.lib.deployer.DeployerConfig;
 import lombok.Data;
@@ -25,4 +29,11 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode( callSuper = false )
 public class HttpDeployerConfig extends HttpClientConfig implements DeployerConfig {
+
+    @JsonProperty( "polling-interval" )
+    private Duration pollingInterval = Duration.ofMillis( 500 );
+
+    @JsonProperty( "polling-timeout" )
+    private Duration pollingTimeout = Duration.ofSeconds( 60 );
+
 }
