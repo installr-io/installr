@@ -70,6 +70,14 @@ public class Transaction {
 
     public void begin( MultiEmitter<? super Event> emitter ) {
         this.emitter = emitter;
+        emitter.onCancellation(
+            () -> {
+                if ( emitter.isCancelled() ) {
+                    log.infof( "Client disconnected from transaction '%s', cancelling.", transactionId );
+                    this.transactionStatus = Status.Canceled;
+                }
+            }
+        );
         log.debug( "Starting transaction..." );
         txLog.put(
             new TransactionLogRecord(
@@ -96,8 +104,10 @@ public class Transaction {
             txLogRecord.setEndTimestamp( Instant.now() );
             txLogRecord.setStatus( TransactionStatus.fromEventStatus( transactionStatus ) );
             txLog.put( txLogRecord );
-            emitEvent( new Events.TransactionFinished( transactionId, transactionStatus ) );
-            emitter.complete();
+            if ( !emitter.isCancelled() ) {
+                emitEvent( new Events.TransactionFinished( transactionId, transactionStatus ) );
+                emitter.complete();
+            }
         }
         finally {
             log.debugf( "Transaction '%s' finished with status '%s'.", transactionId, transactionStatus );
@@ -124,7 +134,9 @@ public class Transaction {
     public void emitEvent( Event event ) {
         checkActive();
         eventLog.put( new EventLogRecord( null, namespace.name(), transactionId, event ) );
-        emitter.emit( event );
+        if ( !emitter.isCancelled() ) {
+            emitter.emit( event );
+        }
         if ( event.status().type() == Status.Type.Fatal ) {
             transactionStatus = event.status();
         }
@@ -147,6 +159,9 @@ public class Transaction {
     }
 
     public void fail( Throwable t ) {
+        if ( isCanceled() ) {
+            return;
+        }
         transactionStatus = Status.Failed( t );
         log.error( t.toString() );
         log.debugf( t, "Stacktrace" );
