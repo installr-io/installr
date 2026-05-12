@@ -27,6 +27,7 @@ public class PeriodicEvaluator<T> {
     private final Predicate<T> predicate;
     private Duration checkInterval = Duration.ofMillis( 500 );
     private Duration timeout = Duration.ofSeconds( 60 );
+    private T value;
 
     public PeriodicEvaluator( Supplier<T> supplier, Predicate<T> predicate ) {
         this.supplier = supplier;
@@ -49,7 +50,7 @@ public class PeriodicEvaluator<T> {
         long intervalMillis = checkInterval.toMillis();
 
         while ( true ) {
-            T value = supplier.get();
+            value = supplier.get();
             if ( predicate.test( value ) ) {
                 return true;
             }
@@ -61,6 +62,26 @@ public class PeriodicEvaluator<T> {
 
             ThreadUtil.sleep( intervalMillis );
         }
+    }
+
+    public Supplier<T> getSupplier() {
+        return supplier;
+    }
+
+    public Predicate<T> getPredicate() {
+        return predicate;
+    }
+
+    public Duration getCheckInterval() {
+        return checkInterval;
+    }
+
+    public Duration getTimeout() {
+        return timeout;
+    }
+
+    public T getValue() {
+        return value;
     }
 
 }
