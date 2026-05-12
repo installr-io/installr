@@ -35,7 +35,6 @@ import io.installr.lib.installrd.event.Status;
 import io.installr.lib.installrd.transaction.TransactionLogRecord;
 import io.installr.lib.installrd.transaction.TransactionStatus;
 import io.installr.lib.util.FileUtil;
-import io.quarkus.arc.Arc;
 import io.smallrye.mutiny.subscription.MultiEmitter;
 import lombok.extern.jbosslog.JBossLog;
 
@@ -50,10 +49,10 @@ public class Transaction {
     private MultiEmitter<? super Event> emitter;
     private Path tmpPath;
 
-    Transaction( Namespace namespace ) {
+    Transaction( Namespace namespace, TransactionLog txLog, EventLog eventLog ) {
         this.namespace = namespace;
-        this.txLog = Arc.container().instance( TransactionLog.class ).get();
-        this.eventLog = Arc.container().instance( EventLog.class ).get();
+        this.txLog = txLog;
+        this.eventLog = eventLog;
     }
 
     UUID acquire() {

@@ -21,6 +21,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import io.installr.installrd.logstore.EventLog;
+import io.installr.installrd.logstore.TransactionLog;
 import io.installr.installrd.namespace.Namespace;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -33,12 +35,18 @@ public class TransactionService {
     @Inject
     Namespace namespace;
 
+    @Inject
+    TransactionLog txLog;
+
+    @Inject
+    EventLog eventLog;
+
     private final Map<String, Transaction> transactions = new HashMap<>();
 
     public Transaction acquireTransaction() {
         log.infof( "Acquiring transaction for namespace '%s'", namespace.name() );
         if ( !transactions.containsKey( namespace.name() ) ) {
-            transactions.put( namespace.name(), new Transaction( namespace ) );
+            transactions.put( namespace.name(), new Transaction( namespace, txLog, eventLog ) );
         }
         final Transaction transaction = transactions.get( namespace.name() );
         final UUID txId = transaction.acquire();
