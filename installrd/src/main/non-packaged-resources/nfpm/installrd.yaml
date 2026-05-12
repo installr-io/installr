@@ -2,7 +2,7 @@ name: ${project.artifactId}
 arch: all # = noarch
 platform: linux
 version: ${project.version}
-release: 1
+release: ${RELEASE} # release can be set via RELEASE environment variable; defaults to 1
 
 maintainer: ${maintainer.name} <${maintainer.email}>
 description: ${project.description}
