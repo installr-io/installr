@@ -38,28 +38,24 @@ public interface InstallController {
 
     @Path( "/install" )
     @POST
-    @Consumes( MediaType.APPLICATION_JSON )
     @Produces( MediaType.SERVER_SENT_EVENTS )
     @RestStreamElementType( MediaType.APPLICATION_JSON )
     Multi<Event> install( @RestPath String namespace, @Valid InstallResource resource );
 
     @Path( "/install-file" )
     @POST
-    @Consumes( MediaType.APPLICATION_JSON )
     @Produces( MediaType.SERVER_SENT_EVENTS )
     @RestStreamElementType( MediaType.APPLICATION_JSON )
     Multi<Event> install( @RestPath String namespace, @Valid InstallFileResource resource );
 
     @Path( "/reinstall" )
     @POST
-    @Consumes( MediaType.APPLICATION_JSON )
     @Produces( MediaType.SERVER_SENT_EVENTS )
     @RestStreamElementType( MediaType.APPLICATION_JSON )
     Multi<Event> reinstall( @RestPath String namespace, @Valid InstallResource resource );
 
     @Path( "/reinstall-file" )
     @POST
-    @Consumes( MediaType.APPLICATION_JSON )
     @Produces( MediaType.SERVER_SENT_EVENTS )
     @RestStreamElementType( MediaType.APPLICATION_JSON )
     Multi<Event> reinstall( @RestPath String namespace, @Valid InstallFileResource resource );

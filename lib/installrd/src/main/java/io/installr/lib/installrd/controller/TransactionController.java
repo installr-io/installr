@@ -38,7 +38,6 @@ public interface TransactionController {
 
     @GET
     @Path( "/transactions/{transactionId}" )
-
     TransactionLogRecord transaction( @RestPath String namespace, @RestPath UUID transactionId );
 
     @GET
