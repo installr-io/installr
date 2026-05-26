@@ -267,7 +267,7 @@
                         </goals>
                         <configuration>
                             <systemProperties>
-                                <quarkus.application.version>${project.version}-${build.revision}</quarkus.application.version>
+                                <quarkus.application.version>${project.version}</quarkus.application.version>
                             </systemProperties>
                         </configuration>
                     </execution>

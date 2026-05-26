@@ -26,6 +26,8 @@ import org.jboss.logmanager.MDC;
 import io.installr.installrd.config.InstallrdConfiguration;
 import io.installr.installrd.config.InstallrdConfiguration.NamespaceDefinition;
 import io.installr.installrd.plugin.PluginLoader;
+import io.installr.lib.installrd.controller.DaemonController;
+import io.installr.lib.installrd.model.VersionInfo;
 import io.quarkus.runtime.Quarkus;
 import io.quarkus.runtime.Startup;
 import jakarta.inject.Inject;
@@ -35,7 +37,7 @@ import lombok.extern.jbosslog.JBossLog;
 
 @Path( "/" )
 @JBossLog( topic = "console-log" )
-public class Daemon {
+public class Daemon implements DaemonController {
 
     @Inject
     InstallrdConfiguration config;
@@ -89,6 +91,16 @@ public class Daemon {
         }
         // currently disabled
         // pluginLoader.load();
+    }
+
+    @Override
+    public String version() {
+        return String.format( "%s-%s", Installrd.version(), Installrd.revision() );
+    }
+
+    @Override
+    public VersionInfo versionInfo() {
+        return Installrd.versionInfo();
     }
 
     @POST
