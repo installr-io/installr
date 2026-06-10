@@ -29,19 +29,19 @@ import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 
-@Path( "/namespaces/{namespace}" )
+@Path( "/" )
 public interface TransactionController {
 
     @GET
-    @Path( "/transactions" )
+    @Path( "/namespaces/{namespace}/transactions" )
     List<TransactionLogRecord> transactions( @RestPath String namespace, @BeanParam Pagination pagination );
 
     @GET
-    @Path( "/transactions/{transactionId}" )
+    @Path( "/namespaces/{namespace}/transactions/{transactionId}" )
     TransactionLogRecord transaction( @RestPath String namespace, @RestPath UUID transactionId );
 
     @GET
-    @Path( "/transactions/{transactionId}/events" )
+    @Path( "/namespaces/{namespace}/transactions/{transactionId}/events" )
     List<EventLogRecord> events( @RestPath String namespace, @RestPath UUID transactionId );
 
 }

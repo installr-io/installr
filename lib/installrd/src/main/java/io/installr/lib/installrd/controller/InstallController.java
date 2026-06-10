@@ -31,36 +31,36 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
-@Path( "/namespaces/{namespace}" )
+@Path( "/" )
 @Consumes( MediaType.APPLICATION_JSON )
 @Produces( MediaType.APPLICATION_JSON )
 public interface InstallController {
 
-    @Path( "/install" )
+    @Path( "/namespaces/{namespace}/install" )
     @POST
     @Produces( MediaType.SERVER_SENT_EVENTS )
     @RestStreamElementType( MediaType.APPLICATION_JSON )
     Multi<Event> install( @RestPath String namespace, @Valid InstallResource resource );
 
-    @Path( "/install-file" )
+    @Path( "/namespaces/{namespace}/install-file" )
     @POST
     @Produces( MediaType.SERVER_SENT_EVENTS )
     @RestStreamElementType( MediaType.APPLICATION_JSON )
     Multi<Event> install( @RestPath String namespace, @Valid InstallFileResource resource );
 
-    @Path( "/reinstall" )
+    @Path( "/namespaces/{namespace}/reinstall" )
     @POST
     @Produces( MediaType.SERVER_SENT_EVENTS )
     @RestStreamElementType( MediaType.APPLICATION_JSON )
     Multi<Event> reinstall( @RestPath String namespace, @Valid InstallResource resource );
 
-    @Path( "/reinstall-file" )
+    @Path( "/namespaces/{namespace}/reinstall-file" )
     @POST
     @Produces( MediaType.SERVER_SENT_EVENTS )
     @RestStreamElementType( MediaType.APPLICATION_JSON )
     Multi<Event> reinstall( @RestPath String namespace, @Valid InstallFileResource resource );
 
-    @Path( "/cancel" )
+    @Path( "/namespaces/{namespace}/cancel" )
     @POST
     void cancel( @RestPath String namespace );
 
