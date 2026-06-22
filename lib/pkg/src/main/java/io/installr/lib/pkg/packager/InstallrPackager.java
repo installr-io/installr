@@ -101,6 +101,36 @@ public class InstallrPackager {
                 "UTF-8",
                 10,
                 Map.of( "platform", "kubernetes" )
+            ),
+            new ContentAssignment(
+                "keycloak/*.realm.json",
+                "application/vnd.io.installr.kc-realm",
+                "UTF-8",
+                15
+            ),
+            new ContentAssignment(
+                "keycloak/*.scope.json",
+                "application/vnd.io.installr.kc-scope",
+                "UTF-8",
+                16
+            ),
+            new ContentAssignment(
+                "keycloak/*.role.json",
+                "application/vnd.io.installr.kc-role",
+                "UTF-8",
+                17
+            ),
+            new ContentAssignment(
+                "keycloak/*.user.json",
+                "application/vnd.io.installr.kc-user",
+                "UTF-8",
+                18
+            ),
+            new ContentAssignment(
+                "keycloak/*.client.json",
+                "application/vnd.io.installr.kc-client",
+                "UTF-8",
+                19
             )
         );
     }
