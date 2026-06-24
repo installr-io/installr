@@ -50,6 +50,7 @@ import io.installr.installrd.pkg.resolver.ResolverStatus;
 import io.installr.installrd.plugin.PluginLoader;
 import io.installr.installrd.transaction.Transaction;
 import io.installr.installrd.util.MapUtil;
+import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentSpec;
 import io.installr.lib.installrd.event.Events;
 import io.installr.lib.installrd.event.Status;
@@ -280,7 +281,10 @@ public class InstallService {
                     itemStatus = Status.Skipped( w.getMessage() );
                 }
                 catch ( Throwable t ) {
-                    log.debugf( "  error: %s", t.toString() );
+                    if ( !( t instanceof DeploymentException ) ) {
+                        log.errorf( "Error: %s", t.toString() );
+                        log.errorf( t, "Stacktrace" );
+                    }
                     itemStatus = Status.Failed( t );
                     packageStatusRef.set( Status.Failed );
                     packageDatabase.updateStatus( id, PackageStatus.Failed );
