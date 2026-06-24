@@ -17,6 +17,7 @@
  */
 package io.installr.installrd.util;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -33,7 +34,46 @@ public class MapUtil {
      * hyphens are replaced by underscores (e.g. {@code my.key-name} → {@code my_key_name}). If a key already has no
      * dots or hyphens, no duplicate entry is added.
      */
-    public static Map<String, String> flatten( Map<String, String> map ) {
+    public static Map<String, String> flatten( Map<String, ?> map ) {
+        if ( map == null ) {
+            return null;
+        }
+        final Map<String, String> dest = new HashMap<>( map.size() );
+        map.forEach(
+            ( k, v ) -> flatten( dest, k, v )
+        );
+        return expand( dest );
+    }
+
+    private static void flatten( Map<String, String> dest, String k, Object v ) {
+        if ( v instanceof Map ) {
+            @SuppressWarnings( "unchecked" )
+            Map<String, ?> map = (Map<String, ?>)v;
+            map.forEach(
+                ( sk, sv ) -> {
+                    String nko = k + "." + sk;
+                    if ( sv instanceof Map ) {
+                        flatten( dest, nko, sv );
+                    }
+                    else {
+                        dest.put( nko, toString( sv ) );
+                    }
+                }
+            );
+        }
+        else {
+            dest.put( k, toString( v ) );
+        }
+    }
+
+    private static String toString( Object value ) {
+        if ( value == null ) {
+            return null;
+        }
+        return value.toString();
+    }
+
+    private static Map<String, String> expand( Map<String, String> map ) {
         return map.entrySet().stream()
             .flatMap(
                 entry -> Stream.of(
@@ -44,14 +84,19 @@ public class MapUtil {
             .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue, ( k, v ) -> k ) );
     }
 
-    public static String toSnakeCase( String key ) {
+    private static String toSnakeCase( String key ) {
         return key.replace( ".", "_" ).replace( "-", "_" ).toLowerCase();
     }
 
     public static void dump( Logger log, Map<String, String> map ) {
-        map.entrySet().stream()
-            .sorted( Map.Entry.comparingByKey() )
-            .forEach( entry -> log.debugf( "  %s = %s", entry.getKey(), entry.getValue() ) );
+        if ( map == null ) {
+            log.debugf( "dump: map is null" );
+        }
+        else {
+            map.entrySet().stream()
+                .sorted( Map.Entry.comparingByKey() )
+                .forEach( entry -> log.debugf( "  %s = %s", entry.getKey(), entry.getValue() ) );
+        }
     }
 
 }
