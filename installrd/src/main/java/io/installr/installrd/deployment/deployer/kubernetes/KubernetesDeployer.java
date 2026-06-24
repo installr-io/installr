@@ -35,7 +35,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.installr.installrd.deployment.deployer.BuiltInDeployer;
 import io.installr.installrd.util.PeriodicEvaluator;
 import io.installr.installrd.util.interpolation.EnvironmentInterpolator;
-import io.installr.lib.deployer.ConfigurableDeployer;
+import io.installr.lib.deployer.AbstractConfigurableDeployer;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentSpec;
 import jakarta.enterprise.context.Dependent;
@@ -45,13 +45,12 @@ import lombok.extern.jbosslog.JBossLog;
 @Dependent
 @BuiltInDeployer( "KubernetesDeployer" )
 @JBossLog
-public class KubernetesDeployer implements ConfigurableDeployer<KubernetesDeployerConfig> {
+public class KubernetesDeployer extends AbstractConfigurableDeployer<KubernetesDeployerConfig> {
 
     @Inject
     EnvironmentInterpolator interpolator;
 
     private KubernetesClient client;
-    private KubernetesDeployerConfig config;
 
     @Override
     public Class<KubernetesDeployerConfig> getConfigType() {
@@ -60,7 +59,7 @@ public class KubernetesDeployer implements ConfigurableDeployer<KubernetesDeploy
 
     @Override
     public void init( KubernetesDeployerConfig config ) {
-        this.config = config;
+        super.init( config );
         final KubernetesClientBuilder builder = new KubernetesClientBuilder();
         if ( config.getApiServerUrl() != null ) {
             final Config k8sConfig = new ConfigBuilder().withMasterUrl( config.getApiServerUrl() ).build();
@@ -76,7 +75,7 @@ public class KubernetesDeployer implements ConfigurableDeployer<KubernetesDeploy
             final String message = cause.getMessage() != null ? cause.getMessage() : cause.toString();
             return new DeploymentException( message );
         }
-        return ConfigurableDeployer.super.translateException( ex );
+        return super.translateException( ex );
     }
 
     @Override

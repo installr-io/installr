@@ -35,6 +35,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import io.installr.installrd.deployment.DeploymentWarning;
+import io.installr.lib.deployer.AbstractConfigurableDeployer;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentResponse;
 import io.installr.lib.deployer.DeploymentSpec;
@@ -58,7 +59,7 @@ class HttpDeployerTest {
         config.setPollingInterval( Duration.ofMillis( 100 ) );
         config.setPollingTimeout( Duration.ofMillis( 500 ) );
 
-        Field configField = HttpDeployer.class.getDeclaredField( "config" );
+        Field configField = AbstractConfigurableDeployer.class.getDeclaredField( "config" );
         configField.setAccessible( true );
         configField.set( deployer, config );
 

@@ -17,6 +17,11 @@
  */
 package io.installr.lib.deployer;
 
+import java.util.Map;
+import java.util.Optional;
+
 public interface DeployerConfig {
+
+    Optional<Map<String, String>> env();
 
 }

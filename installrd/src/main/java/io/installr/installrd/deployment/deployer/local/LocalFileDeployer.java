@@ -22,7 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import io.installr.installrd.deployment.deployer.BuiltInDeployer;
-import io.installr.lib.deployer.ConfigurableDeployer;
+import io.installr.lib.deployer.AbstractConfigurableDeployer;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentSpec;
 import io.installr.lib.util.FileUtil;
@@ -30,18 +30,11 @@ import jakarta.enterprise.context.Dependent;
 
 @Dependent
 @BuiltInDeployer( "LocalFileDeployer" )
-public class LocalFileDeployer implements ConfigurableDeployer<LocalFileDeployerConfig> {
-
-    private LocalFileDeployerConfig config;
+public class LocalFileDeployer extends AbstractConfigurableDeployer<LocalFileDeployerConfig> {
 
     @Override
     public Class<LocalFileDeployerConfig> getConfigType() {
         return LocalFileDeployerConfig.class;
-    }
-
-    @Override
-    public void init( LocalFileDeployerConfig config ) {
-        this.config = config;
     }
 
     @Override

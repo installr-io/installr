@@ -17,13 +17,10 @@
  */
 package io.installr.installrd.deployment.deployer.http;
 
-import java.time.temporal.ChronoUnit;
-import java.util.function.Function;
-
 import static io.installr.installrd.util.ExceptionUtil.wrap;
 
-import io.smallrye.faulttolerance.api.Guard;
-import jakarta.ws.rs.NotFoundException;
+import java.time.temporal.ChronoUnit;
+import java.util.function.Function;
 
 import org.jboss.resteasy.reactive.RestResponse;
 
@@ -31,19 +28,20 @@ import io.installr.installrd.common.http.HttpClientBuilder;
 import io.installr.installrd.deployment.DeploymentWarning;
 import io.installr.installrd.deployment.deployer.BuiltInDeployer;
 import io.installr.installrd.util.PeriodicEvaluator;
-import io.installr.lib.deployer.ConfigurableDeployer;
+import io.installr.lib.deployer.AbstractConfigurableDeployer;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentResponse;
 import io.installr.lib.deployer.DeploymentSpec;
+import io.smallrye.faulttolerance.api.Guard;
 import jakarta.enterprise.context.Dependent;
+import jakarta.ws.rs.NotFoundException;
 import lombok.extern.jbosslog.JBossLog;
 
 @Dependent
 @BuiltInDeployer( "HttpDeployer" )
 @JBossLog
-public class HttpDeployer implements ConfigurableDeployer<HttpDeployerConfig> {
+public class HttpDeployer extends AbstractConfigurableDeployer<HttpDeployerConfig> {
 
-    private HttpDeployerConfig config;
     private HttpDeployerClient client;
 
     @Override
@@ -53,7 +51,7 @@ public class HttpDeployer implements ConfigurableDeployer<HttpDeployerConfig> {
 
     @Override
     public void init( HttpDeployerConfig config ) {
-        this.config = config;
+        super.init( config );
         this.client = HttpClientBuilder.build( this.config, HttpDeployerClient.class );
     }
 

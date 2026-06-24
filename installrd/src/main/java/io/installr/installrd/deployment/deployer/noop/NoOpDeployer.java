@@ -18,7 +18,7 @@
 package io.installr.installrd.deployment.deployer.noop;
 
 import io.installr.installrd.deployment.deployer.BuiltInDeployer;
-import io.installr.lib.deployer.ConfigurableDeployer;
+import io.installr.lib.deployer.AbstractConfigurableDeployer;
 import io.installr.lib.deployer.DeployerConfig;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentSpec;
@@ -26,15 +26,11 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 @BuiltInDeployer( "NoOpDeployer" )
-public class NoOpDeployer implements ConfigurableDeployer<DeployerConfig> {
+public class NoOpDeployer extends AbstractConfigurableDeployer<DeployerConfig> {
 
     @Override
     public Class<DeployerConfig> getConfigType() {
         return null; // No configuration needed
-    }
-
-    @Override
-    public void init( DeployerConfig config ) {
     }
 
     @Override

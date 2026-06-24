@@ -17,9 +17,13 @@
  */
 package io.installr.lib.deployer;
 
+import java.util.Optional;
+
 public interface ConfigurableDeployer<C extends DeployerConfig> extends Deployer {
 
     Class<C> getConfigType();
+
+    Optional<C> getConfig();
 
     void init( C config );
 

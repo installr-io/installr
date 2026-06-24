@@ -23,12 +23,11 @@ import de.gesellix.docker.client.DockerClient;
 import de.gesellix.docker.client.DockerClientImpl;
 import de.gesellix.docker.remote.api.core.ClientException;
 import io.installr.installrd.util.ExceptionUtil;
-import io.installr.lib.deployer.ConfigurableDeployer;
+import io.installr.lib.deployer.AbstractConfigurableDeployer;
 import io.installr.lib.deployer.DeploymentException;
 
-abstract class AbstractDockerDeployer implements ConfigurableDeployer<DockerDeployerConfig> {
+abstract class AbstractDockerDeployer extends AbstractConfigurableDeployer<DockerDeployerConfig> {
 
-    DockerDeployerConfig config;
     DockerClient client;
 
     @Override
@@ -38,7 +37,7 @@ abstract class AbstractDockerDeployer implements ConfigurableDeployer<DockerDepl
 
     @Override
     public void init( DockerDeployerConfig config ) {
-        this.config = config;
+        super.init( config );
         this.client = new DockerClientImpl( config.getHost() );
     }
 
@@ -54,7 +53,7 @@ abstract class AbstractDockerDeployer implements ConfigurableDeployer<DockerDepl
                 config.getHost()
             );
         }
-        return ConfigurableDeployer.super.translateException( ex );
+        return super.translateException( ex );
     }
 
 }

@@ -21,13 +21,13 @@ import java.time.Duration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import io.installr.lib.deployer.DeployerConfig;
+import io.installr.lib.deployer.AbstractDeployerConfig;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class KubernetesDeployerConfig implements DeployerConfig {
+public class KubernetesDeployerConfig extends AbstractDeployerConfig {
 
     /**
      * Kubernetes API server URL. If null, the client uses the default resolution order: in-cluster service account →

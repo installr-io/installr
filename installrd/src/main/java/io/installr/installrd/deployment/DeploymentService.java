@@ -26,6 +26,7 @@ import io.installr.installrd.config.InstallrdConfiguration;
 import io.installr.installrd.config.InstallrdConfiguration.DeployerConfiguration;
 import io.installr.installrd.deployment.deployer.BuiltInDeployerLiteral;
 import io.installr.installrd.plugin.PluginLoader;
+import io.installr.installrd.util.MapUtil;
 import io.installr.installrd.util.PropertyMapUtil;
 import io.installr.lib.deployer.ConfigurableDeployer;
 import io.installr.lib.deployer.DeployerConfig;
@@ -137,6 +138,7 @@ public class DeploymentService {
 
     private DeploymentSpec handleError( DeploymentSpec spec, Consumer<ConfigurableDeployer<?>> consumer ) {
         final ConfigurableDeployer<?> deployer = getDeployer( spec );
+        extendEnv( spec, deployer );
         try {
             consumer.accept( deployer );
             return spec;
@@ -186,6 +188,19 @@ public class DeploymentService {
             return namespaceDeployerMap.get( namespace ).get( matcher.mediaType() );
         }
         return null;
+    }
+
+    private void extendEnv( DeploymentSpec spec, final ConfigurableDeployer<?> deployer ) {
+        if ( deployer.getConfig().isPresent() ) {
+            final Optional<Map<String, String>> deployerEnv = deployer.getConfig().get().env();
+            if ( deployerEnv.isPresent() ) {
+                final Map<String, String> env = deployerEnv.get();
+                env.putAll( spec.getEnv() );
+                spec.setEnv( env );
+                log.debug( "extended environment:" );
+                MapUtil.dump( log, env );
+            }
+        }
     }
 
 }
