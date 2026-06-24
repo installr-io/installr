@@ -19,11 +19,14 @@ package io.installr.installrd;
 
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logmanager.MDC;
 
 import io.installr.installrd.config.InstallrdConfiguration;
+import io.installr.installrd.config.NamespaceConfiguration;
+import io.installr.installrd.config.InstallrdConfiguration.DeployerConfiguration;
 import io.installr.installrd.config.InstallrdConfiguration.NamespaceDefinition;
 import io.installr.installrd.plugin.PluginLoader;
 import io.installr.lib.installrd.controller.DaemonController;
@@ -83,14 +86,22 @@ public class Daemon implements DaemonController {
         if ( config.deployerConfigurations().isEmpty() ) {
             log.info( "- No deployer configured" );
         }
-        else {
-            config.deployerConfigurations()
-                .forEach(
-                    ( k, v ) -> log.infof( "- %s: %s", k, v.type() )
-                );
-        }
+        logDeployerConfigurations( config.deployerConfigurations() );
+        config.namespaceConfigurations()
+            .entrySet()
+            .stream()
+            .map( Map.Entry::getValue )
+            .map( NamespaceConfiguration::deployerConfigurations )
+            .forEach( this::logDeployerConfigurations );
         // currently disabled
         // pluginLoader.load();
+    }
+
+    private void logDeployerConfigurations( Map<String, DeployerConfiguration> deployerConfigurations ) {
+        deployerConfigurations
+            .forEach(
+                ( k, v ) -> log.infof( "- %s: %s", k, v.type() )
+            );
     }
 
     @Override

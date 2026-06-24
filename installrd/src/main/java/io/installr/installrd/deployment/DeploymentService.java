@@ -58,14 +58,28 @@ public class DeploymentService {
     @Any
     Instance<Object> allBeans;
 
-    private Map<String, ConfigurableDeployer<?>> deployerMap;
+    private Map<String, ConfigurableDeployer<?>> globalDeployerMap;
+    private Map<String, Map<String, ConfigurableDeployer<?>>> namespaceDeployerMap;
 
     @PostConstruct
     void init() {
-        deployerMap = config.deployerConfigurations()
+        globalDeployerMap = config.deployerConfigurations()
             .entrySet()
             .stream()
             .collect( Collectors.toMap( Map.Entry::getKey, this::mapToDeployer ) );
+
+        namespaceDeployerMap = config.namespaceConfigurations()
+            .entrySet()
+            .stream()
+            .collect(
+                Collectors.toMap(
+                    Map.Entry::getKey,
+                    entry -> entry.getValue().deployerConfigurations()
+                        .entrySet()
+                        .stream()
+                        .collect( Collectors.toMap( Map.Entry::getKey, this::mapToDeployer ) )
+                )
+            );
     }
 
     private ConfigurableDeployer<?> mapToDeployer( Map.Entry<String, DeployerConfiguration> entry ) {
@@ -140,17 +154,38 @@ public class DeploymentService {
     }
 
     private ConfigurableDeployer<?> getDeployer( DeploymentSpec spec ) {
-        final MediaTypeMatcher matcher = MediaTypeMatcher.matcher(
-            deployerMap.keySet(),
-            spec.getMediaType()
-        );
-        if ( !matcher.matches() ) {
-            throw new MediaTypeNotSupportedException( spec.getMediaType() );
+        ConfigurableDeployer<?> deployer = null;
+
+        // namespace deployer have precedence over global deployers
+        if ( spec.getEnv() != null && spec.getEnv().containsKey( "namespace" ) ) {
+            deployer = findNamespaceDeployer( spec );
         }
-        final ConfigurableDeployer<?> deployer = deployerMap.get( matcher.mediaType() );
+        // global deployers
+        if ( deployer == null ) {
+            final MediaTypeMatcher matcher = MediaTypeMatcher.matcher(
+                globalDeployerMap.keySet(),
+                spec.getMediaType()
+            );
+            if ( !matcher.matches() ) {
+                throw new MediaTypeNotSupportedException( spec.getMediaType() );
+            }
+            deployer = globalDeployerMap.get( matcher.mediaType() );
+        }
         log.debugf( "media-type: '%s'", spec.getMediaType() );
         log.debug( deployer );
         return deployer;
+    }
+
+    private ConfigurableDeployer<?> findNamespaceDeployer( DeploymentSpec spec ) {
+        final String namespace = spec.getEnv().get( "namespace" );
+        final MediaTypeMatcher matcher = MediaTypeMatcher.matcher(
+            namespaceDeployerMap.getOrDefault( namespace, Map.of() ).keySet(),
+            spec.getMediaType()
+        );
+        if ( matcher.matches() ) {
+            return namespaceDeployerMap.get( namespace ).get( matcher.mediaType() );
+        }
+        return null;
     }
 
 }

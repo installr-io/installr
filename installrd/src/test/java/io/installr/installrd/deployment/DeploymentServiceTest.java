@@ -40,6 +40,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import io.installr.installrd.config.InstallrdConfiguration;
 import io.installr.installrd.config.InstallrdConfiguration.DeployerConfiguration;
+import io.installr.installrd.config.NamespaceConfiguration;
 import io.installr.installrd.deployment.deployer.local.LocalFileDeployer;
 import io.installr.installrd.deployment.deployer.noop.NoOpDeployer;
 import io.installr.installrd.plugin.PluginLoader;
@@ -176,6 +177,27 @@ class DeploymentServiceTest {
         service.init();
 
         assertDoesNotThrow( () -> service.deploy( spec( "application/vnd.io.installr.binary" ) ) );
+    }
+
+    @Test
+    void deploy_should_prefer_namespace_deployer_over_global() {
+        final String namespace = "my-namespace";
+        final NamespaceConfiguration nsConfig = mock( NamespaceConfiguration.class );
+        when( nsConfig.deployerConfigurations() ).thenReturn(
+            Map.of( BINARY_MEDIA_TYPE, deployerConfig( "NoOpDeployer", Map.of() ) )
+        );
+
+        whenBuiltInDeployerFound( new NoOpDeployer() );
+        when( config.deployerConfigurations() ).thenReturn(
+            Map.of( NOOP_MEDIA_TYPE, deployerConfig( "NoOpDeployer", Map.of() ) )
+        );
+        when( config.namespaceConfigurations() ).thenReturn( Map.of( namespace, nsConfig ) );
+        service.init();
+
+        // BINARY_MEDIA_TYPE has no global deployer — only a namespace-level one
+        final DeploymentSpec spec = spec( BINARY_MEDIA_TYPE );
+        spec.setEnv( Map.of( "namespace", namespace ) );
+        assertDoesNotThrow( () -> service.deploy( spec ) );
     }
 
     @SuppressWarnings( "rawtypes" )

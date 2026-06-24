@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import io.installr.installrd.config.InstallrdConfiguration.DeployerConfiguration;
 import io.installr.installrd.config.InstallrdConfiguration.RepositoryConfiguration;
 import io.installr.installrd.util.MapUtil;
 import io.smallrye.config.ConfigMapping;
@@ -30,6 +31,9 @@ import io.smallrye.config.WithName;
 public interface NamespaceConfiguration {
 
     Optional<List<RepositoryConfiguration>> repositories();
+
+    @WithName( "deployer" )
+    Map<String, DeployerConfiguration> deployerConfigurations();
 
     default Map<String, String> env() {
         return MapUtil.flatten( rawEnv() );
