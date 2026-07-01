@@ -28,7 +28,7 @@ quarkus:
     package:
         main-class: TestMain
         jar:
-            type: fast-jar
+            type: FAST_JAR
 
     datasource:
         db-kind: h2
@@ -40,7 +40,7 @@ quarkus:
             strategy: drop-and-create
         mapping:
             format:
-                global: ignore
+                global: IGNORE
 
     index-dependency:
         installrd:
@@ -56,3 +56,5 @@ quarkus:
 installrd:
     config:
         location: ./target/classes/test-config
+    database-listener:
+        enabled: false

@@ -40,7 +40,7 @@ quarkus:
     package:
         jar:
             add-runner-suffix: false
-            type: fast-jar
+            type: FAST_JAR
 
     devservices:
         enabled: false
@@ -49,7 +49,7 @@ quarkus:
     datasource:
         db-kind: h2
         jdbc:
-            url: jdbc:h2:${installrd.config.location}/installrd;AUTO_SERVER=TRUE;RETENTION_TIME=0;COMPRESS=true;
+            url: jdbc:h2:${installrd.config.location}/installrd;RETENTION_TIME=0;COMPRESS=true;
             acquisition-timeout: 120s
 
     hibernate-orm:
@@ -57,7 +57,7 @@ quarkus:
             strategy: validate
         mapping:
             format:
-                global: ignore
+                global: IGNORE
 
     index-dependency:
         lib-installrd:
@@ -81,6 +81,8 @@ installrd:
             discriminator:
                 key: 'namespace'
                 default-value: 'installrd'
+    database-listener:
+        port: 9416
 
 "%dev":
     quarkus:
