@@ -34,10 +34,13 @@ import io.smallrye.config.WithDefault;
 import io.smallrye.config.WithName;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import lombok.SneakyThrows;
+import lombok.extern.jbosslog.JBossLog;
 
 @ApplicationScoped
+@JBossLog
 public class InstallrdConfiguration implements InstallrdConfigurationMapping {
 
     public enum LocationType {
@@ -95,13 +98,17 @@ public class InstallrdConfiguration implements InstallrdConfigurationMapping {
     @ConfigProperty( name = "installrd.config.location" )
     Path configLocation;
 
-    private InstallrdConfigurationMapping installrdConfig;
+    private volatile InstallrdConfigurationMapping installrdConfig;
 
-    private Map<String, NamespaceConfiguration> namespaceConfigs;
+    private volatile Map<String, NamespaceConfiguration> namespaceConfigs;
 
     @PostConstruct
-    @SneakyThrows
     void init() {
+        reload();
+    }
+
+    @SneakyThrows
+    void reload() {
         final Path location = configLocation.toAbsolutePath();
         Files.createDirectories( location );
         final Path configFile = location.resolve( "config.yaml" );
@@ -110,6 +117,12 @@ public class InstallrdConfiguration implements InstallrdConfigurationMapping {
         }
         installrdConfig = yamlConfigLoader.load( configFile, InstallrdConfigurationMapping.class );
         namespaceConfigs = namespaceConfigurationLoader.load( locationFor( LocationType.Namespace ) );
+    }
+
+    void onConfigReloaded( @Observes ConfigReloadedEvent event ) {
+        log.info( "Reloading configuration..." );
+        reload();
+        log.info( "Configuration reloaded." );
     }
 
     public Path location() {

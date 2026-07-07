@@ -33,8 +33,10 @@ import io.installr.lib.deployer.DeployerConfig;
 import io.installr.lib.deployer.DeployerPlugin;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentSpec;
+import io.installr.installrd.config.ConfigReloadedEvent;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -59,11 +61,15 @@ public class DeploymentService {
     @Any
     Instance<Object> allBeans;
 
-    private Map<String, ConfigurableDeployer<?>> globalDeployerMap;
-    private Map<String, Map<String, ConfigurableDeployer<?>>> namespaceDeployerMap;
+    private volatile Map<String, ConfigurableDeployer<?>> globalDeployerMap;
+    private volatile Map<String, Map<String, ConfigurableDeployer<?>>> namespaceDeployerMap;
 
     @PostConstruct
     void init() {
+        buildDeployerMaps();
+    }
+
+    void buildDeployerMaps() {
         globalDeployerMap = config.deployerConfigurations()
             .entrySet()
             .stream()
@@ -81,6 +87,11 @@ public class DeploymentService {
                         .collect( Collectors.toMap( Map.Entry::getKey, this::mapToDeployer ) )
                 )
             );
+    }
+
+    void onConfigReloaded( @Observes ConfigReloadedEvent event ) {
+        log.info( "Rebuilding deployer maps after configuration reload..." );
+        buildDeployerMaps();
     }
 
     private ConfigurableDeployer<?> mapToDeployer( Map.Entry<String, DeployerConfiguration> entry ) {
