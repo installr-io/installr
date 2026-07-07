@@ -19,6 +19,7 @@ package io.installr.installrd.util;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -46,6 +47,9 @@ public class MapUtil {
     }
 
     private static void flatten( Map<String, String> dest, String k, Object v ) {
+        if ( v instanceof Optional<?> opt ) {
+            v = opt.isEmpty() ? "" : opt.get();
+        }
         if ( v instanceof Map ) {
             @SuppressWarnings( "unchecked" )
             Map<String, ?> map = (Map<String, ?>)v;

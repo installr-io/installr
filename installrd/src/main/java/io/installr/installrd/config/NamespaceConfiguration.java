@@ -40,6 +40,6 @@ public interface NamespaceConfiguration {
     }
 
     @WithName( "env" )
-    Map<String, String> rawEnv();
+    Map<String, Optional<String>> rawEnv();
 
 }
