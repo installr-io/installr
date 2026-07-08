@@ -110,6 +110,39 @@ We recommend running both commands before submitting a pull request to avoid unn
 
 ---
 
+## Use of AI Coding Assistants
+
+AI tools are permitted and can be a helpful aid when contributing to `Installr`. However, human contributors remain fully responsible for every contribution they submit.
+
+### Responsibilities
+
+When using AI assistance, you as the contributor are responsible for:
+
+* Reviewing all AI-generated code for correctness, security, and license compliance,
+* Ensuring the contribution meets the project's code style and quality standards,
+* Verifying that no AI-generated code introduces incompatible licensing (see AGPL-3.0 and LGPL-3.0),
+* Adding your own `Signed-off-by` tag to certify the DCO.
+
+AI tools **MUST NOT** add `Signed-off-by` tags. Only humans can legally certify the Developer Certificate of Origin (DCO).
+
+### Attribution
+
+If a contribution was significantly shaped by an AI tool, please include an `Assisted-by` tag in the commit message:
+
+```text
+Assisted-by: AGENT_NAME:MODEL_VERSION
+```
+
+Example:
+
+```text
+Assisted-by: Claude:claude-sonnet-4-6
+```
+
+This helps track the evolving role of AI in the project's development history and is appreciated, but not strictly required.
+
+---
+
 ## Getting Started
 
 To get up and running quickly, check out the [Developer Guide](docs/DEVELOPER_GUIDE.md), which walks you through everything you need to know to get started.
