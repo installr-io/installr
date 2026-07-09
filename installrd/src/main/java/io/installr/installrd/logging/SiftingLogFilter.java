@@ -56,7 +56,7 @@ public final class SiftingLogFilter implements Filter {
         @ConfigProperty( name = "installrd.log.timezone" ) String timezone,
         @ConfigProperty( name = "installrd.log.sifting-logger.log-dir" ) Path logPath,
         @ConfigProperty( name = "installrd.log.sifting-logger.discriminator.key" ) String discriminatorKey,
-        @ConfigProperty( name = "installrd.log.sifting-logger.discriminator.default-value" ) String discriminatorDefVal,        
+        @ConfigProperty( name = "installrd.log.sifting-logger.discriminator.default-value" ) String discriminatorDefVal,
         @ConfigProperty( name = "installrd.log.sifting-logger.enabled", defaultValue = "false" ) boolean enabled
     ) {
         this.logPath = createOrGetLogPath( logPath );

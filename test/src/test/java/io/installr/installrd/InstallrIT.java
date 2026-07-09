@@ -46,7 +46,7 @@ import io.installr.lib.installrd.event.Events.PackageInstallationStarted;
 import io.installr.lib.installrd.event.Events.PackageResolvingFinished;
 import io.installr.lib.installrd.event.Events.TransactionFinished;
 import io.installr.lib.installrd.event.Status;
-import io.installr.lib.installrd.resource.InstallResource;
+import io.installr.lib.installrd.resource.InstallPackageResource;
 import io.installr.lib.pkg.InvalidPackageIdException;
 import io.installr.lib.pkg.PackageId;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
@@ -72,7 +72,7 @@ class InstallrIT {
     @Test
     void install_should_throw_NamespaceNotFoundException() {
         final String namespace = "Non-Existent-Namespace";
-        final InstallResource resource = new InstallResource();
+        final InstallPackageResource resource = new InstallPackageResource();
         resource.setPackageIds( List.of( PackageId.valueOf( TEST_PACKAGE ) ) );
         final RuntimeException ex = assertThrows(
             RuntimeException.class,
@@ -108,7 +108,7 @@ class InstallrIT {
     }
 
     private Map<Class<?>, List<Event>> install( String namespace, List<PackageId> packageIds ) {
-        final InstallResource resource = new InstallResource();
+        final InstallPackageResource resource = new InstallPackageResource();
         resource.setPackageIds( packageIds );
         return installrClient
             .install( namespace, resource )
@@ -119,7 +119,7 @@ class InstallrIT {
     }
 
     private Map<Class<?>, List<Event>> reinstall( String namespace, List<PackageId> packageIds ) {
-        final InstallResource resource = new InstallResource();
+        final InstallPackageResource resource = new InstallPackageResource();
         resource.setPackageIds( packageIds );
         return installrClient
             .reinstall( namespace, resource )
@@ -151,7 +151,7 @@ class InstallrIT {
         backgroundThread.start();
         TimeUnit.SECONDS.sleep( 1 );
 
-        final InstallResource resource = new InstallResource();
+        final InstallPackageResource resource = new InstallPackageResource();
         resource.setPackageIds( List.of( PackageId.valueOf( TEST_PACKAGE ) ) );
         RuntimeException ex = assertThrows(
             RuntimeException.class,
@@ -342,7 +342,7 @@ class InstallrIT {
                             return headers;
                         } )
                         .build( InstallController.class );
-                    final InstallResource resource = new InstallResource();
+                    final InstallPackageResource resource = new InstallPackageResource();
                     resource.setPackageIds( List.of( PackageId.valueOf( "http-test-package-1:0.1.0" ) ) );
                     final Map<Class<?>, List<Event>> events = installr
                         .install( namespace, resource )

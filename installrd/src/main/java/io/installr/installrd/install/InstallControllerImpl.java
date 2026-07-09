@@ -27,7 +27,7 @@ import io.installr.installrd.transaction.TransactionService;
 import io.installr.lib.installrd.controller.InstallController;
 import io.installr.lib.installrd.event.Event;
 import io.installr.lib.installrd.resource.InstallFileResource;
-import io.installr.lib.installrd.resource.InstallResource;
+import io.installr.lib.installrd.resource.InstallPackageResource;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.subscription.MultiEmitter;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -49,7 +49,7 @@ public class InstallControllerImpl implements InstallController {
     InstallService installer;
 
     @Override
-    public Multi<Event> install( String namespace, InstallResource resource ) {
+    public Multi<Event> install( String namespace, InstallPackageResource resource ) {
         return handleInstall( namespace, ( tx ) -> installer.install( tx, resource.getPackageIds() ) );
     }
 
@@ -59,7 +59,7 @@ public class InstallControllerImpl implements InstallController {
     }
 
     @Override
-    public Multi<Event> reinstall( String namespace, InstallResource resource ) {
+    public Multi<Event> reinstall( String namespace, InstallPackageResource resource ) {
         return handleInstall( namespace, ( tx ) -> installer.reinstall( tx, resource.getPackageIds() ) );
     }
 

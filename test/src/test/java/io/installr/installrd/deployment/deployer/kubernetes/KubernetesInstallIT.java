@@ -31,7 +31,7 @@ import io.installr.installrd.InstallrClient;
 import io.installr.lib.installrd.event.Event;
 import io.installr.lib.installrd.event.Events.TransactionFinished;
 import io.installr.lib.installrd.event.Status;
-import io.installr.lib.installrd.resource.InstallResource;
+import io.installr.lib.installrd.resource.InstallPackageResource;
 import io.installr.lib.pkg.PackageId;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -53,7 +53,7 @@ public class KubernetesInstallIT {
     void install_package_with_kubernetes_resources_should_succeed() {
         final PackageId testPackageId = PackageId.valueOf( "k8s-test-package:1.0.0" );
 
-        final InstallResource resource = new InstallResource();
+        final InstallPackageResource resource = new InstallPackageResource();
         resource.setPackageIds( List.of( testPackageId ) );
         Map<Class<?>, List<Event>> events = installrClient
             .install( TEST_NAMESPACE, resource )

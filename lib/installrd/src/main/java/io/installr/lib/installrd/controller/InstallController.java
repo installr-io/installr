@@ -22,7 +22,7 @@ import org.jboss.resteasy.reactive.RestStreamElementType;
 
 import io.installr.lib.installrd.event.Event;
 import io.installr.lib.installrd.resource.InstallFileResource;
-import io.installr.lib.installrd.resource.InstallResource;
+import io.installr.lib.installrd.resource.InstallPackageResource;
 import io.smallrye.mutiny.Multi;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
@@ -40,7 +40,7 @@ public interface InstallController {
     @POST
     @Produces( MediaType.SERVER_SENT_EVENTS )
     @RestStreamElementType( MediaType.APPLICATION_JSON )
-    Multi<Event> install( @RestPath String namespace, @Valid InstallResource resource );
+    Multi<Event> install( @RestPath String namespace, @Valid InstallPackageResource resource );
 
     @Path( "/namespaces/{namespace}/install-file" )
     @POST
@@ -52,7 +52,7 @@ public interface InstallController {
     @POST
     @Produces( MediaType.SERVER_SENT_EVENTS )
     @RestStreamElementType( MediaType.APPLICATION_JSON )
-    Multi<Event> reinstall( @RestPath String namespace, @Valid InstallResource resource );
+    Multi<Event> reinstall( @RestPath String namespace, @Valid InstallPackageResource resource );
 
     @Path( "/namespaces/{namespace}/reinstall-file" )
     @POST

@@ -17,19 +17,5 @@
  */
 package io.installr.lib.installrd.resource;
 
-import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import io.installr.lib.pkg.PackageId;
-import jakarta.validation.constraints.NotEmpty;
-import lombok.Data;
-
-@Data
-public class InstallResource {
-
-    @NotEmpty( message = "No packages selected." )
-    @JsonProperty( "packageId" )
-    private List<PackageId> packageIds;
-
+public interface InstallResource {
 }
