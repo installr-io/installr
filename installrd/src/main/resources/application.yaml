@@ -1,7 +1,7 @@
 # quarkus configuration
 quarkus:
     http:
-        port: 9316
+        port: ${installrd.port}
         access-log:
             enabled: true
             pattern: combined
@@ -71,6 +71,7 @@ quarkus:
             artifact-id: "installr-lib-registry"
 
 installrd:
+    port: 9316
     config:
         location: ${HOME}/.installrd
     log:
