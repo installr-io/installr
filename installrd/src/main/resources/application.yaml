@@ -75,7 +75,8 @@ installrd:
         location: ${HOME}/.installrd
     log:
         level: INFO
-        format: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}  %-5p [%c{1}] %s%e%n"
+        format: "%z{${installrd.log.timezone}}%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}  %-5p [%c{1}] %s%e%n"
+        timezone: ${os.timezone:UTC}
         sifting-logger:
             log-dir: ${installrd.config.location}/logs
             discriminator:

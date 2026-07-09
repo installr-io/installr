@@ -21,6 +21,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.logging.Filter;
 import java.util.logging.LogRecord;
 
@@ -35,16 +38,22 @@ import lombok.SneakyThrows;
 @LoggingFilter( name = "sifting-log-file-filter" )
 public final class SiftingLogFilter implements Filter {
 
+    private static final ZoneId DEFAULT_TZ = ZoneId.systemDefault();
+
     private final Path logPath;
     private final String discriminatorKey;
     private final String discriminatorDefaultValue;
     private final boolean enabled;
     private final PatternFormatter formatter;
     private final PatternFormatter accessLogFormatter;
+    private final ZoneId timezone;
+    private DateTimeFormatter accessLogDateTimeFmt;
+    private DateTimeFormatter accessLogZonedDateTimeFmt;
 
     @SneakyThrows
     public SiftingLogFilter(
         @ConfigProperty( name = "installrd.log.format" ) String logFormat,
+        @ConfigProperty( name = "installrd.log.timezone" ) String timezone,
         @ConfigProperty( name = "installrd.log.sifting-logger.log-dir" ) Path logPath,
         @ConfigProperty( name = "installrd.log.sifting-logger.discriminator.key" ) String discriminatorKey,
         @ConfigProperty( name = "installrd.log.sifting-logger.discriminator.default-value" ) String discriminatorDefVal,        
@@ -56,6 +65,11 @@ public final class SiftingLogFilter implements Filter {
         this.enabled = enabled;
         this.formatter = new ColorPatternFormatter( logFormat );
         this.accessLogFormatter = new ColorPatternFormatter( "%s%n" );
+        this.timezone = ZoneId.of( timezone );
+        if ( !this.timezone.equals( DEFAULT_TZ ) ) {
+            accessLogDateTimeFmt = DateTimeFormatter.ofPattern( "dd/MMM/yyyy:HH:mm:ss Z", Locale.US );
+            accessLogZonedDateTimeFmt = accessLogDateTimeFmt.withZone( this.timezone );
+        }
     }
 
     @SneakyThrows( IOException.class )
@@ -90,6 +104,14 @@ public final class SiftingLogFilter implements Filter {
 
     private byte[] formatLogRecord( ExtLogRecord record ) {
         if ( "io.quarkus.http.access-log".equals( record.getLoggerName() ) ) {
+            if ( !this.timezone.equals( DEFAULT_TZ ) ) {
+                record.setMessage(
+                    record.getMessage().replace(
+                        accessLogDateTimeFmt.format( record.getInstant().atZone( DEFAULT_TZ ) ),
+                        accessLogZonedDateTimeFmt.format( record.getInstant() )
+                    )
+                );
+            }
             return accessLogFormatter.format( record ).getBytes();
         }
         return ( formatter.format( record ) ).getBytes();

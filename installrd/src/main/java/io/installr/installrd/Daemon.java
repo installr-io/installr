@@ -51,6 +51,12 @@ public class Daemon implements DaemonController {
     @ConfigProperty( name = "quarkus.http.port" )
     int httpPort;
 
+    @ConfigProperty( name = "installrd.log.timezone" )
+    String logTimezone;
+
+    @ConfigProperty( name = "installrd.log.sifting-logger.log-dir" )
+    String logLocation;
+
     @Startup
     void startup() {
         // set 'installrd' as default "namespace", to prevent empty brackets in the logs
@@ -65,6 +71,10 @@ public class Daemon implements DaemonController {
 
         log.info( "Config:" );
         log.infof( "- Location: %s", config.location() );
+
+        log.info( "Log:" );
+        log.infof( "- Location: %s", logLocation );
+        log.infof( "- Timezone: %s", logTimezone );
 
         log.info( "Namespaces:" );
         final List<NamespaceDefinition> namespaces = config.namespaceDefinitions();

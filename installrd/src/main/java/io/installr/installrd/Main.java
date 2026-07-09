@@ -26,6 +26,8 @@ import io.quarkus.runtime.annotations.QuarkusMain;
 public class Main {
 
     public static void main( String ... args ) {
+        // store current os timezone
+        System.setProperty( "os.timezone", TimeZone.getDefault().toZoneId().toString() );
         // set timezone to UTC
         TimeZone.setDefault( TimeZone.getTimeZone( "UTC" ) );
         // run quarkus
