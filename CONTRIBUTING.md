@@ -80,6 +80,46 @@ For more details, see: [https://developercertificate.org/](https://developercert
 
 ---
 
+## Commit Messages
+
+Good commit messages make the project history readable and help reviewers understand the intent of a change.
+
+### Rules
+
+1. Separate the subject from the body with a blank line
+2. Limit the subject line to 72 characters
+3. Capitalize the subject line
+4. Do not end the subject line with a period
+5. Use the imperative mood in the subject line
+6. Wrap the body at about 72 to 80 characters
+7. Use the body to explain **what** and **why**, not **how**
+
+### Example
+
+```text
+Summarize the change in up to 72 characters, imperative mood
+
+If needed, add a body here - separated from the subject by a blank line.
+Explain what changed and why this change was necessary. Are there side effects
+or other unintuitive consequences of this change? Here's the place to explain
+them. Wrap lines at around 72 to 80 characters. Leave out implementation
+details; the code already shows how.
+
+Further paragraphs come after blank lines.
+
+ - Bullet points are okay, too
+
+ - Typically a hyphen or asterisk is used for the bullet, preceded
+   by a single space, with blank lines in between, but conventions
+   vary here
+
+Signed-off-by: Your Name <your.email@example.com>
+```
+
+A body is not always necessary. For small, self-explanatory changes a single subject line is sufficient.
+
+---
+
 ## Code Style & License Compliance
 
 To ensure a consistent codebase and proper license attribution across all source files, this project uses Maven plugins for both license header management and code formatting.
