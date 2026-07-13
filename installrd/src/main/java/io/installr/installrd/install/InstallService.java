@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -384,7 +383,7 @@ public class InstallService {
             throw new FileNotFoundException( String.format( "File not found: %s", file ) );
         }
         final DeploymentSpec spec = new DeploymentSpec();
-        spec.setName( encodeName( packageId, content.getPath() ) );
+        spec.setName( prefixName( packageId, content.getPath() ) );
         spec.setVersion( packageId.version() );
         spec.setData( Files.readAllBytes( file ) );
         spec.setHash( content.getHash() );
@@ -394,8 +393,8 @@ public class InstallService {
         return spec;
     }
 
-    private String encodeName( PackageId packageId, String path ) {
-        return Base64.getEncoder().encodeToString( ( packageId.name() + "/" + path ).getBytes() );
+    private String prefixName( PackageId packageId, String path ) {
+        return packageId.name() + "/" + path;
     }
 
     private Status aggregateStatus( Status s1, Status s2 ) {

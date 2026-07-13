@@ -20,6 +20,7 @@ package io.installr.installrd.deployment.deployer.http;
 import static io.installr.installrd.util.ExceptionUtil.wrap;
 
 import java.time.temporal.ChronoUnit;
+import java.util.Base64;
 import java.util.function.Function;
 
 import org.jboss.resteasy.reactive.RestResponse;
@@ -69,6 +70,9 @@ public class HttpDeployer extends AbstractConfigurableDeployer<HttpDeployerConfi
     private void handleResponse(
         Function<DeploymentSpec, RestResponse<DeploymentResponse>> task, DeploymentSpec spec
     ) {
+        // spec.getName() contains forward slashes and dots but is part of the request path
+        DeploymentSpec encodedSpec = encodeSpec( spec );
+
         // @formatter:off
         final RestResponse<DeploymentResponse> response = wrap(
             () -> Guard.create()
@@ -78,11 +82,23 @@ public class HttpDeployer extends AbstractConfigurableDeployer<HttpDeployerConfi
                     .retryOn( NotFoundException.class )
                     .done()
                 .build()
-                .call( () -> task.apply( spec ), RestResponse.class ),
+                .call( () -> task.apply( encodedSpec ), RestResponse.class ),
             this::translateException
         ).get();
         // @formatter:on
-        checkResponse( response, spec );
+        checkResponse( response, encodedSpec );
+    }
+
+    private DeploymentSpec encodeSpec( DeploymentSpec spec ) {
+        final DeploymentSpec encoded = new DeploymentSpec();
+        encoded.setName( Base64.getEncoder().encodeToString( spec.getName().getBytes() ) );
+        encoded.setVersion( spec.getVersion() );
+        encoded.setData( spec.getData() );
+        encoded.setHash( spec.getHash() );
+        encoded.setMediaType( spec.getMediaType() );
+        encoded.setEncoding( spec.getEncoding() );
+        encoded.setEnv( spec.getEnv() );
+        return encoded;
     }
 
     private void checkResponse( RestResponse<DeploymentResponse> response, DeploymentSpec spec ) {

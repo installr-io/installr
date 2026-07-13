@@ -29,7 +29,6 @@ import java.net.SocketException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.Base64;
 import java.util.Map;
 import java.util.Random;
 
@@ -61,7 +60,7 @@ public class DockerStackDeployerTest {
 
     DeploymentSpec genSpec( String name ) {
         final DeploymentSpec spec = new DeploymentSpec();
-        spec.setName( Base64.getEncoder().encodeToString( name.getBytes() ) );
+        spec.setName( name );
         spec.setVersion( Semver.parse( "0.1.0" ) );
         spec.setData( readDescriptor( name + ".yaml" ) );
         spec.setMediaType( "application/vnd.io.installr.docker-stack" );

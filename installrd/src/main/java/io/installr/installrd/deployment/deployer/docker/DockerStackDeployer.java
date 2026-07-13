@@ -20,7 +20,6 @@ package io.installr.installrd.deployment.deployer.docker;
 import java.io.ByteArrayInputStream;
 import java.time.Duration;
 import java.time.ZonedDateTime;
-import java.util.Base64;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -116,8 +115,7 @@ public class DockerStackDeployer extends AbstractDockerDeployer {
         if ( namespace == null || namespace.isBlank() ) {
             throw new IllegalStateException( "Namespace must be provided via env." );
         }
-        final String name = new String( Base64.getDecoder().decode( spec.getName() ) )
-            .split( "/" )[ 0 ];
+        final String name = spec.getName().split( "/" )[ 0 ];
         return String.format( "%s-%s", namespace, name );
     }
 

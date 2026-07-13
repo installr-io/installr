@@ -25,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -59,7 +58,7 @@ public class DockerNetworkDeployerTest {
 
     DeploymentSpec genSpec( String name ) {
         final DeploymentSpec spec = new DeploymentSpec();
-        spec.setName( Base64.getEncoder().encodeToString( name.getBytes() ) );
+        spec.setName( name );
         spec.setVersion( Semver.parse( "0.1.0" ) );
         spec.setData( readDescriptor( name + ".json" ) );
         spec.setMediaType( "application/vnd.io.installr.docker-network" );
