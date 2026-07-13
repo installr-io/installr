@@ -9,6 +9,14 @@ deployer:
     "application/vnd.io.installr.*":
         type: NoOpDeployer
 
+    "application/vnd.io.installr.liquibase":
+        type: LiquibaseDeployer
+        config:
+            url: "jdbc:h2:mem:liquibase_it;DB_CLOSE_DELAY=-1"
+            username: sa
+            ## password is empty
+            # password: ""
+
     "application/vnd.io.installr.http-test":
         type: HttpDeployer
         config:

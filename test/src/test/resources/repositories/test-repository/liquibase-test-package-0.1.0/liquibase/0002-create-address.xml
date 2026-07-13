@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+    <changeSet id="0002-create-address" author="liquibase-test">
+        <createTable tableName="ADDRESS">
+            <column name="ID" type="INT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="STREET" type="VARCHAR(255)"/>
+            <column name="PERSON_ID" type="INT"/>
+        </createTable>
+        <rollback>
+            <dropTable tableName="ADDRESS"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -122,7 +122,7 @@ installrd:
                     - META-INF/LGPL2.1
                     - META-INF/quarkus-config-doc/quarkus-config-model-version
                     - META-INF/quarkus-config-doc/quarkus-config-model.json
-
+                    - META-INF/versions/11/OSGI-INF/MANIFEST.MF
     smallrye:
         config:
             ## read build properties

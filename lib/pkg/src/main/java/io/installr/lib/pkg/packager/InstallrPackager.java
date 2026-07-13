@@ -75,6 +75,12 @@ public class InstallrPackager {
     private List<ContentAssignment> defaultContentAssignments() {
         return List.of(
             new ContentAssignment(
+                "liquibase/**",
+                "application/vnd.io.installr.liquibase",
+                "UTF-8",
+                1
+            ),
+            new ContentAssignment(
                 "docker/*.network.json",
                 "application/vnd.io.installr.docker-network",
                 "UTF-8",

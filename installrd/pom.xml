@@ -145,6 +145,11 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
         <dependency>
+	    <!-- used by the build-in Liquibase Deployer -->
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+        </dependency>
+        <dependency>
             <groupId>de.gesellix</groupId>
             <artifactId>docker-client</artifactId>
         </dependency>

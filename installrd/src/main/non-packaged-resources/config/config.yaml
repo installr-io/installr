@@ -34,6 +34,19 @@
 #         config:
 #             directory: /tmp/local-files
 
+#     ## deploy Liquibase changelogs against a PostgreSQL database
+#     "application/vnd.io.installr.liquibase":
+#         type: LiquibaseDeployer
+#         config:
+#             url: "jdbc:postgresql://localhost:5432/myapp"
+#             username: myapp
+#             password: secret
+#             changelog-file: changelog.sql
+#             tag-on-deploy: true
+#             ## optional: contexts and labels for selective execution
+#             # contexts: prod
+#             # labels: schema
+
 # ## configure your package repositories
 # repositories:
 #     - id: demo-repository
