@@ -96,6 +96,17 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-liquibase</artifactId>
+            <exclusions>
+                <exclusion>
+                    <!-- excluded: license incompatible; only needed for loadData/loadUpdateData changesets -->
+                    <groupId>com.opencsv</groupId>
+                    <artifactId>opencsv</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
             <artifactId>quarkus-kubernetes-client</artifactId>
         </dependency>
         <dependency>

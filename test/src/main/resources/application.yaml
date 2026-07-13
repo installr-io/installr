@@ -35,6 +35,9 @@ quarkus:
         jdbc:
             url: jdbc:h2:./target/test-db
 
+    liquibase:
+        migrate-at-start: false
+
     hibernate-orm:
         schema-management:
             strategy: drop-and-create
