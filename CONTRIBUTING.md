@@ -120,6 +120,18 @@ A body is not always necessary. For small, self-explanatory changes a single sub
 
 ---
 
+## Separate your changes
+
+Each commit must represent exactly one **logical change**. A logical change is a self-contained unit of work that can be understood, reviewed, and reverted independently.
+
+If you find yourself writing "and" in the subject line, your commit likely contains more than one change and should be split.
+
+What constitutes a single logical change is a matter of judgment. As a rule of thumb: a bug fix and its test belong together. A refactoring and a behaviour change do not. Conversely, if a single logical change touches many files, all those changes belong in one commit - the number of files changed is not a reason to split.
+
+Every commit in a series **must** leave the codebase in a buildable and passing state.
+
+---
+
 ## Code Style & License Compliance
 
 To ensure a consistent codebase and proper license attribution across all source files, this project uses Maven plugins for both license header management and code formatting.
@@ -193,4 +205,4 @@ To get up and running quickly, check out the [Developer Guide](docs/DEVELOPER_GU
 
 If something is unclear, feel free to open an issue and ask.
 
-We’re building `Installr` together — thanks for being part of it. 🚀
+We’re building `Installr` together - thanks for being part of it. 🚀
