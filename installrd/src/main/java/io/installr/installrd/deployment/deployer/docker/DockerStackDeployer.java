@@ -41,6 +41,7 @@ import io.installr.installrd.deployment.deployer.BuiltInDeployer;
 import io.installr.installrd.util.PeriodicEvaluator;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentSpec;
+import io.installr.lib.util.FileUtil;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import lombok.extern.jbosslog.JBossLog;
@@ -115,8 +116,7 @@ public class DockerStackDeployer extends AbstractDockerDeployer {
         if ( namespace == null || namespace.isBlank() ) {
             throw new IllegalStateException( "Namespace must be provided via env." );
         }
-        final String name = spec.getName().split( "/" )[ 0 ];
-        return String.format( "%s-%s", namespace, name );
+        return String.format( "%s-%s", namespace, FileUtil.nameWithoutExtension( spec.getName() ) );
     }
 
     private boolean existsStack( String stack ) {

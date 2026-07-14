@@ -122,4 +122,14 @@ public final class FileUtil {
         }
     }
 
+    public static String nameWithoutExtension( String path ) {
+        return nameWithoutExtension( Path.of( path ) );
+    }
+
+    public static String nameWithoutExtension( Path path ) {
+        final String name = path.getFileName().toString();
+        final int dot = name.lastIndexOf( '.' );
+        return dot >= 0 ? name.substring( 0, dot ) : name;
+    }
+
 }
