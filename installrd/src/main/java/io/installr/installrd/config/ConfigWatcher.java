@@ -34,16 +34,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import io.installr.installrd.config.InstallrdConfiguration.LocationType;
+import io.installr.installrd.logging.ConsoleLog;
 import io.quarkus.runtime.Shutdown;
 import io.quarkus.runtime.Startup;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import lombok.SneakyThrows;
-import lombok.extern.jbosslog.JBossLog;
 
 @ApplicationScoped
-@JBossLog
 public class ConfigWatcher {
 
     @Inject
@@ -51,6 +50,9 @@ public class ConfigWatcher {
 
     @Inject
     Event<ConfigReloadedEvent> reloadEvent;
+
+    @Inject
+    ConsoleLog consoleLog;
 
     private final Map<WatchKey, Path> keyDirMap = new ConcurrentHashMap<>();
     private WatchService watchService;
@@ -94,7 +96,7 @@ public class ConfigWatcher {
         }
         final WatchKey key = dir.register( watchService, ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE );
         keyDirMap.put( key, dir );
-        log.debugf( "Watching: %s", dir );
+        consoleLog.debugf( "Watching: %s", dir );
     }
 
     private void watch() {
@@ -122,7 +124,7 @@ public class ConfigWatcher {
                 key.reset();
 
                 if ( relevant ) {
-                    log.infof( "Configuration change detected, reloading..." );
+                    consoleLog.infof( "Configuration change detected, reloading..." );
                     reloadEvent.fire( new ConfigReloadedEvent() );
                 }
             }
@@ -135,7 +137,7 @@ public class ConfigWatcher {
                 watchService.close();
             }
             catch ( IOException ex ) {
-                log.debugf( "Error closing WatchService: %s", ex.getMessage() );
+                consoleLog.debugf( "Error closing WatchService: %s", ex.getMessage() );
             }
         }
     }

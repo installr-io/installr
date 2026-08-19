@@ -97,6 +97,12 @@ installrd:
                 "io.installr":
                     level: DEBUG
                     min-level: DEBUG
+"%test":
+    quarkus:
+        jacoco:
+            excludes:
+                ## ConsoleLog is a delegate
+                - io/installr/installrd/logging/ConsoleLog.class
 
 "%prod":
     quarkus:

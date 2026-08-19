@@ -29,6 +29,7 @@ import java.util.Optional;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import io.installr.installrd.logging.ConsoleLog;
 import io.installr.installrd.util.YamlConfigLoader;
 import io.smallrye.config.WithDefault;
 import io.smallrye.config.WithName;
@@ -37,10 +38,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import lombok.SneakyThrows;
-import lombok.extern.jbosslog.JBossLog;
 
 @ApplicationScoped
-@JBossLog
 public class InstallrdConfiguration implements InstallrdConfigurationMapping {
 
     public enum LocationType {
@@ -98,6 +97,9 @@ public class InstallrdConfiguration implements InstallrdConfigurationMapping {
     @ConfigProperty( name = "installrd.config.location" )
     Path configLocation;
 
+    @Inject
+    ConsoleLog consoleLog;
+
     private volatile InstallrdConfigurationMapping installrdConfig;
 
     private volatile Map<String, NamespaceConfiguration> namespaceConfigs;
@@ -120,9 +122,9 @@ public class InstallrdConfiguration implements InstallrdConfigurationMapping {
     }
 
     void onConfigReloaded( @Observes ConfigReloadedEvent event ) {
-        log.info( "Reloading configuration..." );
+        consoleLog.info( "Reloading configuration..." );
         reload();
-        log.info( "Configuration reloaded." );
+        consoleLog.info( "Configuration reloaded." );
     }
 
     public Path location() {

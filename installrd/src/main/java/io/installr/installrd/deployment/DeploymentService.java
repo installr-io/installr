@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import io.installr.installrd.config.InstallrdConfiguration;
 import io.installr.installrd.config.InstallrdConfiguration.DeployerConfiguration;
 import io.installr.installrd.deployment.deployer.BuiltInDeployerLiteral;
+import io.installr.installrd.logging.ConsoleLog;
 import io.installr.installrd.plugin.PluginLoader;
 import io.installr.installrd.util.MapUtil;
 import io.installr.installrd.util.PropertyMapUtil;
@@ -61,6 +62,9 @@ public class DeploymentService {
     @Any
     Instance<Object> allBeans;
 
+    @Inject
+    ConsoleLog consoleLog;
+
     private volatile Map<String, ConfigurableDeployer<?>> globalDeployerMap;
     private volatile Map<String, Map<String, ConfigurableDeployer<?>>> namespaceDeployerMap;
 
@@ -90,8 +94,9 @@ public class DeploymentService {
     }
 
     void onConfigReloaded( @Observes ConfigReloadedEvent event ) {
-        log.info( "Rebuilding deployer maps after configuration reload..." );
+        consoleLog.info( "Rebuilding deployer maps..." );
         buildDeployerMaps();
+        consoleLog.info( "Deployer maps rebuild." );
     }
 
     private ConfigurableDeployer<?> mapToDeployer( Map.Entry<String, DeployerConfiguration> entry ) {
