@@ -80,8 +80,8 @@ public class Transaction {
         log.debug( "Starting transaction..." );
         txLog.put(
             new TransactionLogRecord(
-                transactionId,
                 namespace.name(),
+                transactionId,
                 Instant.now(),
                 null,
                 TransactionStatus.InProgress,
@@ -99,7 +99,7 @@ public class Transaction {
         log.debugf( "Ending transaction with id %s.", transactionId );
         checkActive();
         try {
-            final TransactionLogRecord txLogRecord = txLog.get( transactionId );
+            final TransactionLogRecord txLogRecord = txLog.get( namespace.name(), transactionId );
             txLogRecord.setEndTimestamp( Instant.now() );
             txLogRecord.setStatus( TransactionStatus.fromEventStatus( transactionStatus ) );
             txLog.put( txLogRecord );
@@ -132,7 +132,7 @@ public class Transaction {
 
     public void emitEvent( Event event ) {
         checkActive();
-        eventLog.put( new EventLogRecord( null, namespace.name(), transactionId, event ) );
+        eventLog.put( new EventLogRecord( namespace.name(), transactionId, event ) );
         if ( !emitter.isCancelled() ) {
             emitter.emit( event );
         }

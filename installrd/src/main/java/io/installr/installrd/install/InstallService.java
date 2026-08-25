@@ -245,7 +245,7 @@ public class InstallService {
             .ifPresent( filters -> filters.values().forEach( filter -> filter.filter( contentsToInstall ) ) );
 
         // put package into database (status == InProgress)
-        final Long id = packageDatabase.putPackage( tx, action, pkg );
+        packageDatabase.putPackage( tx, action, pkg );
 
         // extract package defaults
         defaultsExtractor.extract( tx.namespace(), pkg );
@@ -286,7 +286,7 @@ public class InstallService {
                     }
                     itemStatus = Status.Failed( t );
                     packageStatusRef.set( Status.Failed );
-                    packageDatabase.updateStatus( id, PackageStatus.Failed );
+                    packageDatabase.updateStatus( tx, packageId.name(), PackageStatus.Failed );
                 }
                 finally {
                     packageDatabase.putItem( tx, packageId, item, !itemStatus.equals( Status.Success ) );
@@ -317,7 +317,7 @@ public class InstallService {
             );
 
         log.debugf( "  txStatus (at end): %s", packageStatusRef.get() );
-        packageDatabase.updateStatus( id, PackageStatus.fromEventStatus( packageStatusRef.get() ) );
+        packageDatabase.updateStatus( tx, packageId.name(), PackageStatus.fromEventStatus( packageStatusRef.get() ) );
         tx.emitEvent( new Events.PackageInstallationFinished( packageId, packageIdx, packageStatusRef.get() ) );
         return packageStatusRef.get();
     }

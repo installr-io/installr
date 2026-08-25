@@ -33,13 +33,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PackageLogRecord {
 
-    private Long id;
     private String namespace;
+    private UUID txId;
     private String packageName;
     private PackageInfo packageInfo;
     private String repositoryId;
     private Action action;
-    private UUID actionByTx;
     private Instant actionTimestamp;
     private PackageStatus status;
 
@@ -64,7 +63,7 @@ public class PackageLogRecord {
             qb.put( "action", action );
             qb.put( "status", status );
             qb.put( "action_timestamp", timestamp );
-            qb.put( "action_by_tx", transactionId );
+            qb.put( "txId", transactionId );
             qb.put( "repository_id", repositoryId );
             return qb;
         }

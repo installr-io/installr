@@ -23,10 +23,8 @@ import java.util.UUID;
 import org.jboss.logging.Logger.Level;
 
 import io.installr.installrd.logstore.entity.EventLogEntity;
-import io.installr.installrd.logstore.entity.TransactionLogEntity;
 import io.installr.lib.installrd.event.Event;
 import io.installr.lib.installrd.event.EventLogRecord;
-import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import lombok.extern.jbosslog.JBossLog;
@@ -36,28 +34,21 @@ import lombok.extern.jbosslog.JBossLog;
 public class EventLog {
 
     @Transactional
-    public Long put( EventLogRecord record ) {
+    public void put( EventLogRecord record ) {
         logEvent( record.getEvent() );
         final EventLogEntity entity = new EventLogEntity();
         entity.namespace = record.getNamespace();
-        entity.txEntity = TransactionLogEntity.findById( record.getTransactionId() );
+        entity.txId = record.getTxId();
+        entity.id = UUID.randomUUID();
         entity.event = record.getEvent();
         entity.persistAndFlush();
-        return entity.id;
     }
 
-    public EventLogRecord get( Long id ) {
-        return ( (EventLogEntity)EventLogEntity.findById( id ) ).toEventLogRecord();
-    }
-
-    public List<EventLogRecord> getAll( UUID transactionId ) {
+    public List<EventLogRecord> getAll( String namespace, UUID transactionId ) {
         return EventLogEntity
-            .stream(
-                "txEntity = ?1",
-                Sort.by( "id" ),
-                (TransactionLogEntity)TransactionLogEntity.findById( transactionId )
-            )
+            .stream( "namespace = ?1 and txId = ?2", namespace, transactionId )
             .map( x -> ( (EventLogEntity)x ).toEventLogRecord() )
+            .sorted( ( x1, x2 ) -> x1.getEvent().timestamp().compareTo( x2.getEvent().timestamp() ) )
             .toList();
     }
 

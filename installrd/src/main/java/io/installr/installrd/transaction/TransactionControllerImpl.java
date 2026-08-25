@@ -49,12 +49,12 @@ public class TransactionControllerImpl implements TransactionController {
 
     @Override
     public TransactionLogRecord transaction( String namespace, UUID transactionId ) {
-        return txLog.get( transactionId );
+        return txLog.get( namespace, transactionId );
     }
 
     @Override
     public List<EventLogRecord> events( String namespace, UUID transactionId ) {
-        return eventLog.getAll( transactionId );
+        return eventLog.getAll( namespace, transactionId );
     }
 
 }

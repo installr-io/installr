@@ -230,10 +230,10 @@ class TransactionTest {
     }
 
     private void givenTransactionLogRecord() {
-        when( txLog.get( any( UUID.class ) ) ).thenReturn(
+        when( txLog.get( any( String.class ), any( UUID.class ) ) ).thenReturn(
             new TransactionLogRecord(
-                null,
                 "test-namespace",
+                UUID.randomUUID(),
                 Instant.now(),
                 null,
                 TransactionStatus.InProgress,
