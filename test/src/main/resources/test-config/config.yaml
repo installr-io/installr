@@ -13,9 +13,7 @@ deployer:
         type: LiquibaseDeployer
         config:
             url: "jdbc:h2:mem:liquibase_it;DB_CLOSE_DELAY=-1"
-            username: sa
-            ## password is empty
-            # password: ""
+            ## username and password configured per package
 
     "application/vnd.io.installr.http-test":
         type: HttpDeployer

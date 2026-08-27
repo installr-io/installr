@@ -20,6 +20,7 @@ package io.installr.installrd.deployment.deployer.liquibase;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Map;
 
 import io.installr.installrd.deployment.deployer.BuiltInDeployer;
 import io.installr.lib.deployer.AbstractConfigurableDeployer;
@@ -74,7 +75,7 @@ public class LiquibaseDeployer extends AbstractConfigurableDeployer<LiquibaseDep
 
     private void withLiquibase( DeploymentSpec spec, LiquibaseOperation operation ) throws DeploymentException {
         try {
-            final Connection conn = openConnection();
+            final Connection conn = openConnection( spec.getEnv() );
             final Database db = database( conn );
             try (
                 Liquibase liquibase = new Liquibase(
@@ -97,8 +98,12 @@ public class LiquibaseDeployer extends AbstractConfigurableDeployer<LiquibaseDep
         void execute( Liquibase liquibase ) throws LiquibaseException, SQLException;
     }
 
-    private Connection openConnection() throws SQLException {
-        return DriverManager.getConnection( config.getUrl(), config.getUsername(), config.getPassword() );
+    private Connection openConnection( Map<String, String> env ) throws SQLException {
+        return DriverManager.getConnection(
+            config.getUrl(),
+            env.getOrDefault( "liquibase.username", config.getUsername() ),
+            env.getOrDefault( "liquibase.password", config.getPassword() )
+        );
     }
 
     private Database database( Connection conn ) throws LiquibaseException {
