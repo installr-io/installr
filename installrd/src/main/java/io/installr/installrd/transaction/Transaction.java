@@ -44,7 +44,7 @@ public class Transaction {
     private final Namespace namespace;
     private final TransactionLog txLog;
     private final EventLog eventLog;
-    private UUID transactionId;
+    private UUID txId;
     private Status transactionStatus;
     private MultiEmitter<? super Event> emitter;
     private Path tmpPath;
@@ -57,10 +57,10 @@ public class Transaction {
 
     UUID acquire() {
         if ( isActive() ) {
-            log.errorf( "Namespace '%s' is locked by TX '%s'.", namespace.name(), transactionId );
+            log.errorf( "Namespace '%s' is locked by TX '%s'.", namespace.name(), txId );
             throw new LockException();
         }
-        return this.transactionId = UUID.randomUUID();
+        return this.txId = UUID.randomUUID();
     }
 
     public Namespace namespace() {
@@ -72,7 +72,7 @@ public class Transaction {
         emitter.onCancellation(
             () -> {
                 if ( emitter.isCancelled() ) {
-                    log.infof( "Client disconnected from transaction '%s', cancelling.", transactionId );
+                    log.infof( "Client disconnected from transaction '%s', cancelling.", txId );
                     this.transactionStatus = Status.Canceled;
                 }
             }
@@ -81,36 +81,36 @@ public class Transaction {
         txLog.put(
             new TransactionLogRecord(
                 namespace.name(),
-                transactionId,
+                txId,
                 Instant.now(),
                 null,
                 TransactionStatus.InProgress,
                 Installrd.version().getVersion()
             )
         );
-        log.debugf( "Transaction with id %s started.", transactionId );
-        emitEvent( new Events.TransactionStarted( transactionId ) );
+        log.debugf( "Transaction with id %s started.", txId );
+        emitEvent( new Events.TransactionStarted( txId ) );
     }
 
     public void end() {
         if ( transactionStatus == null ) {
             transactionStatus = Status.Success;
         }
-        log.debugf( "Ending transaction with id %s.", transactionId );
+        log.debugf( "Ending transaction with id %s.", txId );
         checkActive();
         try {
-            final TransactionLogRecord txLogRecord = txLog.get( namespace.name(), transactionId );
+            final TransactionLogRecord txLogRecord = txLog.get( namespace.name(), txId );
             txLogRecord.setEndTimestamp( Instant.now() );
             txLogRecord.setStatus( TransactionStatus.fromEventStatus( transactionStatus ) );
             txLog.put( txLogRecord );
             if ( !emitter.isCancelled() ) {
-                emitEvent( new Events.TransactionFinished( transactionId, transactionStatus ) );
+                emitEvent( new Events.TransactionFinished( txId, transactionStatus ) );
                 emitter.complete();
             }
         }
         finally {
-            log.debugf( "Transaction '%s' finished with status '%s'.", transactionId, transactionStatus );
-            transactionId = null;
+            log.debugf( "Transaction '%s' finished with status '%s'.", txId, transactionStatus );
+            txId = null;
             transactionStatus = null;
             emitter = null;
             if ( tmpPath != null ) {
@@ -127,12 +127,12 @@ public class Transaction {
     }
 
     public boolean isActive() {
-        return transactionId != null;
+        return txId != null;
     }
 
     public void emitEvent( Event event ) {
         checkActive();
-        eventLog.put( new EventLogRecord( namespace.name(), transactionId, event ) );
+        eventLog.put( new EventLogRecord( namespace.name(), txId, event ) );
         if ( !emitter.isCancelled() ) {
             emitter.emit( event );
         }
@@ -145,7 +145,7 @@ public class Transaction {
     }
 
     public UUID id() {
-        return transactionId;
+        return txId;
     }
 
     public void cancel() {
@@ -167,7 +167,7 @@ public class Transaction {
     }
 
     public void reset( Throwable t ) {
-        transactionId = null;
+        txId = null;
         log.error( "Transaction reset called!" );
         log.error( t.toString() );
         log.debugf( t, "Stacktrace" );

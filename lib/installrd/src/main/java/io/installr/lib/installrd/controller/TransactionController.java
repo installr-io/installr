@@ -37,11 +37,11 @@ public interface TransactionController {
     List<TransactionLogRecord> transactions( @RestPath String namespace, @BeanParam Pagination pagination );
 
     @GET
-    @Path( "/namespaces/{namespace}/transactions/{transactionId}" )
-    TransactionLogRecord transaction( @RestPath String namespace, @RestPath UUID transactionId );
+    @Path( "/namespaces/{namespace}/transactions/{txId}" )
+    TransactionLogRecord transaction( @RestPath String namespace, @RestPath UUID txId );
 
     @GET
-    @Path( "/namespaces/{namespace}/transactions/{transactionId}/events" )
-    List<EventLogRecord> events( @RestPath String namespace, @RestPath UUID transactionId );
+    @Path( "/namespaces/{namespace}/transactions/{txId}/events" )
+    List<EventLogRecord> events( @RestPath String namespace, @RestPath UUID txId );
 
 }

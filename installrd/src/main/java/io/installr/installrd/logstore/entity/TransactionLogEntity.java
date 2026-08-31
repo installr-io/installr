@@ -42,7 +42,7 @@ public class TransactionLogEntity extends PanacheEntityBase {
 
     @Id
     @Column( name = "tx_id" )
-    public UUID txId;
+    public UUID tx_id;
 
     @Column( name = "begin_timestamp", nullable = false )
     public Instant begin_timestamp;
@@ -58,7 +58,7 @@ public class TransactionLogEntity extends PanacheEntityBase {
     public String daemon_version;
 
     public TransactionLogRecord toTransactionLogRecord() {
-        return new TransactionLogRecord( namespace, txId, begin_timestamp, end_timestamp, status, daemon_version );
+        return new TransactionLogRecord( namespace, tx_id, begin_timestamp, end_timestamp, status, daemon_version );
     }
 
 }

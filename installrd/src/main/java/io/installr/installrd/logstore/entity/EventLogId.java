@@ -36,6 +36,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class EventLogId implements Serializable {
     private String namespace;
-    private UUID txId;
+    private UUID tx_id;
     private UUID id;
 }

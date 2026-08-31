@@ -29,6 +29,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PackageLogId implements Serializable {
     private String namespace;
-    private UUID txId;
+    private UUID tx_id;
     private String package_name;
 }

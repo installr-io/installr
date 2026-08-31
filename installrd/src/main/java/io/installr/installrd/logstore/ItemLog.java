@@ -49,7 +49,7 @@ public class ItemLog {
         }
         entity = new ItemLogEntity();
         entity.namespace = record.getNamespace();
-        entity.txId = record.getTxId();
+        entity.tx_id = record.getTxId();
         entity.package_name = record.getPackageName();
         entity.path = record.getPath();
         entity.version = record.getVersion().toString();

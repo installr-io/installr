@@ -38,15 +38,15 @@ public class EventLog {
         logEvent( record.getEvent() );
         final EventLogEntity entity = new EventLogEntity();
         entity.namespace = record.getNamespace();
-        entity.txId = record.getTxId();
+        entity.tx_id = record.getTxId();
         entity.id = UUID.randomUUID();
         entity.event = record.getEvent();
         entity.persistAndFlush();
     }
 
-    public List<EventLogRecord> getAll( String namespace, UUID transactionId ) {
+    public List<EventLogRecord> getAll( String namespace, UUID txId ) {
         return EventLogEntity
-            .stream( "namespace = ?1 and txId = ?2", namespace, transactionId )
+            .stream( "namespace = ?1 and tx_id = ?2", namespace, txId )
             .map( x -> ( (EventLogEntity)x ).toEventLogRecord() )
             .sorted( ( x1, x2 ) -> x1.getEvent().timestamp().compareTo( x2.getEvent().timestamp() ) )
             .toList();

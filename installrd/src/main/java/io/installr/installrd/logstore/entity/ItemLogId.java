@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ItemLogId implements Serializable {
     private String namespace;
-    private UUID txId;
+    private UUID tx_id;
     private String package_name;
     private String path;
 }

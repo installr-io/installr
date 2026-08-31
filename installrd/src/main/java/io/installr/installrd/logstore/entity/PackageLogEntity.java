@@ -47,7 +47,7 @@ public class PackageLogEntity extends PanacheEntityBase {
 
     @Id
     @Column( name = "tx_id" )
-    public UUID txId;
+    public UUID tx_id;
 
     @Id
     @Column( name = "package_name" )
@@ -74,7 +74,7 @@ public class PackageLogEntity extends PanacheEntityBase {
     public PackageLogRecord toPackageLogRecord() {
         return new PackageLogRecord(
             namespace,
-            txId,
+            tx_id,
             package_name,
             package_info,
             repository_id,

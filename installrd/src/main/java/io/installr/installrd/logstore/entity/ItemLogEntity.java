@@ -41,7 +41,7 @@ public class ItemLogEntity extends PanacheEntityBase {
 
     @Id
     @Column( name = "tx_id" )
-    public UUID txId;
+    public UUID tx_id;
 
     @Id
     @Column( name = "package_name" )
@@ -72,7 +72,7 @@ public class ItemLogEntity extends PanacheEntityBase {
     public ItemLogRecord toItemLogRecord() {
         final ItemLogRecord item = new ItemLogRecord();
         item.setNamespace( namespace );
-        item.setTxId( txId );
+        item.setTxId( tx_id );
         item.setPackageName( package_name );
         item.setPath( path );
         item.setVersion( Semver.parse( version ) );

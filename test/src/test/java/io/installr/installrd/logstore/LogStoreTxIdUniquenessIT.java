@@ -58,7 +58,7 @@ class LogStoreTxIdUniquenessIT {
             new TransactionLogRecord( NS, txId, Instant.now(), Instant.now(), TransactionStatus.Canceled, "0.0.0-test" )
         );
 
-        assertEquals( 1L, TransactionLogEntity.count( "namespace = ?1 and txId = ?2", NS, txId ) );
+        assertEquals( 1L, TransactionLogEntity.count( "namespace = ?1 and tx_id = ?2", NS, txId ) );
 
         final TransactionLogRecord record = txLog.get( NS, txId );
         assertEquals( TransactionStatus.Canceled, record.getStatus() );

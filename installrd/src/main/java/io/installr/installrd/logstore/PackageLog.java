@@ -47,7 +47,7 @@ public class PackageLog {
             .findByIdOptional( id )
             .orElse( new PackageLogEntity() );
         entity.namespace = record.getNamespace();
-        entity.txId = record.getTxId();
+        entity.tx_id = record.getTxId();
         entity.package_name = record.getPackageName();
         entity.package_info = record.getPackageInfo();
         entity.repository_id = record.getRepositoryId();

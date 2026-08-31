@@ -42,7 +42,7 @@ public class EventLogEntity extends PanacheEntityBase {
 
     @Id
     @Column( name = "tx_id" )
-    public UUID txId;
+    public UUID tx_id;
 
     /**
      * Hibernate needs a unique key to distinguish between entities (cache). We use a dummy ID as part of the composite
@@ -57,7 +57,7 @@ public class EventLogEntity extends PanacheEntityBase {
     public Event event;
 
     public EventLogRecord toEventLogRecord() {
-        return new EventLogRecord( namespace, txId, event );
+        return new EventLogRecord( namespace, tx_id, event );
     }
 
 }

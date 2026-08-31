@@ -46,7 +46,7 @@ public class TransactionLog {
             .findByIdOptional( id )
             .orElse( new TransactionLogEntity() );
         entity.namespace = record.getNamespace();
-        entity.txId = record.getId();
+        entity.tx_id = record.getId();
         entity.begin_timestamp = record.getBeginTimestamp();
         entity.end_timestamp = record.getEndTimestamp();
         entity.status = record.getStatus();
@@ -55,13 +55,13 @@ public class TransactionLog {
         return record;
     }
 
-    public TransactionLogRecord get( String namespace, UUID transactionId ) {
+    public TransactionLogRecord get( String namespace, UUID txId ) {
         final TransactionLogEntity tx = (TransactionLogEntity)TransactionLogEntity
-            .find( "namespace = ?1 and txId = ?2", namespace, transactionId )
+            .find( "namespace = ?1 and tx_id = ?2", namespace, txId )
             .firstResult();
         if ( tx == null ) {
             throw new BadRequestException(
-                String.format( "Transaction with id '%s' not found.", transactionId )
+                String.format( "Transaction with id '%s' not found.", txId )
             );
         }
         return tx.toTransactionLogRecord();

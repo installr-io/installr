@@ -53,7 +53,7 @@ public class PackageLogRecord {
         @RestQuery
         private Instant timestamp;
         @RestQuery
-        private UUID transactionId;
+        private UUID txId;
         @RestQuery
         private String repositoryId;
 
@@ -63,7 +63,7 @@ public class PackageLogRecord {
             qb.put( "action", action );
             qb.put( "status", status );
             qb.put( "action_timestamp", timestamp );
-            qb.put( "txId", transactionId );
+            qb.put( "tx_id", txId );
             qb.put( "repository_id", repositoryId );
             return qb;
         }
