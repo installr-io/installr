@@ -44,8 +44,8 @@ public class Transaction {
     private final Namespace namespace;
     private final TransactionLog txLog;
     private final EventLog eventLog;
-    private UUID txId;
-    private Status transactionStatus;
+    private volatile UUID txId;
+    private volatile Status transactionStatus;
     private MultiEmitter<? super Event> emitter;
     private Path tmpPath;
 
@@ -55,7 +55,7 @@ public class Transaction {
         this.eventLog = eventLog;
     }
 
-    UUID acquire() {
+    synchronized UUID acquire() {
         if ( isActive() ) {
             log.errorf( "Namespace '%s' is locked by TX '%s'.", namespace.name(), txId );
             throw new LockException();

@@ -28,6 +28,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -208,6 +209,49 @@ class InstallrIT {
                     assertEquals( Status.Type.Success, txf.status().type() );
                 }
             );
+    }
+
+    /**
+     * Two simultaneous install requests to the <em>same</em> namespace must behave like sequential requests: the first
+     * acquires the lock and the second is rejected with a {@link LockException}.
+     *
+     * <p>
+     * Guaranteed by {@code ConcurrentHashMap.computeIfAbsent} in {@code TransactionService.acquireTransaction()}
+     * (ensures both threads operate on the same {@code Transaction} instance) combined with
+     * {@code synchronized acquire()} and {@code volatile txId} in {@code Transaction} (ensures the check-then-act is
+     * atomic and the written {@code txId} is immediately visible to all threads).
+     */
+    @Test
+    void concurrent_install_to_same_namespace_must_result_in_lock_exception() throws Exception {
+        installPackageCacheMock();
+        installInstallrServiceMock();
+
+        final AtomicInteger lockCount = new AtomicInteger( 0 );
+        final AtomicInteger successCount = new AtomicInteger( 0 );
+
+        List.of( TEST_NAMESPACE, TEST_NAMESPACE ).parallelStream()
+            .forEach(
+                namespace -> {
+                    try {
+                        final Map<Class<?>, List<Event>> events = install(
+                            namespace,
+                            List.of( PackageId.valueOf( TEST_PACKAGE ) )
+                        );
+                        final TransactionFinished txf = (TransactionFinished)events
+                            .get( TransactionFinished.class )
+                            .getFirst();
+                        assertEquals( Status.Type.Success, txf.status().type() );
+                        successCount.incrementAndGet();
+                    }
+                    catch ( RuntimeException ex ) {
+                        checkException( new LockException(), ex );
+                        lockCount.incrementAndGet();
+                    }
+                }
+            );
+
+        assertEquals( 1, successCount.get(), "Exactly one install must succeed" );
+        assertEquals( 1, lockCount.get(), "Exactly one install must be rejected with LockException" );
     }
 
     @Test

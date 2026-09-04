@@ -17,9 +17,9 @@
  */
 package io.installr.installrd.transaction;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import io.installr.installrd.logstore.EventLog;
 import io.installr.installrd.logstore.TransactionLog;
@@ -41,14 +41,14 @@ public class TransactionService {
     @Inject
     EventLog eventLog;
 
-    private final Map<String, Transaction> transactions = new HashMap<>();
+    private final Map<String, Transaction> transactions = new ConcurrentHashMap<>();
 
     public Transaction acquireTransaction() {
         log.infof( "Acquiring transaction for namespace '%s'", namespace.name() );
-        if ( !transactions.containsKey( namespace.name() ) ) {
-            transactions.put( namespace.name(), new Transaction( namespace, txLog, eventLog ) );
-        }
-        final Transaction transaction = transactions.get( namespace.name() );
+        final Transaction transaction = transactions.computeIfAbsent(
+            namespace.name(),
+            name -> new Transaction( namespace, txLog, eventLog )
+        );
         final UUID txId = transaction.acquire();
         log.infof( "Transaction acquired. ID = %s", txId );
         return transaction;
