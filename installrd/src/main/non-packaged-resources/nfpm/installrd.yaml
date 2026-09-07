@@ -64,14 +64,6 @@ contents:
           owner: ${installrd-user}
           group: ${installrd-user}
 
-    - src: target/non-packaged-resources/config/
-      dst: /home/${installrd-user}/.installrd/
-      type: config|noreplace
-      file_info:
-          mode: 0664
-          owner: ${installrd-user}
-          group: ${installrd-user}
-
 scripts:
     preinstall: target/non-packaged-resources/rpm/pre-install.sh
     postinstall: target/non-packaged-resources/rpm/post-install.sh
@@ -81,3 +73,5 @@ scripts:
 rpm:
     signature:
         key_file: secret.key
+    scripts:
+        posttrans: target/non-packaged-resources/rpm/post-trans.sh

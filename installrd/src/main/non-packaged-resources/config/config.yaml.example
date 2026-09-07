@@ -1,0 +1,60 @@
+##
+## Example configuration
+##
+
+## configure package cache
+package-cache:
+    directory: ${installrd.config.location}/.pkg-cache
+    expires-after: 1h
+
+## configure selectors
+selector:
+    platform: docker-swarm
+
+## configure deployers
+deployer:
+    ## deploy Docker Swarm descriptors
+    "application/vnd.io.installr.docker-stack":
+        type: DockerStackDeployer
+
+    ## deploy Docker Network descriptors
+    "application/vnd.io.installr.docker-network":
+        type: DockerNetworkDeployer
+
+    ## deploy Kubernetes descriptors
+    "application/vnd.io.installr.kubernetes":
+        ## configuration is done via ~/.kube/config
+        type: KubernetesDeployer
+
+    ## deploy Keycloak resources via 'kcd' running on localhost
+    "application/vnd.io.installr.kc-*":
+        type: HttpDeployer
+        config:
+            url: http://localhost:30001
+
+            keycloak:
+                url: 'https://auth.installr.io/auth'
+                user: 'admin'
+                password: 'my-admin-secret'
+
+    ## deploy binary files to /tmp/local-files
+    "application/vnd.io.installr.binary":
+        type: LocalFileDeployer
+        config:
+            directory: /tmp/local-files
+
+    ## deploy Liquibase changelogs against a PostgreSQL database
+    "application/vnd.io.installr.liquibase":
+        type: LiquibaseDeployer
+        config:
+            url: "jdbc:postgresql://localhost:5432/myapp"
+            username: myapp
+            password: secret
+
+## configure your package repositories
+repositories:
+    - id: demo-repository
+      name: "Demo Applications"
+      url: http://localhost:9317/repositories/demo
+      package-cache:
+          expires-after: 1s
