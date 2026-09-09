@@ -29,6 +29,12 @@ deployer:
     "application/vnd.io.installr.kubernetes":
         type: KubernetesDeployer
 
+    "application/vnd.io.installr.docker-stack":
+        type: DockerStackDeployer
+
+    "application/vnd.io.installr.docker-network":
+        type: DockerNetworkDeployer
+
 repositories:
     - id: test-repository
       name: "Pretty name for test-repository"

@@ -36,6 +36,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import io.installr.installrd.install.InstallService;
+import io.installr.installrd.logstore.ItemLog;
 import io.installr.installrd.namespace.LockException;
 import io.installr.installrd.namespace.NamespaceNotFoundException;
 import io.installr.installrd.pkg.PackageCache;
@@ -47,6 +48,7 @@ import io.installr.lib.installrd.event.Events.PackageInstallationStarted;
 import io.installr.lib.installrd.event.Events.PackageResolvingFinished;
 import io.installr.lib.installrd.event.Events.TransactionFinished;
 import io.installr.lib.installrd.event.Status;
+import io.installr.lib.installrd.pkg.ItemLogRecord;
 import io.installr.lib.installrd.resource.InstallPackageResource;
 import io.installr.lib.pkg.InvalidPackageIdException;
 import io.installr.lib.pkg.PackageId;
@@ -69,6 +71,9 @@ class InstallrIT {
     @Inject
     @RestClient
     InstallrClient installrClient;
+
+    @Inject
+    ItemLog itemLog;
 
     @Test
     void install_should_throw_NamespaceNotFoundException() {
@@ -400,6 +405,71 @@ class InstallrIT {
                     assertEquals( Status.Type.Success, txf.status().type() );
                 }
             );
+    }
+
+    @Test
+    void install_should_record_items_without_error() throws InvalidPackageIdException {
+        final String namespace = "Namespace2";
+        final PackageId testPackageId = PackageId.valueOf( "test-package-3:0.1.0" );
+
+        final Map<Class<?>, List<Event>> events = install( namespace, List.of( testPackageId ) );
+
+        assertEquals(
+            Status.Success,
+            ( (PackageInstallationFinished)events.get( PackageInstallationFinished.class ).getFirst() ).status()
+        );
+
+        final Map<String, ItemLogRecord> items = itemLog.getByPackagename( namespace, "test-package-3" );
+        assertEquals( 3, items.size() );
+        assertTrue( items.values().stream().noneMatch( ItemLogRecord::hasError ) );
+    }
+
+    @Test
+    void install_should_record_items_with_error() throws InvalidPackageIdException {
+        final String namespace = "Namespace2";
+        final PackageId testPackageId = PackageId.valueOf( "test-package-with-errors:0.1.0" );
+
+        final Map<Class<?>, List<Event>> events = install( namespace, List.of( testPackageId ) );
+
+        assertEquals(
+            Status.Failed,
+            ( (PackageInstallationFinished)events.get( PackageInstallationFinished.class ).getFirst() ).status()
+        );
+
+        final Map<String, ItemLogRecord> items = itemLog.getByPackagename( namespace, "test-package-with-errors" );
+        assertEquals( 1, items.size() );
+        assertTrue(
+            items.values().stream().allMatch( ItemLogRecord::hasError )
+        );
+    }
+
+    @Test
+    void install_should_not_set_error_flag_for_skipped_items() throws InvalidPackageIdException {
+        final String namespace = "Namespace2";
+        final PackageId testPackageId = PackageId.valueOf( "test-package-skip-item:0.1.0" );
+
+        // first install: item will be installed
+        Map<Class<?>, List<Event>> events = install( namespace, List.of( testPackageId ) );
+
+        assertEquals(
+            Status.Success,
+            ( (PackageInstallationFinished)events.get( PackageInstallationFinished.class ).getFirst() ).status()
+        );
+
+        // second install: item will be skipped
+        events = reinstall( namespace, List.of( testPackageId ) );
+
+        assertEquals(
+            Status.Success,
+            ( (PackageInstallationFinished)events.get( PackageInstallationFinished.class ).getFirst() ).status()
+        );
+
+        // skipped item should have no error flag set
+        final Map<String, ItemLogRecord> items = itemLog.getByPackagename( namespace, "test-package-skip-item" );
+        assertEquals( 1, items.size() );
+        assertTrue(
+            items.values().stream().noneMatch( ItemLogRecord::hasError )
+        );
     }
 
 }

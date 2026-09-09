@@ -289,7 +289,7 @@ public class InstallService {
                     packageDatabase.updateStatus( tx, packageId.name(), PackageStatus.Failed );
                 }
                 finally {
-                    packageDatabase.putItem( tx, packageId, item, !itemStatus.equals( Status.Success ) );
+                    packageDatabase.putItem( tx, packageId, item, itemStatus.equals( Status.Failed ) );
                     tx.emitEvent( new Events.PackageContentDeploymentFinished( item.getPath(), 0, itemStatus ) );
                 }
             }
