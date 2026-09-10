@@ -19,11 +19,12 @@ package io.installr.lib.installrd.client;
 
 import io.installr.lib.installrd.controller.DaemonController;
 import io.installr.lib.installrd.controller.InstallController;
+import io.installr.lib.installrd.controller.NamespaceController;
 import io.installr.lib.installrd.controller.PackageLogController;
 import io.installr.lib.installrd.controller.TransactionController;
 import jakarta.ws.rs.Path;
 
 @Path( "/" )
 public interface InstallrdClient
-    extends DaemonController, InstallController, TransactionController, PackageLogController {
+    extends DaemonController, InstallController, NamespaceController, TransactionController, PackageLogController {
 }
