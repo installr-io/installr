@@ -25,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -43,6 +42,12 @@ public class DockerNetworkDeployerTest {
 
     final DockerClient dockerClient = new DockerClientImpl();
 
+    DockerNetworkDeployer deployer() {
+        final DockerNetworkDeployer deployer = new DockerNetworkDeployer();
+        deployer.init( new DockerDeployerConfig() );
+        return deployer;
+    }
+
     @SneakyThrows
     byte[] readDescriptor( String name ) {
         final Path root = Path.of(
@@ -53,7 +58,7 @@ public class DockerNetworkDeployerTest {
 
     DeploymentSpec genSpec( String name ) {
         final DeploymentSpec spec = new DeploymentSpec();
-        spec.setName( Base64.getEncoder().encodeToString( name.getBytes() ) );
+        spec.setName( name );
         spec.setVersion( Semver.parse( "0.1.0" ) );
         spec.setData( readDescriptor( name + ".json" ) );
         spec.setMediaType( "application/vnd.io.installr.docker-network" );
@@ -70,7 +75,7 @@ public class DockerNetworkDeployerTest {
 
     @Test
     void deploy_should_create_an_non_existing_network() {
-        final DockerNetworkDeployer deployer = new DockerNetworkDeployer( new DockerDeployerConfig() );
+        final DockerNetworkDeployer deployer = deployer();
         final DeploymentSpec spec = genSpec( "test-network-1" );
         try {
             assertFalse( existsNetwork( "Namespace1-test-network-1" ), "Network 'test-network-1' does not exist." );
@@ -84,7 +89,7 @@ public class DockerNetworkDeployerTest {
 
     @Test
     void deploy_should_skip_an_existing_network() {
-        final DockerNetworkDeployer deployer = new DockerNetworkDeployer( new DockerDeployerConfig() );
+        final DockerNetworkDeployer deployer = deployer();
         final DeploymentSpec spec = genSpec( "test-network-1" );
         try {
             assertFalse( existsNetwork( "Namespace1-test-network-1" ), "Network 'test-network-1' does not exist." );

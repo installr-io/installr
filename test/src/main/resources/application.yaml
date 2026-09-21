@@ -10,6 +10,7 @@ quarkus:
         level: WARN
         console:
             stderr: true
+            enabled: true
         handler:
             console:
                 "access-log-handler":
@@ -27,16 +28,22 @@ quarkus:
     package:
         main-class: TestMain
         jar:
-            type: fast-jar
+            type: FAST_JAR
 
     datasource:
         db-kind: h2
         jdbc:
             url: jdbc:h2:./target/test-db
 
+    liquibase:
+        migrate-at-start: true
+
     hibernate-orm:
         schema-management:
-            strategy: drop-and-create
+            strategy: validate
+        mapping:
+            format:
+                global: IGNORE
 
     index-dependency:
         installrd:
@@ -52,3 +59,5 @@ quarkus:
 installrd:
     config:
         location: ./target/classes/test-config
+    database-listener:
+        enabled: false

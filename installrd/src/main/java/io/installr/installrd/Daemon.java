@@ -19,23 +19,27 @@ package io.installr.installrd;
 
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logmanager.MDC;
 
 import io.installr.installrd.config.InstallrdConfiguration;
+import io.installr.installrd.config.InstallrdConfiguration.DeployerConfiguration;
 import io.installr.installrd.config.InstallrdConfiguration.NamespaceDefinition;
+import io.installr.installrd.config.NamespaceConfiguration;
+import io.installr.installrd.logging.ConsoleLog;
 import io.installr.installrd.plugin.PluginLoader;
+import io.installr.lib.installrd.controller.DaemonController;
+import io.installr.lib.installrd.model.VersionInfo;
 import io.quarkus.runtime.Quarkus;
 import io.quarkus.runtime.Startup;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
-import lombok.extern.jbosslog.JBossLog;
 
 @Path( "/" )
-@JBossLog( topic = "console-log" )
-public class Daemon {
+public class Daemon implements DaemonController {
 
     @Inject
     InstallrdConfiguration config;
@@ -46,49 +50,80 @@ public class Daemon {
     @ConfigProperty( name = "quarkus.http.port" )
     int httpPort;
 
+    @ConfigProperty( name = "installrd.log.timezone" )
+    String logTimezone;
+
+    @ConfigProperty( name = "installrd.log.sifting-logger.log-dir" )
+    String logLocation;
+
+    @Inject
+    ConsoleLog consoleLog;
+
     @Startup
     void startup() {
         // set 'installrd' as default "namespace", to prevent empty brackets in the logs
         MDC.put( "namespace", "installrd" );
 
-        log.infof( "Installrd %s running on port %d\n", Installrd.version(), httpPort );
+        consoleLog.infof( "Installrd %s running on port %d\n", Installrd.version(), httpPort );
 
-        log.info( "Installrd:" );
-        log.infof( "- Revision: %s", Installrd.revision() );
-        log.infof( "- Timestamp: %s", Installrd.buildTimestamp().atZone( ZoneId.systemDefault() ) );
-        log.infof( "- Timezone: %s", ZoneId.systemDefault() );
+        consoleLog.info( "Installrd:" );
+        consoleLog.infof( "- Revision: %s", Installrd.revision() );
+        consoleLog.infof( "- Timestamp: %s", Installrd.buildTimestamp().atZone( ZoneId.systemDefault() ) );
+        consoleLog.infof( "- Timezone: %s", ZoneId.systemDefault() );
 
-        log.info( "Config:" );
-        log.infof( "- Location: %s", config.location() );
+        consoleLog.info( "Config:" );
+        consoleLog.infof( "- Location: %s", config.location() );
 
-        log.info( "Namespaces:" );
+        consoleLog.info( "Log:" );
+        consoleLog.infof( "- Location: %s", logLocation );
+        consoleLog.infof( "- Timezone: %s", logTimezone );
+
+        consoleLog.info( "Namespaces:" );
         final List<NamespaceDefinition> namespaces = config.namespaceDefinitions();
         if ( namespaces.isEmpty() ) {
-            log.info( "- No namespaces configured" );
+            consoleLog.info( "- No namespaces configured" );
         }
         else {
-            namespaces.forEach( nd -> log.infof( "- %s", nd.name() ) );
+            namespaces.forEach( nd -> consoleLog.infof( "- %s", nd.name() ) );
         }
 
-        log.info( "Repositories:" );
+        consoleLog.info( "Repositories:" );
         config.repositories()
             .ifPresentOrElse(
-                list -> list.forEach( repo -> log.infof( "- %s: %s", repo.id(), repo.url() ) ),
-                () -> log.info( "- No repositories configured" )
+                list -> list.forEach( repo -> consoleLog.infof( "- %s: %s", repo.id(), repo.url() ) ),
+                () -> consoleLog.info( "- No repositories configured" )
             );
 
-        log.info( "Deployer:" );
+        consoleLog.info( "Deployer:" );
         if ( config.deployerConfigurations().isEmpty() ) {
-            log.info( "- No deployer configured" );
+            consoleLog.info( "- No deployer configured" );
         }
-        else {
-            config.deployerConfigurations()
-                .forEach(
-                    ( k, v ) -> log.infof( "- %s: %s", k, v.type() )
-                );
-        }
+        logDeployerConfigurations( config.deployerConfigurations() );
+        config.namespaceConfigurations()
+            .entrySet()
+            .stream()
+            .map( Map.Entry::getValue )
+            .map( NamespaceConfiguration::deployerConfigurations )
+            .forEach( this::logDeployerConfigurations );
         // currently disabled
         // pluginLoader.load();
+    }
+
+    private void logDeployerConfigurations( Map<String, DeployerConfiguration> deployerConfigurations ) {
+        deployerConfigurations
+            .forEach(
+                ( k, v ) -> consoleLog.infof( "- %s: %s", k, v.type() )
+            );
+    }
+
+    @Override
+    public String version() {
+        return String.format( "%s-%s", Installrd.version(), Installrd.revision() );
+    }
+
+    @Override
+    public VersionInfo versionInfo() {
+        return Installrd.versionInfo();
     }
 
     @POST

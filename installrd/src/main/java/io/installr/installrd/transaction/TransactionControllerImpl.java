@@ -48,13 +48,13 @@ public class TransactionControllerImpl implements TransactionController {
     }
 
     @Override
-    public TransactionLogRecord transaction( String namespace, UUID transactionId ) {
-        return txLog.get( transactionId );
+    public TransactionLogRecord transaction( String namespace, UUID txId ) {
+        return txLog.get( namespace, txId );
     }
 
     @Override
-    public List<EventLogRecord> events( String namespace, UUID transactionId ) {
-        return eventLog.getAll( transactionId );
+    public List<EventLogRecord> events( String namespace, UUID txId ) {
+        return eventLog.getAll( namespace, txId );
     }
 
 }

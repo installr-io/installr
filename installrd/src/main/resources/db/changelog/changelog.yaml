@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: 0.1.0/0001-initial-schema.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 0.2.0/0001-composite-key-refactoring.sql
+      relativeToChangelogFile: true

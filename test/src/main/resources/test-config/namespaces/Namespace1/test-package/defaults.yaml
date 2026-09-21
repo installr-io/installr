@@ -4,3 +4,13 @@ value: foo
 other: bar
 
 third-value: baz
+
+hierarchical:
+    value:
+        one: 1
+        two: 2
+    other: 3
+
+value-substitution: ${value}-sub
+
+globally-overwritten: default-value

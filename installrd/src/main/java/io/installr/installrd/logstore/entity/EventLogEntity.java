@@ -17,6 +17,8 @@
  */
 package io.installr.installrd.logstore.entity;
 
+import java.util.UUID;
+
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -25,36 +27,37 @@ import io.installr.lib.installrd.event.EventLogRecord;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
 
 @Entity
 @Table( name = "EVENT_LOG" )
+@IdClass( EventLogId.class )
 public class EventLogEntity extends PanacheEntityBase {
 
     @Id
-    @SequenceGenerator( name = "EVENT_LOG_SEQ", initialValue = 1, allocationSize = 1 )
-    @GeneratedValue( strategy = GenerationType.SEQUENCE, generator = "EVENT_LOG_SEQ" )
-    public Long id;
-
-    @Column( name = "namespace", nullable = false )
+    @Column( name = "namespace" )
     public String namespace;
 
-    @ManyToOne
-    @JoinColumn( name = "transaction_id", nullable = false )
-    public TransactionLogEntity txEntity;
+    @Id
+    @Column( name = "tx_id" )
+    public UUID tx_id;
+
+    /**
+     * Hibernate needs a unique key to distinguish between entities (cache). We use a dummy ID as part of the composite
+     * key to make entities distinct.
+     */
+    @Id
+    @Column( name = "id" )
+    public UUID id;
 
     @Column( name = "event", nullable = false )
     @JdbcTypeCode( SqlTypes.JSON )
     public Event event;
 
     public EventLogRecord toEventLogRecord() {
-        return new EventLogRecord( id, namespace, txEntity.id, event );
+        return new EventLogRecord( namespace, tx_id, event );
     }
 
 }

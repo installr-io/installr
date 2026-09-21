@@ -30,25 +30,30 @@ import de.gesellix.docker.remote.api.IPAM;
 import de.gesellix.docker.remote.api.Network;
 import de.gesellix.docker.remote.api.NetworkCreateRequest;
 import io.installr.installrd.deployment.DeploymentWarning;
+import io.installr.installrd.deployment.deployer.BuiltInDeployer;
 import io.installr.installrd.util.interpolation.EnvironmentInterpolator;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentSpec;
+import jakarta.enterprise.context.Dependent;
 
+@Dependent
+@BuiltInDeployer( "DockerNetworkDeployer" )
 public class DockerNetworkDeployer extends AbstractDockerDeployer {
 
-    private final EnvironmentInterpolator interpolator;
-    private final JsonMapper jsonMapper;
+    private EnvironmentInterpolator interpolator;
+    private JsonMapper jsonMapper;
 
-    public DockerNetworkDeployer( DockerDeployerConfig config ) {
-        super( config );
+    @Override
+    public void init( DockerDeployerConfig config ) {
+        super.init( config );
         this.interpolator = new EnvironmentInterpolator();
         this.jsonMapper = new JsonMapper();
         jsonMapper.addMixIn( NetworkCreateRequest.class, NetworkCreateRequestMixIn.class );
     }
 
     @Override
-    public void deploy( DeploymentSpec deployment ) throws DeploymentException {
-        final NetworkCreateRequest networkSpec = readNetworkSpec( deployment );
+    public void deploy( DeploymentSpec spec ) throws DeploymentException {
+        final NetworkCreateRequest networkSpec = readNetworkSpec( spec );
         if ( existsNetwork( networkSpec ) ) {
             throw new DeploymentWarning( "Network '%s' already exists.", networkSpec.getName() );
         }
@@ -58,15 +63,15 @@ public class DockerNetworkDeployer extends AbstractDockerDeployer {
     }
 
     @Override
-    public void undeploy( DeploymentSpec deployment ) throws DeploymentException {
-        client.rmNetwork( readNetworkSpec( deployment ).getName() );
+    public void undeploy( DeploymentSpec spec ) throws DeploymentException {
+        client.rmNetwork( readNetworkSpec( spec ).getName() );
     }
 
-    private NetworkCreateRequest readNetworkSpec( DeploymentSpec deployment ) throws DeploymentException {
+    private NetworkCreateRequest readNetworkSpec( DeploymentSpec spec ) throws DeploymentException {
         try {
-            final String json = new String( deployment.getData() );
+            final String json = new String( spec.getData() );
             return jsonMapper
-                .readValue( interpolator.interpolate( json, deployment.getEnv() ), NetworkCreateRequest.class );
+                .readValue( interpolator.interpolate( json, spec.getEnv() ), NetworkCreateRequest.class );
         }
         catch ( IOException ex ) {
             throw new DeploymentException( ex.toString() );

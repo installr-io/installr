@@ -125,6 +125,12 @@ public class PackageCache {
         try {
             tx.emitEvent( new Events.PackageIndexUpdateStarted() );
             final List<RepositoryConfiguration> repositories = unwrapRepositories();
+            if ( repositories.isEmpty() ) {
+                tx.emitEvent(
+                    new Events.PackageIndexUpdateFinished( Status.Skipped( "No repositories configured." ) )
+                );
+                return;
+            }
             final AtomicInteger errors = new AtomicInteger( 0 );
             repositories.forEach(
                 repo -> {
@@ -173,8 +179,7 @@ public class PackageCache {
     }
 
     private List<RepositoryConfiguration> unwrapRepositories() {
-        return config.repositories()
-            .orElseThrow( () -> new IllegalStateException( "No repositories configured." ) );
+        return config.repositories().orElse( List.of() );
     }
 
     private RepositoryClient buildRepoClient( RepositoryConfiguration repo ) {
@@ -227,7 +232,7 @@ public class PackageCache {
                 .resolve( "packages" );
             FileUtil.mkdir( dest );
             repoClient.downloadPackage( dest, pkg.getPackageInfo().getPackageId() );
-            final Path pkgDir = pkg.extractArchive();
+            final Path pkgDir = pkg.extractArchive( dest );
             Files.delete( pkg.getLocalPath() );
             pkg.setLocalPath( pkgDir );
             status = Status.Success;

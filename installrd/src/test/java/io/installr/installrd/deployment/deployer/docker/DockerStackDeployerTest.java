@@ -22,22 +22,33 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import static org.mockito.Mockito.lenient;
+
+import java.lang.reflect.Field;
+import java.net.SocketException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.Base64;
 import java.util.Map;
 import java.util.Random;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.semver4j.Semver;
 
+import io.installr.installrd.config.InstallrdConfiguration;
 import io.installr.installrd.util.ThreadUtil;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentSpec;
 import lombok.SneakyThrows;
 
+@ExtendWith( MockitoExtension.class )
 public class DockerStackDeployerTest {
+
+    @Mock
+    InstallrdConfiguration installrdConfig;
 
     @SneakyThrows
     byte[] readDescriptor( String name ) {
@@ -49,13 +60,28 @@ public class DockerStackDeployerTest {
 
     DeploymentSpec genSpec( String name ) {
         final DeploymentSpec spec = new DeploymentSpec();
-        spec.setName( Base64.getEncoder().encodeToString( name.getBytes() ) );
+        spec.setName( name );
         spec.setVersion( Semver.parse( "0.1.0" ) );
         spec.setData( readDescriptor( name + ".yaml" ) );
         spec.setMediaType( "application/vnd.io.installr.docker-stack" );
         spec.setHash( "empty" );
         spec.setEnv( Map.of( "namespace", "Namespace1" ) );
         return spec;
+    }
+
+    DockerStackDeployer deployer() {
+        return deployer( new DockerDeployerConfig() );
+    }
+
+    @SneakyThrows
+    DockerStackDeployer deployer( DockerDeployerConfig config ) {
+        lenient().when( installrdConfig.location() ).thenReturn( Path.of( "/tmp" ) );
+        final DockerStackDeployer deployer = new DockerStackDeployer();
+        deployer.init( config );
+        final Field field = DockerStackDeployer.class.getDeclaredField( "installrdConfig" );
+        field.setAccessible( true );
+        field.set( deployer, installrdConfig );
+        return deployer;
     }
 
     void randomSleep() {
@@ -66,7 +92,7 @@ public class DockerStackDeployerTest {
 
     @Test
     void deploy_should_throw_exception_when_image_was_not_found() {
-        final DockerStackDeployer deployer = new DockerStackDeployer( new DockerDeployerConfig() );
+        final DockerStackDeployer deployer = deployer();
         final DeploymentSpec spec = genSpec( "test-1" );
         try {
             randomSleep();
@@ -83,7 +109,7 @@ public class DockerStackDeployerTest {
 
     @Test
     void deploy_should_throw_exception_when_container_start_fails() {
-        final DockerStackDeployer deployer = new DockerStackDeployer( new DockerDeployerConfig() );
+        final DockerStackDeployer deployer = deployer();
         final DeploymentSpec spec = genSpec( "test-2" );
         try {
             randomSleep();
@@ -102,7 +128,7 @@ public class DockerStackDeployerTest {
     void deploy_should_throw_exception_when_not_all_services_are_running() {
         final DockerDeployerConfig config = new DockerDeployerConfig();
         config.setPollingTimeout( Duration.ofSeconds( 5 ) );
-        final DockerStackDeployer deployer = new DockerStackDeployer( config );
+        final DockerStackDeployer deployer = deployer( config );
         final DeploymentSpec spec = genSpec( "test-3" );
         try {
             randomSleep();
@@ -122,7 +148,7 @@ public class DockerStackDeployerTest {
 
     @Test
     void deploy_should_be_successful_when_all_tasks_running() {
-        final DockerStackDeployer deployer = new DockerStackDeployer( new DockerDeployerConfig() );
+        final DockerStackDeployer deployer = deployer();
         final DeploymentSpec spec = genSpec( "test-4" );
         try {
             randomSleep();
@@ -131,6 +157,21 @@ public class DockerStackDeployerTest {
         finally {
             deployer.undeploy( spec );
         }
+    }
+
+    @Test
+    void translateException_should_return_meaningful_message_when_socket_unreachable() {
+        final DockerDeployerConfig config = new DockerDeployerConfig();
+        config.setHost( "unix:///nonexistent/docker.sock" );
+        final DockerStackDeployer deployer = deployer( config );
+
+        final RuntimeException socketError = new RuntimeException( new SocketException( "No such file or directory" ) );
+        final DeploymentException result = deployer.translateException( socketError );
+
+        assertTrue(
+            result.getMessage().contains( "Cannot connect to Docker" ),
+            "Expected meaningful message, got: " + result.getMessage()
+        );
     }
 
 }

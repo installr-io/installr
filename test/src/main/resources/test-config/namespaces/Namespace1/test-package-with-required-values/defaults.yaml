@@ -1,0 +1,5 @@
+## this is a property with an empty value as its default
+empty-value: ''
+
+## this is a required value that MUST be set, either globally in the namespace or via custom.yaml per package
+required-value: REQUIRED

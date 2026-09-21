@@ -50,6 +50,7 @@
         "Vallant"
     ],
     "microprofile.tools.validation.unassigned.excluded": [
-        "quarkus.http.port"
+        "quarkus.http.port",
+        "installrd.database-listener.port"
     ]
 }

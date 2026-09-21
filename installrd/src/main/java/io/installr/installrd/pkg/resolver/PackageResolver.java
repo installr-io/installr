@@ -21,7 +21,7 @@ import static io.installr.installrd.util.Partials.not;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -51,9 +51,7 @@ public class PackageResolver {
     }
 
     public List<ResolverResult> resolve( Map<PackageId, Optional<Package>> packageMap ) {
-        final Map<PackageId, Optional<Package>> searchResult = new HashMap<>( packageMap );
-        final List<PackageId> dependentPackageIds = searchResult.entrySet().stream()
-            .map( Map.Entry::getValue )
+        final List<PackageId> dependentPackageIds = packageMap.values().stream()
             .filter( Optional::isPresent )
             .map( Optional::get )
             .map( Package::getPackageInfo )
@@ -62,7 +60,11 @@ public class PackageResolver {
             .flatMap( List::stream )
             .distinct()
             .collect( Collectors.toList() );
-        searchResult.putAll( findPackages( dependentPackageIds ) );
+
+        final Map<PackageId, Optional<Package>> searchResult = new LinkedHashMap<>(
+            findPackages( dependentPackageIds )
+        );
+        searchResult.putAll( packageMap );
 
         return searchResult.entrySet().stream()
             .map( this::toResolverResult )
@@ -74,7 +76,9 @@ public class PackageResolver {
             .collect(
                 Collectors.toMap(
                     Function.identity(),
-                    packageCache::searchIndex
+                    packageCache::searchIndex,
+                    ( existing, duplicate ) -> existing,
+                    LinkedHashMap::new
                 )
             );
     }

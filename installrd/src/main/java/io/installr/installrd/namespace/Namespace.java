@@ -17,19 +17,14 @@
  */
 package io.installr.installrd.namespace;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
+import io.installr.installrd.config.InstallrdConfiguration;
 import io.installr.installrd.config.NamespaceConfiguration;
-import io.smallrye.config.SmallRyeConfig;
-import io.smallrye.config.SmallRyeConfigBuilder;
-import io.smallrye.config.source.yaml.YamlConfigSource;
 import jakarta.enterprise.context.RequestScoped;
-import jakarta.ws.rs.core.UriBuilder;
-import lombok.extern.jbosslog.JBossLog;
+import jakarta.inject.Inject;
 
 @RequestScoped
-@JBossLog
 public class Namespace {
 
     /*
@@ -42,10 +37,8 @@ public class Namespace {
      */
     private Path location;
 
-    /*
-     * To prevent loading the namespace configuration more than one time per request, we store the config temporarily.
-     */
-    private NamespaceConfiguration namespaceConfig;
+    @Inject
+    InstallrdConfiguration installrdConfig;
 
     void init( String name, Path location ) {
         this.name = name;
@@ -60,30 +53,9 @@ public class Namespace {
         return location;
     }
 
-    public NamespaceConfiguration config() throws NamespaceNotFoundException {
-        if ( namespaceConfig == null ) {
-            try {
-                log.debugf( "loading config from: %s", location );
-                final SmallRyeConfig config = new SmallRyeConfigBuilder()
-                    .addDefaultInterceptors()
-                    .withSources(
-                        new YamlConfigSource(
-                            UriBuilder.fromPath( "/{location}/config.yaml" )
-                                .scheme( "file" )
-                                .build( location, name )
-                                .toURL()
-                        )
-                    )
-                    .withValidateUnknown( false ) // this ignores not mapped values! should be needed...
-                    .withMapping( NamespaceConfiguration.class )
-                    .build();
-                namespaceConfig = config.getConfigMapping( NamespaceConfiguration.class );
-            }
-            catch ( IOException ex ) {
-                throw new NamespaceNotFoundException( name );
-            }
-        }
-        return namespaceConfig;
+    public NamespaceConfiguration config() {
+        return installrdConfig.namespaceConfiguration( name )
+            .orElseThrow( () -> new NamespaceNotFoundException( name ) );
     }
 
     @Override

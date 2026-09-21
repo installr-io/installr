@@ -1,7 +1,7 @@
 # quarkus configuration
 quarkus:
     http:
-        port: 9316
+        port: ${installrd.port}
         access-log:
             enabled: true
             pattern: combined
@@ -10,19 +10,25 @@ quarkus:
         level: WARN
         console:
             stderr: true
-            format: '%-5p [%X{namespace}] %s%e%n'
-            enabled: false
+            format: ${installrd.log.format}
 
         handler:
             console:
                 "console-log-handler":
                     format: '%-5p %s%e%n'
                     stderr: false
-
+                "access-log-handler":
+                    format: "%s%n"
+                    stderr: false
+            
         category:
             "console-log":
                 level: INFO
                 handlers: console-log-handler
+                use-parent-handlers: false
+            "io.quarkus.http.access-log":
+                level: INFO
+                handlers: access-log-handler
                 use-parent-handlers: false
             "io.installr":
                 level: ${installrd.log.level}
@@ -34,7 +40,7 @@ quarkus:
     package:
         jar:
             add-runner-suffix: false
-            type: fast-jar
+            type: FAST_JAR
 
     devservices:
         enabled: false
@@ -43,15 +49,19 @@ quarkus:
     datasource:
         db-kind: h2
         jdbc:
-            url: jdbc:h2:${installrd.config.location}/installrd;AUTO_SERVER=TRUE;RETENTION_TIME=0;COMPRESS=true;
+            url: jdbc:h2:${installrd.config.location}/installrd;RETENTION_TIME=0;COMPRESS=true;
             acquisition-timeout: 120s
+
+    liquibase:
+        migrate-at-start: true
+        change-log: db/changelog/changelog.yaml
 
     hibernate-orm:
         schema-management:
             strategy: validate
         mapping:
             format:
-                global: ignore
+                global: IGNORE
 
     index-dependency:
         lib-installrd:
@@ -65,39 +75,46 @@ quarkus:
             artifact-id: "installr-lib-registry"
 
 installrd:
+    port: 9316
     config:
         location: ${HOME}/.installrd
     log:
         level: INFO
+        format: "%z{${installrd.log.timezone}}%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}  %-5p [%c{1}] %s%e%n"
+        timezone: ${os.timezone:UTC}
+        sifting-logger:
+            log-dir: ${installrd.config.location}/logs
+            discriminator:
+                key: 'namespace'
+                default-value: 'installrd'
+    database-listener:
+        port: 9416
 
 "%dev":
     quarkus:
         log:
-            console:
-                enabled: true
-
-            handler:
-                console:
-                    "access-log-handler":
-                        format: "%s%n"
-                        stderr: false
-
             category:
-                "io.quarkus.http.access-log":
-                    level: INFO
-                    handlers: access-log-handler
-                    use-parent-handlers: false
                 "io.installr":
                     level: DEBUG
                     min-level: DEBUG
+"%test":
+    quarkus:
+        jacoco:
+            excludes:
+                ## ConsoleLog is a delegate
+                - io/installr/installrd/logging/ConsoleLog.class
 
 "%prod":
     quarkus:
         log:
-            category:
-                "console-log":
-                    use-parent-handlers: true
-                
+            console:
+                filter: "sifting-log-file-filter"
+
+            handler:
+                console:
+                    "access-log-handler":
+                        filter: "sifting-log-file-filter"
+
         package:
             jar:
                 type: uber-jar
@@ -111,9 +128,13 @@ installrd:
                     - META-INF/LGPL2.1
                     - META-INF/quarkus-config-doc/quarkus-config-model-version
                     - META-INF/quarkus-config-doc/quarkus-config-model.json
-
+                    - META-INF/versions/11/OSGI-INF/MANIFEST.MF
     smallrye:
         config:
             ## read build properties
             locations: META-INF/build.properties
 
+    installrd:
+        log:
+            sifting-logger:
+                enabled: true

@@ -27,8 +27,8 @@ import lombok.Data;
 @AllArgsConstructor
 public class TransactionLogRecord {
 
-    private UUID id;
     private String namespace;
+    private UUID id;
     private Instant beginTimestamp;
     private Instant endTimestamp;
     private TransactionStatus status;

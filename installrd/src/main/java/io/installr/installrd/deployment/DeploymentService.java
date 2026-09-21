@@ -24,22 +24,22 @@ import java.util.stream.Collectors;
 
 import io.installr.installrd.config.InstallrdConfiguration;
 import io.installr.installrd.config.InstallrdConfiguration.DeployerConfiguration;
-import io.installr.installrd.deployment.deployer.docker.DockerDeployerConfig;
-import io.installr.installrd.deployment.deployer.docker.DockerNetworkDeployer;
-import io.installr.installrd.deployment.deployer.docker.DockerStackDeployer;
-import io.installr.installrd.deployment.deployer.http.HttpDeployer;
-import io.installr.installrd.deployment.deployer.http.HttpDeployerConfig;
-import io.installr.installrd.deployment.deployer.local.LocalFileDeployer;
-import io.installr.installrd.deployment.deployer.local.LocalFileDeployerConfig;
-import io.installr.installrd.deployment.deployer.noop.NoOpDeployer;
+import io.installr.installrd.deployment.deployer.BuiltInDeployerLiteral;
+import io.installr.installrd.logging.ConsoleLog;
 import io.installr.installrd.plugin.PluginLoader;
+import io.installr.installrd.util.MapUtil;
 import io.installr.installrd.util.PropertyMapUtil;
-import io.installr.lib.deployer.Deployer;
+import io.installr.lib.deployer.ConfigurableDeployer;
+import io.installr.lib.deployer.DeployerConfig;
 import io.installr.lib.deployer.DeployerPlugin;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentSpec;
+import io.installr.installrd.config.ConfigReloadedEvent;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import lombok.extern.jbosslog.JBossLog;
 
@@ -53,53 +53,94 @@ public class DeploymentService {
     @Inject
     PluginLoader pluginLoader;
 
-    private Map<String, Deployer> deployerMap;
+    // Instance<Object> is intentional: CDI type resolution is invariant, so Instance<ConfigurableDeployer<X>>
+    // would only match beans whose type parameter is exactly X. Since each built-in deployer uses its own
+    // config subtype (e.g. ConfigurableDeployer<DockerDeployerConfig>), a typed injection point would make
+    // most deployers invisible. Instance<Object> with @Any is the CDI-standard approach for programmatic
+    // lookup of heterogeneous beans — filtering is done via the @BuiltInDeployer qualifier in initDeployer().
+    @Inject
+    @Any
+    Instance<Object> allBeans;
+
+    @Inject
+    ConsoleLog consoleLog;
+
+    private volatile Map<String, ConfigurableDeployer<?>> globalDeployerMap;
+    private volatile Map<String, Map<String, ConfigurableDeployer<?>>> namespaceDeployerMap;
 
     @PostConstruct
     void init() {
-        deployerMap = config.deployerConfigurations()
+        buildDeployerMaps();
+    }
+
+    void buildDeployerMaps() {
+        globalDeployerMap = config.deployerConfigurations()
             .entrySet()
             .stream()
             .collect( Collectors.toMap( Map.Entry::getKey, this::mapToDeployer ) );
+
+        namespaceDeployerMap = config.namespaceConfigurations()
+            .entrySet()
+            .stream()
+            .collect(
+                Collectors.toMap(
+                    Map.Entry::getKey,
+                    entry -> entry.getValue().deployerConfigurations()
+                        .entrySet()
+                        .stream()
+                        .collect( Collectors.toMap( Map.Entry::getKey, this::mapToDeployer ) )
+                )
+            );
     }
 
-    private Deployer mapToDeployer( Map.Entry<String, DeployerConfiguration> entry ) {
+    void onConfigReloaded( @Observes ConfigReloadedEvent event ) {
+        consoleLog.info( "Rebuilding deployer maps..." );
+        buildDeployerMaps();
+        consoleLog.info( "Deployer maps rebuild." );
+    }
+
+    private ConfigurableDeployer<?> mapToDeployer( Map.Entry<String, DeployerConfiguration> entry ) {
         final DeployerConfiguration config = entry.getValue();
-        switch ( config.type() ) {
-            case "NoOpDeployer":
-                return new NoOpDeployer();
-            case "LocalFileDeployer":
-                return new LocalFileDeployer(
-                    PropertyMapUtil.readPropertyMap( config.config(), LocalFileDeployerConfig.class )
-                );
-            case "HttpDeployer":
-                return new HttpDeployer(
-                    PropertyMapUtil.readPropertyMap( config.config(), HttpDeployerConfig.class )
-                );
-            case "DockerStackDeployer":
-                return new DockerStackDeployer(
-                    PropertyMapUtil.readPropertyMap( config.config(), DockerDeployerConfig.class )
-                );
-            case "DockerNetworkDeployer":
-                return new DockerNetworkDeployer(
-                    PropertyMapUtil.readPropertyMap( config.config(), DockerDeployerConfig.class )
-                );
-            default:
-                return findDeployer( config.type(), entry.getKey(), config.config() );
+        final Instance<Object> selected = allBeans.select( new BuiltInDeployerLiteral( config.type() ) );
+
+        if ( !selected.isUnsatisfied() ) {
+            return initDeployer( selected.get(), config.config() );
         }
+        return findExternalDeployer( config.type(), entry.getKey(), config.config() );
     }
 
-    private DeployerPlugin findDeployer( String deployerName, String mediaType, Map<String, String> config ) {
-        final Optional<Map<String, DeployerPlugin>> plugins = pluginLoader.getDeployers();
+    @SuppressWarnings( "unchecked" )
+    private <C extends DeployerConfig> ConfigurableDeployer<C> initDeployer(
+        Object bean, Map<String, String> rawConfig
+    ) {
+        final ConfigurableDeployer<C> deployer = (ConfigurableDeployer<C>)bean;
+        deployer.init( deserializeConfig( deployer, rawConfig ) );
+        return deployer;
+    }
+
+    private <C extends DeployerConfig> C deserializeConfig(
+        ConfigurableDeployer<C> deployer, Map<String, String> rawConfig
+    ) {
+        final Class<C> configType = deployer.getConfigType();
+        if ( configType == null ) {
+            return null;
+        }
+        return PropertyMapUtil.readPropertyMap( rawConfig, configType );
+    }
+
+    private DeployerPlugin<DeployerConfig> findExternalDeployer(
+        String deployerName, String mediaType, Map<String, String> config
+    ) {
+        final Optional<Map<String, DeployerPlugin<DeployerConfig>>> plugins = pluginLoader.getDeployers();
         if ( !plugins.isPresent() ) {
             throw new IllegalStateException( String.format( "No deployer found for media-type '%s'.", mediaType ) );
         }
-        final Map<String, DeployerPlugin> deployers = plugins.get();
+        final Map<String, DeployerPlugin<DeployerConfig>> deployers = plugins.get();
         if ( !deployers.containsKey( deployerName ) ) {
             throw new IllegalStateException( "Deployer not found: " + deployerName );
         }
-        final DeployerPlugin deployer = deployers.get( deployerName );
-        deployer.init( config );
+        final DeployerPlugin<DeployerConfig> deployer = deployers.get( deployerName );
+        deployer.init( deserializeConfig( deployer, config ) );
         return deployer;
     }
 
@@ -111,36 +152,71 @@ public class DeploymentService {
         return handleError( spec, deployer -> deployer.undeploy( spec ) );
     }
 
-    private DeploymentSpec handleError( DeploymentSpec spec, Consumer<Deployer> consumer ) {
-        final Deployer deployer = getDeployer( spec );
+    private DeploymentSpec handleError( DeploymentSpec spec, Consumer<ConfigurableDeployer<?>> consumer ) {
+        final ConfigurableDeployer<?> deployer = getDeployer( spec );
+        extendEnv( spec, deployer );
         try {
             consumer.accept( deployer );
             return spec;
         }
         catch ( Throwable t ) {
-            if ( t instanceof DeploymentWarning ) {
-                throw t;
+            log.debugf( t, "STACKTRACE" );
+            if ( t instanceof DeploymentWarning dw ) {
+                throw dw;
             }
-            throw new DeploymentException(
-                "[%s] %s",
-                deployer.getClass().getSimpleName(),
-                t.getMessage() == null ? t.toString() : t.getMessage()
-            );
+            final DeploymentException de = t instanceof DeploymentException existing
+                ? existing
+                : deployer.translateException( t );
+            throw new DeploymentException( "[%s] %s", deployer.getClass().getSimpleName(), de.getMessage() );
         }
     }
 
-    private Deployer getDeployer( DeploymentSpec spec ) {
-        final MediaTypeMatcher matcher = MediaTypeMatcher.matcher(
-            deployerMap.keySet(),
-            spec.getMediaType()
-        );
-        if ( !matcher.matches() ) {
-            throw new MediaTypeNotSupportedException( spec.getMediaType() );
+    private ConfigurableDeployer<?> getDeployer( DeploymentSpec spec ) {
+        ConfigurableDeployer<?> deployer = null;
+
+        // namespace deployer have precedence over global deployers
+        if ( spec.getEnv() != null && spec.getEnv().containsKey( "namespace" ) ) {
+            deployer = findNamespaceDeployer( spec );
         }
-        final Deployer deployer = deployerMap.get( matcher.mediaType() );
+        // global deployers
+        if ( deployer == null ) {
+            final MediaTypeMatcher matcher = MediaTypeMatcher.matcher(
+                globalDeployerMap.keySet(),
+                spec.getMediaType()
+            );
+            if ( !matcher.matches() ) {
+                throw new MediaTypeNotSupportedException( spec.getMediaType() );
+            }
+            deployer = globalDeployerMap.get( matcher.mediaType() );
+        }
         log.debugf( "media-type: '%s'", spec.getMediaType() );
         log.debug( deployer );
         return deployer;
+    }
+
+    private ConfigurableDeployer<?> findNamespaceDeployer( DeploymentSpec spec ) {
+        final String namespace = spec.getEnv().get( "namespace" );
+        final MediaTypeMatcher matcher = MediaTypeMatcher.matcher(
+            namespaceDeployerMap.getOrDefault( namespace, Map.of() ).keySet(),
+            spec.getMediaType()
+        );
+        if ( matcher.matches() ) {
+            return namespaceDeployerMap.get( namespace ).get( matcher.mediaType() );
+        }
+        return null;
+    }
+
+    private void extendEnv( DeploymentSpec spec, final ConfigurableDeployer<?> deployer ) {
+        if ( deployer.getConfig().isPresent() ) {
+            final Optional<Map<String, String>> deployerEnv = deployer.getConfig().get().env();
+            if ( deployerEnv.isPresent() ) {
+                final Map<String, String> env = deployerEnv.get();
+                env.putAll( spec.getEnv() );
+                spec.setEnv( env );
+                log.debug( "extended environment:" );
+                MapUtil.dump( log, env );
+            }
+        }
     }
 
 }

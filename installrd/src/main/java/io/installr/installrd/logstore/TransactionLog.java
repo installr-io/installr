@@ -18,11 +18,11 @@
 package io.installr.installrd.logstore;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 import io.installr.installrd.logstore.entity.TransactionLogEntity;
+import io.installr.installrd.logstore.entity.TransactionLogId;
 import io.installr.lib.installrd.transaction.TransactionLogRecord;
 import io.installr.lib.installrd.util.Pagination;
 import io.installr.lib.installrd.util.QueryBuilder;
@@ -41,11 +41,12 @@ public class TransactionLog {
 
     @Transactional
     public TransactionLogRecord put( TransactionLogRecord record ) {
+        final TransactionLogId id = new TransactionLogId( record.getNamespace(), record.getId() );
         final TransactionLogEntity entity = (TransactionLogEntity)TransactionLogEntity
-            .findByIdOptional( record.getId() )
+            .findByIdOptional( id )
             .orElse( new TransactionLogEntity() );
-        entity.id = record.getId();
         entity.namespace = record.getNamespace();
+        entity.tx_id = record.getId();
         entity.begin_timestamp = record.getBeginTimestamp();
         entity.end_timestamp = record.getEndTimestamp();
         entity.status = record.getStatus();
@@ -54,14 +55,16 @@ public class TransactionLog {
         return record;
     }
 
-    public TransactionLogRecord get( UUID transactionId ) {
-        final Optional<TransactionLogEntity> tx = TransactionLogEntity.findByIdOptional( transactionId );
-        if ( tx.isEmpty() ) {
+    public TransactionLogRecord get( String namespace, UUID txId ) {
+        final TransactionLogEntity tx = (TransactionLogEntity)TransactionLogEntity
+            .find( "namespace = ?1 and tx_id = ?2", namespace, txId )
+            .firstResult();
+        if ( tx == null ) {
             throw new BadRequestException(
-                String.format( "Transaction with id '%s' not found.", transactionId )
+                String.format( "Transaction with id '%s' not found.", txId )
             );
         }
-        return tx.get().toTransactionLogRecord();
+        return tx.toTransactionLogRecord();
     }
 
     public List<TransactionLogRecord> getAll( String namespace ) {

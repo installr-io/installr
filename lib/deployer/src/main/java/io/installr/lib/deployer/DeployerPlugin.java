@@ -17,10 +17,10 @@
  */
 package io.installr.lib.deployer;
 
-import java.util.Map;
-
-public interface DeployerPlugin extends Deployer {
-
-    void init( Map<String, String> config );
+/**
+ * Marker interface for externally loaded deployer plugins discovered via {@link java.util.ServiceLoader}. Implement
+ * this interface in external JAR files placed in the plugin directory.
+ */
+public interface DeployerPlugin<C extends DeployerConfig> extends ConfigurableDeployer<C> {
 
 }

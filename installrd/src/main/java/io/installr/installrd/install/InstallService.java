@@ -18,13 +18,13 @@
 package io.installr.installrd.install;
 
 import static io.installr.installrd.util.Partials.not;
+import static io.installr.installrd.util.Partials.toFunction;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 
 import org.semver4j.Semver;
 
+import io.installr.installrd.config.InstallrdConfiguration;
 import io.installr.installrd.deployment.DeploymentService;
 import io.installr.installrd.deployment.DeploymentWarning;
 import io.installr.installrd.pkg.PackageCache;
@@ -47,6 +48,8 @@ import io.installr.installrd.pkg.resolver.ResolverResult;
 import io.installr.installrd.pkg.resolver.ResolverStatus;
 import io.installr.installrd.plugin.PluginLoader;
 import io.installr.installrd.transaction.Transaction;
+import io.installr.installrd.util.MapUtil;
+import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentSpec;
 import io.installr.lib.installrd.event.Events;
 import io.installr.lib.installrd.event.Status;
@@ -87,12 +90,15 @@ public class InstallService {
     @Inject
     DeploymentService deploymentService;
 
+    @Inject
+    InstallrdConfiguration installrdConfig;
+
     public void install( Transaction tx, List<PackageId> packageIds ) {
         install( tx, Action.Install, () -> packageResolver.resolve( packageIds ) );
     }
 
     public void installFile( Transaction tx, List<String> files ) {
-        install( tx, Action.Install, () -> resolvePackagesFromFiles( files ) );
+        install( tx, Action.Install, () -> resolvePackagesFromFiles( tx, files ) );
     }
 
     public void reinstall( Transaction tx, List<PackageId> packageIds ) {
@@ -100,15 +106,15 @@ public class InstallService {
     }
 
     public void reinstallFile( Transaction tx, List<String> files ) {
-        install( tx, Action.ReInstall, () -> resolvePackagesFromFiles( files ) );
+        install( tx, Action.ReInstall, () -> resolvePackagesFromFiles( tx, files ) );
     }
 
-    private List<ResolverResult> resolvePackagesFromFiles( List<String> files ) {
+    private List<ResolverResult> resolvePackagesFromFiles( Transaction tx, List<String> files ) {
         return packageResolver.resolve(
             files.stream()
                 .map( this::toPath )
                 .map( this::toPackage )
-                .map( this::extractPackage )
+                .map( toFunction( this::extractPackage, tx ) )
                 .collect(
                     Collectors.toMap(
                         k -> k.getPackageInfo().getPackageId(),
@@ -239,7 +245,7 @@ public class InstallService {
             .ifPresent( filters -> filters.values().forEach( filter -> filter.filter( contentsToInstall ) ) );
 
         // put package into database (status == InProgress)
-        final Long id = packageDatabase.putPackage( tx, action, pkg );
+        packageDatabase.putPackage( tx, action, pkg );
 
         // extract package defaults
         defaultsExtractor.extract( tx.namespace(), pkg );
@@ -251,7 +257,7 @@ public class InstallService {
         env.put( "namespace", tx.namespace().name() );
         env.putAll( packageConfigReader.readAll( tx.namespace().location(), env, packageId ) );
         log.debug( "environment:" );
-        env.forEach( ( k, v ) -> log.debugf( "  %s = %s", k, v ) );
+        MapUtil.dump( log, env );
 
         // install new items
         tx.emitEvent( new Events.PackageInstallationStarted( packageId, packageIdx, contentsToInstall.size() ) );
@@ -274,13 +280,16 @@ public class InstallService {
                     itemStatus = Status.Skipped( w.getMessage() );
                 }
                 catch ( Throwable t ) {
-                    log.debugf( "  error: %s", t.toString() );
+                    if ( !( t instanceof DeploymentException ) ) {
+                        log.errorf( "Error: %s", t.toString() );
+                        log.errorf( t, "Stacktrace" );
+                    }
                     itemStatus = Status.Failed( t );
                     packageStatusRef.set( Status.Failed );
-                    packageDatabase.updateStatus( id, PackageStatus.Failed );
+                    packageDatabase.updateStatus( tx, packageId.name(), PackageStatus.Failed );
                 }
                 finally {
-                    packageDatabase.putItem( tx, packageId, item, !itemStatus.equals( Status.Success ) );
+                    packageDatabase.putItem( tx, packageId, item, itemStatus.equals( Status.Failed ) );
                     tx.emitEvent( new Events.PackageContentDeploymentFinished( item.getPath(), 0, itemStatus ) );
                 }
             }
@@ -290,6 +299,10 @@ public class InstallService {
         final List<PackageContent> contentsToUpdate = new ArrayList<>( pkg.getPackageInfo().getContents() );
         contentsToUpdate.removeAll( contentsToInstall );
         contentsToUpdate.stream()
+            .filter(
+                // consider only items matching the configured selectors
+                item -> matchesSelector( item.getLabels(), installrdConfig.selector() )
+            )
             .map(
                 item -> installedItems.get( item.getPath() )
             )
@@ -304,7 +317,7 @@ public class InstallService {
             );
 
         log.debugf( "  txStatus (at end): %s", packageStatusRef.get() );
-        packageDatabase.updateStatus( id, PackageStatus.fromEventStatus( packageStatusRef.get() ) );
+        packageDatabase.updateStatus( tx, packageId.name(), PackageStatus.fromEventStatus( packageStatusRef.get() ) );
         tx.emitEvent( new Events.PackageInstallationFinished( packageId, packageIdx, packageStatusRef.get() ) );
         return packageStatusRef.get();
     }
@@ -312,12 +325,17 @@ public class InstallService {
     private List<PackageContent> filterContents(
         final Package pkg, Action action, Map<String, ItemLogRecord> installedItems
     ) {
+        final Map<String, String> selector = installrdConfig.selector();
         return pkg.getPackageInfo()
             .getContents()
             .stream()
             .filter(
                 newItem -> {
                     log.tracef( "%s:", newItem.getPath() );
+                    if ( !matchesSelector( newItem.getLabels(), selector ) ) {
+                        log.tracef( "=> labels %s do not match selector %s => skip", newItem.getLabels(), selector );
+                        return false;
+                    }
                     final ItemLogRecord installedItem = installedItems.get( newItem.getPath() );
                     if ( installedItem == null ) {
                         log.trace( "=> installedItem == null (=> not yet installed)" );
@@ -343,6 +361,17 @@ public class InstallService {
             .toList();
     }
 
+    boolean matchesSelector( Map<String, String> labels, Map<String, String> selector ) {
+        if ( labels == null || labels.isEmpty() ) {
+            return true; // item without labels is always relevant
+        }
+        if ( selector == null || selector.isEmpty() ) {
+            return true; // no selector configured => install everything
+        }
+        return selector.entrySet().stream()
+            .allMatch( entry -> entry.getValue().equals( labels.get( entry.getKey() ) ) );
+    }
+
     private DeploymentSpec toDeploymentSpec( PackageContent content, Package pkg, final Map<String, String> env )
         throws IOException {
         final PackageId packageId = pkg.getPackageInfo().getPackageId();
@@ -354,7 +383,7 @@ public class InstallService {
             throw new FileNotFoundException( String.format( "File not found: %s", file ) );
         }
         final DeploymentSpec spec = new DeploymentSpec();
-        spec.setName( encodeName( packageId, content.getPath() ) );
+        spec.setName( prefixName( packageId, content.getPath() ) );
         spec.setVersion( packageId.version() );
         spec.setData( Files.readAllBytes( file ) );
         spec.setHash( content.getHash() );
@@ -364,8 +393,8 @@ public class InstallService {
         return spec;
     }
 
-    private String encodeName( PackageId packageId, String path ) {
-        return Base64.getEncoder().encodeToString( ( packageId.name() + "/" + path ).getBytes() );
+    private String prefixName( PackageId packageId, String path ) {
+        return packageId.name() + "/" + path;
     }
 
     private Status aggregateStatus( Status s1, Status s2 ) {
@@ -388,8 +417,9 @@ public class InstallService {
     }
 
     @SneakyThrows
-    private Package extractPackage( Package pkg ) {
-        final Path archive = pkg.extractArchive();
+    private Package extractPackage( Transaction tx, Package pkg ) {
+        final Path archive = pkg.extractArchive( tx.tmpDir() );
+        pkg.setLocalPath( archive );
         log.debugf( "Extracted package '%s' to '%s'.", pkg, archive );
         return pkg;
     }

@@ -19,18 +19,26 @@
 
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.installr</groupId>
     <artifactId>installr-project</artifactId>
-    <version>0.2.0-SNAPSHOT</version>
+    <version>0.2.0</version>
     <packaging>pom</packaging>
 
     <organization>
         <name>Installr.io</name>
         <url>https://installr.io</url>
     </organization>
+
+    <licenses>
+        <license>
+            <name>GNU Affero General Public License v3.0</name>
+            <url>https://www.gnu.org/licenses/agpl-3.0.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
     <modules>
         <module>code-format</module>
@@ -61,7 +69,7 @@
         <!-- maintainer info -->
         <maintainer.name>Dorian Vallant</maintainer.name>
         <maintainer.email>dorian@installr.io</maintainer.email>
-        
+
         <!-- compiler and project setup -->
         <failsafe.useModulePath>false</failsafe.useModulePath>
         <maven.compiler.release>21</maven.compiler.release>
@@ -75,40 +83,41 @@
         <!-- platform version -->
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-        <quarkus.platform.version>3.27.3</quarkus.platform.version>
+        <quarkus.platform.version>3.33.3.2</quarkus.platform.version>
 
         <!-- plugin versions -->
-        <buildnumber-maven-plugin.version>3.3.0</buildnumber-maven-plugin.version>
-        <exec-maven-plugin.version>3.6.3</exec-maven-plugin.version>
-        <extra-enforcer-rules.version>1.12.0</extra-enforcer-rules.version>
-        <flatten-maven-plugin.version>1.7.3</flatten-maven-plugin.version>
+        <buildnumber-maven-plugin.version>3.3.1</buildnumber-maven-plugin.version>
+        <exec-maven-plugin.version>3.6.4</exec-maven-plugin.version>
+        <extra-enforcer-rules.version>1.12.1</extra-enforcer-rules.version>
+        <flatten-maven-plugin.version>1.8.0</flatten-maven-plugin.version>
         <formatter-maven-plugin.version>2.29.0</formatter-maven-plugin.version>
-        <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
-        <license-maven-plugin.version>5.0.0</license-maven-plugin.version>
+        <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
+        <license-maven-plugin.version>5.1.2</license-maven-plugin.version>
         <maven-antrun-plugin.version>3.2.0</maven-antrun-plugin.version>
         <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
-        <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
-        <maven-dependency-plugin.version>3.10.0</maven-dependency-plugin.version>
+        <maven-compiler-plugin.version>3.16.0</maven-compiler-plugin.version>
+        <maven-dependency-plugin.version>3.11.0</maven-dependency-plugin.version>
         <maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
-        <maven-enforcer-plugin.version>3.6.2</maven-enforcer-plugin.version>
-        <maven-failsafe-plugin.version>3.5.5</maven-failsafe-plugin.version>
+        <maven-enforcer-plugin.version>3.6.3</maven-enforcer-plugin.version>
+        <maven-failsafe-plugin.version>3.6.0</maven-failsafe-plugin.version>
         <maven-install-plugin.version>3.1.4</maven-install-plugin.version>
-        <maven-jar-plugin.version>3.5.0</maven-jar-plugin.version>
+        <maven-jar-plugin.version>3.5.1</maven-jar-plugin.version>
         <maven-resources-plugin.version>3.5.0</maven-resources-plugin.version>
-        <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
+        <maven-surefire-plugin.version>3.6.0</maven-surefire-plugin.version>
+        <maven-surefire-junit5-tree-reporter.version>1.5.1</maven-surefire-junit5-tree-reporter.version>
+        <mojo-license-maven-plugin.version>2.7.1</mojo-license-maven-plugin.version>
         <quarkus-maven-plugin.version>${quarkus.platform.version}</quarkus-maven-plugin.version>
         <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
-        <versions-maven-plugin.version>2.21.0</versions-maven-plugin.version>
-        <wagon-maven-plugin.version>3.0.0</wagon-maven-plugin.version>
+        <versions-maven-plugin.version>2.22.0</versions-maven-plugin.version>
+        <wagon-maven-plugin.version>3.1.0</wagon-maven-plugin.version>
 
         <!-- dependency versions -->
-        <commons-codec.version>1.21.0</commons-codec.version>
+        <commons-codec.version>1.22.1</commons-codec.version>
         <commons-compress.version>1.28.0</commons-compress.version>
         <docker-client.version>2026-03-11T08-30-00-groovy-4</docker-client.version>
-        <groovy.version>4.0.31</groovy.version>
-        <installr-code-format.version>0.2.0-SNAPSHOT</installr-code-format.version>
-        <lombok.version>1.18.44</lombok.version>
-        <quarkus-logging-logback.version>1.1.2</quarkus-logging-logback.version>
+        <groovy.version>4.0.33</groovy.version>
+        <installr-code-format.version>0.2.0</installr-code-format.version>
+        <lombok.version>1.18.48</lombok.version>
         <semver4j.version>6.0.0</semver4j.version>
 
         <!-- maven-deploy-plugin -->
@@ -145,11 +154,6 @@
                 <groupId>commons-codec</groupId>
                 <artifactId>commons-codec</artifactId>
                 <version>${commons-codec.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.quarkiverse.logging.logback</groupId>
-                <artifactId>quarkus-logging-logback</artifactId>
-                <version>${quarkus-logging-logback.version}</version>
             </dependency>
             <dependency>
                 <groupId>de.gesellix</groupId>
@@ -202,6 +206,67 @@
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>flatten-maven-plugin</artifactId>
                     <version>${flatten-maven-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>license-maven-plugin</artifactId>
+                    <version>${mojo-license-maven-plugin.version}</version>
+                    <configuration>
+                        <!-- configuration is based on: https://www.gnu.org/licenses/license-list.html -->
+                        <failOnBlacklist>true</failOnBlacklist>
+
+                        <!-- test-scoped dependencies are never distributed and are therefore not license-relevant -->
+                        <excludedScopes>test</excludedScopes>
+                        <!--
+                            EPL-1.0 and EPL-2.0 are intentionally NOT in this list (FSF: not
+                            GPL-compatible). Dual-licensed EPL dependencies are mapped to their
+                            AGPLv3-compatible alternative in src/license/THIRD-PARTY.properties.
+                        -->
+                        <!-- Licenses compatible with AGPLv3 -->
+                        <includedLicenses>
+                            <includedLicense>Apache License 2.0</includedLicense>
+                            <includedLicense>Bouncy Castle Licence</includedLicense>
+                            <!-- CDDL + GPL2-CE: javax.annotation-api; Classpath Exception permits use in AGPLv3 -->
+                            <includedLicense>CDDL + GPLv2 with Classpath Exception</includedLicense>
+                            <includedLicense>BSD 2-Clause License</includedLicense>
+                            <includedLicense>BSD 3-Clause License</includedLicense>
+                            <includedLicense>Creative Commons Zero v1.0 Universal</includedLicense>
+                            <includedLicense>Eclipse Distribution License 1.0</includedLicense>
+                            <includedLicense>GNU Affero General Public License v3.0</includedLicense>
+                            <includedLicense>GNU General Public License v2.0 with Classpath Exception</includedLicense>
+                            <includedLicense>GNU General Public License v3.0</includedLicense>
+                            <includedLicense>GNU Lesser General Public License v2.1</includedLicense>
+                            <includedLicense>GNU Lesser General Public License v3.0</includedLicense>
+                            <includedLicense>MIT License</includedLicense>
+                            <includedLicense>MIT-0</includedLicense>
+                            <includedLicense>Mozilla Public License 2.0</includedLicense>
+                            <includedLicense>Public Domain</includedLicense>
+                            <includedLicense>The Unlicense</includedLicense>
+                            <includedLicense>Universal Permissive License, Version 1.0</includedLicense>
+                        </includedLicenses>
+                        <!-- Normalize the many different spellings found in dependency POMs -->
+                        <licenseMerges>
+                            <licenseMerge>Apache License 2.0|Apache License, Version 2.0|The Apache License, Version 2.0|The Apache Software License, Version 2.0|Apache 2.0|Apache-2.0|Apache Software License - Version 2.0|Apache License Version 2.0|Apache License 2|Apache License v2.0|ASL, version 2</licenseMerge>
+                            <licenseMerge>Bouncy Castle Licence</licenseMerge>
+                            <licenseMerge>CDDL + GPLv2 with Classpath Exception|CDDL + GPLv2 with classpath exception|CDDL/GPLv2+CE</licenseMerge>
+                            <licenseMerge>BSD 2-Clause License|BSD 2-Clause|The BSD 2-Clause License|BSD-2-Clause|FreeBSD License|Simplified BSD License</licenseMerge>
+                            <!-- Go License (re2j) is BSD 3-Clause in practice -->
+                            <licenseMerge>BSD 3-Clause License|BSD 3-Clause|The BSD 3-Clause License|BSD-3-Clause|New BSD License|The New BSD License|Modified BSD License|BSD License|BSD|BSD License 3|Go License</licenseMerge>
+                            <licenseMerge>Creative Commons Zero v1.0 Universal|CC0-1.0|CC0 1.0 Universal|Public Domain, per Creative Commons CC0</licenseMerge>
+                            <licenseMerge>Eclipse Distribution License 1.0|Eclipse Distribution License - v 1.0|Eclipse Distribution License v. 1.0|EDL 1.0|EDL-1.0</licenseMerge>
+                            <licenseMerge>GNU Affero General Public License v3.0|GNU Affero General Public License, Version 3|AGPL 3.0|AGPL-3.0|AGPL-3.0-only|AGPLv3</licenseMerge>
+                            <licenseMerge>GNU General Public License v2.0 with Classpath Exception|GPL-2.0-with-classpath-exception|GNU General Public License, Version 2 with the Classpath Exception|GNU General Public License, version 2, with the Classpath Exception|GNU General Public License, version 2 with the GNU Classpath Exception|GPL v2 with Classpath Exception|GPL2 w/ CPE</licenseMerge>
+                            <licenseMerge>GNU General Public License v3.0|GNU General Public License, Version 3|GPL 3.0|GPL-3.0|GPL-3.0-only|GPLv3</licenseMerge>
+                            <licenseMerge>GNU Lesser General Public License v2.1|GNU Lesser General Public License, Version 2.1|LGPL 2.1|LGPL-2.1|LGPL-2.1-only|LGPL, version 2.1|GNU Lesser General Public License v2.1 or later|LGPL-2.1-or-later</licenseMerge>
+                            <licenseMerge>GNU Lesser General Public License v3.0|GNU Lesser General Public License, Version 3|LGPL 3.0|LGPL-3.0|LGPL-3.0-only|GNU Lesser General Public License v3.0 or later|LGPL-3.0-or-later</licenseMerge>
+                            <licenseMerge>MIT License|The MIT License|MIT|MIT license|MIT License (MIT)|The MIT License (MIT)</licenseMerge>
+                            <licenseMerge>MIT-0</licenseMerge>
+                            <licenseMerge>Mozilla Public License 2.0|MPL-2.0|MPL 2.0|Mozilla Public License, Version 2.0</licenseMerge>
+                            <licenseMerge>Public Domain</licenseMerge>
+                            <licenseMerge>The Unlicense|Unlicense|UNLICENSED</licenseMerge>
+                            <licenseMerge>Universal Permissive License, Version 1.0|UPL-1.0|Universal Permissive License v 1.0</licenseMerge>
+                        </licenseMerges>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>net.revelc.code.formatter</groupId>
@@ -293,6 +358,37 @@
                 <plugin>
                     <artifactId>maven-failsafe-plugin</artifactId>
                     <version>${maven-failsafe-plugin.version}</version>
+                    <!--
+                        The configurations of maven-failsafe-plugin and maven-surefire-plugin are largely identical.
+                        If you change one configuration, you should also change the other.
+                     -->
+                    <configuration>
+                        <enableOutErrElements>false</enableOutErrElements>
+                        <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                        <reportFormat>plain</reportFormat>
+                        <statelessTestsetInfoReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoTreeReporter">
+                            <theme>UNICODE</theme>
+                            <printStacktraceOnError>true</printStacktraceOnError>
+                            <printStacktraceOnFailure>true</printStacktraceOnFailure>
+                            <printStdoutOnError>true</printStdoutOnError>
+                            <printStdoutOnFailure>false</printStdoutOnFailure>
+                            <printStdoutOnSuccess>false</printStdoutOnSuccess>
+                            <printStderrOnError>true</printStderrOnError>
+                            <printStderrOnFailure>false</printStderrOnFailure>
+                            <printStderrOnSuccess>false</printStderrOnSuccess>
+                        </statelessTestsetInfoReporter>
+                        <systemPropertyVariables>
+                            <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                            <maven.home>${maven.home}</maven.home>
+                        </systemPropertyVariables>
+                    </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>me.fabriciorby</groupId>
+                            <artifactId>maven-surefire-junit5-tree-reporter</artifactId>
+                            <version>${maven-surefire-junit5-tree-reporter.version}</version>
+                        </dependency>
+                    </dependencies>
                 </plugin>
                 <plugin>
                     <artifactId>maven-install-plugin</artifactId>
@@ -312,6 +408,37 @@
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven-surefire-plugin.version}</version>
+                    <!--
+                        The configurations of maven-failsafe-plugin and maven-surefire-plugin are largely identical.
+                        If you change one configuration, you should also change the other.
+                     -->
+                    <configuration>
+                        <enableOutErrElements>false</enableOutErrElements>
+                        <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                        <reportFormat>plain</reportFormat>
+                        <statelessTestsetInfoReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoTreeReporter">
+                            <theme>UNICODE</theme>
+                            <printStacktraceOnError>true</printStacktraceOnError>
+                            <printStacktraceOnFailure>true</printStacktraceOnFailure>
+                            <printStdoutOnError>true</printStdoutOnError>
+                            <printStdoutOnFailure>false</printStdoutOnFailure>
+                            <printStdoutOnSuccess>false</printStdoutOnSuccess>
+                            <printStderrOnError>true</printStderrOnError>
+                            <printStderrOnFailure>false</printStderrOnFailure>
+                            <printStderrOnSuccess>false</printStderrOnSuccess>
+                        </statelessTestsetInfoReporter>
+                        <systemPropertyVariables>
+                            <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                            <maven.home>${maven.home}</maven.home>
+                        </systemPropertyVariables>
+                    </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>me.fabriciorby</groupId>
+                            <artifactId>maven-surefire-junit5-tree-reporter</artifactId>
+                            <version>${maven-surefire-junit5-tree-reporter.version}</version>
+                        </dependency>
+                    </dependencies>
                 </plugin>
                 <plugin>
                     <groupId>${quarkus.platform.group-id}</groupId>

@@ -50,21 +50,19 @@ public class PackageDatabase {
     @Inject
     Namespace namespace;
 
-    public Long putPackage( Transaction transaction, Action action, Package pkg ) {
-        return pkgLog.put(
+    public void putPackage( Transaction transaction, Action action, Package pkg ) {
+        pkgLog.put(
             new PackageLogRecord(
-                null,
                 transaction.namespace().name(),
+                transaction.id(),
                 pkg.getPackageInfo().getPackageId().name(),
                 pkg.getPackageInfo(),
                 pkg.getRepositoryId(),
                 action,
-                transaction.id(),
                 Instant.now(),
                 PackageStatus.InProgress
             )
-        )
-            .getId();
+        );
     }
 
     public Optional<PackageLogRecord> getInstalledPackageLog( String namespace, String packageName ) {
@@ -81,8 +79,9 @@ public class PackageDatabase {
             .findFirst();
     }
 
-    public void updateStatus( Long id, PackageStatus status ) {
-        final PackageLogRecord pkgLogRecord = pkgLog.get( id );
+    public void updateStatus( Transaction transaction, String packageName, PackageStatus status ) {
+        final PackageLogRecord pkgLogRecord = pkgLog
+            .get( transaction.namespace().name(), transaction.id(), packageName );
         pkgLogRecord.setStatus( status );
         pkgLog.put( pkgLogRecord );
     }
@@ -90,13 +89,13 @@ public class PackageDatabase {
     public void putItem( Transaction transaction, PackageId packageId, PackageContent content, boolean error ) {
         final ItemLogRecord item = new ItemLogRecord();
         item.setNamespace( transaction.namespace().name() );
+        item.setTxId( transaction.id() );
         item.setPackageName( packageId.name() );
         item.setPath( content.getPath() );
         item.setVersion( packageId.version() );
         item.setMediaType( content.getMediaType() );
         item.setEncoding( content.getEncoding() );
         item.setHash( content.getHash() );
-        item.setInstalledBy( transaction.id() );
         item.setInstalledOn( Instant.now() );
         item.hasError( error );
         itemLog.put( item );

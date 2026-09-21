@@ -24,7 +24,12 @@ import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper;
 
 public class PropertyMapUtil {
 
-    private static JavaPropsMapper objectMapper = new JavaPropsMapper();
+    private static final JavaPropsMapper objectMapper;
+
+    static {
+        objectMapper = new JavaPropsMapper();
+        objectMapper.findAndRegisterModules();
+    }
 
     public static <T> T readPropertyMap( Map<String, String> map, Class<T> javaType ) {
         try {

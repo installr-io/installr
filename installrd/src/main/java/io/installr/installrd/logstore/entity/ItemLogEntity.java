@@ -18,6 +18,7 @@
 package io.installr.installrd.logstore.entity;
 
 import java.time.Instant;
+import java.util.UUID;
 
 import org.semver4j.Semver;
 
@@ -25,36 +26,29 @@ import io.installr.lib.installrd.pkg.ItemLogRecord;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 
 @Entity
-@Table(
-    name = "ITEM_LOG",
-    uniqueConstraints = {
-        @UniqueConstraint( columnNames = { "namespace", "package_name", "path" }, name = "ITEM_LOG_NS_PKG_PATH_UC" )
-    }
-)
+@Table( name = "ITEM_LOG" )
+@IdClass( ItemLogId.class )
 public class ItemLogEntity extends PanacheEntityBase {
 
     @Id
-    @SequenceGenerator( name = "ITEM_LOG_SEQ", initialValue = 1, allocationSize = 1 )
-    @GeneratedValue( strategy = GenerationType.SEQUENCE, generator = "ITEM_LOG_SEQ" )
-    public Long id;
-
-    @Column( name = "namespace", nullable = false )
+    @Column( name = "namespace" )
     public String namespace;
 
-    @Column( name = "package_name", nullable = false )
+    @Id
+    @Column( name = "tx_id" )
+    public UUID tx_id;
+
+    @Id
+    @Column( name = "package_name" )
     public String package_name;
 
-    @Column( name = "path", nullable = false )
+    @Id
+    @Column( name = "path" )
     public String path;
 
     @Column( name = "version", nullable = false )
@@ -69,10 +63,6 @@ public class ItemLogEntity extends PanacheEntityBase {
     @Column( name = "hash", nullable = false )
     public String hash;
 
-    @ManyToOne
-    @JoinColumn( name = "installed_by_txid", nullable = false )
-    public TransactionLogEntity installed_by_tx;
-
     @Column( name = "installed_on", nullable = false )
     public Instant installed_on;
 
@@ -81,15 +71,14 @@ public class ItemLogEntity extends PanacheEntityBase {
 
     public ItemLogRecord toItemLogRecord() {
         final ItemLogRecord item = new ItemLogRecord();
-        item.setId( id );
         item.setNamespace( namespace );
+        item.setTxId( tx_id );
         item.setPackageName( package_name );
         item.setPath( path );
         item.setVersion( Semver.parse( version ) );
         item.setMediaType( media_type );
         item.setEncoding( encoding );
         item.setHash( hash );
-        item.setInstalledBy( installed_by_tx.id );
         item.setInstalledOn( installed_on );
         item.hasError( error );
         return item;

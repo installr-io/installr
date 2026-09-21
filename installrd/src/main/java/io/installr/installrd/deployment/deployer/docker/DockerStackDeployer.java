@@ -20,7 +20,6 @@ package io.installr.installrd.deployment.deployer.docker;
 import java.io.ByteArrayInputStream;
 import java.time.Duration;
 import java.time.ZonedDateTime;
-import java.util.Base64;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -37,22 +36,32 @@ import de.gesellix.docker.remote.api.Service;
 import de.gesellix.docker.remote.api.Task;
 import de.gesellix.docker.remote.api.TaskState;
 import de.gesellix.docker.remote.api.TaskStatus;
-import de.gesellix.docker.remote.api.core.ClientException;
+import io.installr.installrd.config.InstallrdConfiguration;
+import io.installr.installrd.deployment.deployer.BuiltInDeployer;
 import io.installr.installrd.util.PeriodicEvaluator;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentSpec;
+import io.installr.lib.util.FileUtil;
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
 import lombok.extern.jbosslog.JBossLog;
 
+@Dependent
+@BuiltInDeployer( "DockerStackDeployer" )
 @JBossLog
 public class DockerStackDeployer extends AbstractDockerDeployer {
 
+    @Inject
+    InstallrdConfiguration installrdConfig;
+
     private static final String MEM_REGEX = "\\d+([.]\\d+)?[KkMmGg]";
 
-    private final DeployConfigReader reader;
-    private final DeployStackOptions options;
+    private DeployConfigReader reader;
+    private DeployStackOptions options;
 
-    public DockerStackDeployer( DockerDeployerConfig config ) {
-        super( config );
+    @Override
+    public void init( DockerDeployerConfig config ) {
+        super.init( config );
         this.reader = new DeployConfigReader( this.client );
         this.options = new DeployStackOptions();
         this.options.setSendRegistryAuth( true );
@@ -69,12 +78,10 @@ public class DockerStackDeployer extends AbstractDockerDeployer {
         final DeployStackConfig stackConfig = reader.loadCompose(
             stack,
             new ByteArrayInputStream( spec.getData() ),
-            "/tmp", // fixme
+            installrdConfig.location().toAbsolutePath().toString(),
             env == null ? new HashMap<>() : env
         );
-        handleClientException(
-            () -> client.stackDeploy( stack, stackConfig, options )
-        );
+        client.stackDeploy( stack, stackConfig, options );
         final boolean running = new PeriodicEvaluator<>( () -> taskStateStream( stack ), checkAllTasksRunning() )
             .withInterval( config.getPollingInterval() )
             .withTimeout( config.getPollingTimeout() )
@@ -92,9 +99,7 @@ public class DockerStackDeployer extends AbstractDockerDeployer {
         // determine all task IDs
         final List<String> taskIds = taskStream( stack ).map( Task::getID ).toList();
         // remove stack
-        handleClientException(
-            () -> client.stackRm( stack )
-        );
+        client.stackRm( stack );
         // and check if all tasks have been removed
         final boolean successful = new PeriodicEvaluator<>( () -> taskIds.stream(), checkAllTasksRemoved() )
             .withInterval( config.getPollingInterval() )
@@ -111,9 +116,7 @@ public class DockerStackDeployer extends AbstractDockerDeployer {
         if ( namespace == null || namespace.isBlank() ) {
             throw new IllegalStateException( "Namespace must be provided via env." );
         }
-        final String name = new String( Base64.getDecoder().decode( spec.getName() ) )
-            .split( "/" )[ 0 ];
-        return String.format( "%s-%s", namespace, name );
+        return String.format( "%s-%s", namespace, FileUtil.nameWithoutExtension( spec.getName() ) );
     }
 
     private boolean existsStack( String stack ) {
@@ -166,16 +169,6 @@ public class DockerStackDeployer extends AbstractDockerDeployer {
                 bytes = 0;
         }
         return String.valueOf( bytes );
-    }
-
-    private void handleClientException( Runnable runnable ) throws DeploymentException {
-        try {
-            runnable.run();
-        }
-        catch ( ClientException ex ) {
-            // toString() returns the message body
-            throw new DeploymentException( ex.toString() );
-        }
     }
 
     private Stream<TaskState> taskStateStream( final String stackName ) {

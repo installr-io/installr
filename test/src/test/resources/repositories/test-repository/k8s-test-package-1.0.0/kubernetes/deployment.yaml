@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: co-whoami
+spec:
+    template:
+        metadata:
+            labels:
+                app.kubernetes.io/name: co-whoami
+                app.kubernetes.io/instance: co-whoami-1.0.0-d34db33f
+                app.kubernetes.io/version: 1.0.0
+                app.kubernetes.io/component: application
+        spec:
+            containers:
+                - name: co-whoami
+                  image: traefik/whoami
+                  ports:
+                      - containerPort: 80
+    replicas: 1
+    selector:
+        matchLabels:
+            app.kubernetes.io/instance: co-whoami-1.0.0-d34db33f

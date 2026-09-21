@@ -18,6 +18,7 @@
 package io.installr.installrd.logstore.entity;
 
 import java.time.Instant;
+import java.util.UUID;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -31,27 +32,25 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
 
 @Entity
 @Table( name = "PACKAGE_LOG" )
+@IdClass( PackageLogId.class )
 public class PackageLogEntity extends PanacheEntityBase {
 
     @Id
-    @SequenceGenerator( name = "PACKAGE_LOG_SEQ", initialValue = 1, allocationSize = 1 )
-    @GeneratedValue( strategy = GenerationType.SEQUENCE, generator = "PACKAGE_LOG_SEQ" )
-    public Long id;
-
-    @Column( name = "namespace", nullable = false )
+    @Column( name = "namespace" )
     public String namespace;
 
-    @Column( name = "package_name", nullable = false )
+    @Id
+    @Column( name = "tx_id" )
+    public UUID tx_id;
+
+    @Id
+    @Column( name = "package_name" )
     public String package_name;
 
     @Column( name = "package_info", nullable = false )
@@ -65,10 +64,6 @@ public class PackageLogEntity extends PanacheEntityBase {
     @Enumerated( EnumType.STRING )
     public Action action;
 
-    @ManyToOne
-    @JoinColumn( name = "action_by_txid", nullable = false )
-    public TransactionLogEntity action_by_tx;
-
     @Column( name = "action_timestamp", nullable = false )
     public Instant action_timestamp;
 
@@ -78,13 +73,12 @@ public class PackageLogEntity extends PanacheEntityBase {
 
     public PackageLogRecord toPackageLogRecord() {
         return new PackageLogRecord(
-            id,
             namespace,
+            tx_id,
             package_name,
             package_info,
             repository_id,
             action,
-            action_by_tx.id,
             action_timestamp,
             status
         );

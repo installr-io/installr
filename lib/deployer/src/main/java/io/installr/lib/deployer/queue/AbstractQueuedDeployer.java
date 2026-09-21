@@ -20,9 +20,9 @@ package io.installr.lib.deployer.queue;
 import java.time.Duration;
 
 import io.installr.lib.deployer.Deployer;
-import io.installr.lib.deployer.DeploymentSpec;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentResponse;
+import io.installr.lib.deployer.DeploymentSpec;
 
 public abstract class AbstractQueuedDeployer implements Deployer {
 
@@ -37,21 +37,21 @@ public abstract class AbstractQueuedDeployer implements Deployer {
     }
 
     @Override
-    public final void deploy( DeploymentSpec deployment ) throws DeploymentException {
+    public final void deploy( DeploymentSpec spec ) throws DeploymentException {
         deploymentQueue.enqueue(
-            deployment.getName(),
+            spec.getName(),
             () -> {
-                doDeploy( deployment );
+                doDeploy( spec );
             }
         );
     }
 
     @Override
-    public final void undeploy( DeploymentSpec deployment ) throws DeploymentException {
+    public final void undeploy( DeploymentSpec spec ) throws DeploymentException {
         deploymentQueue.enqueue(
-            deployment.getName(),
+            spec.getName(),
             () -> {
-                doUndeploy( deployment );
+                doUndeploy( spec );
             }
         );
     }
@@ -60,8 +60,8 @@ public abstract class AbstractQueuedDeployer implements Deployer {
         return deploymentQueue.getStatus( name );
     }
 
-    protected abstract void doDeploy( DeploymentSpec deployment ) throws DeploymentException;
+    protected abstract void doDeploy( DeploymentSpec spec ) throws DeploymentException;
 
-    protected abstract void doUndeploy( DeploymentSpec deployment ) throws DeploymentException;
+    protected abstract void doUndeploy( DeploymentSpec spec ) throws DeploymentException;
 
 }

@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.codec.digest.DigestUtils;
@@ -74,22 +75,68 @@ public class InstallrPackager {
     private List<ContentAssignment> defaultContentAssignments() {
         return List.of(
             new ContentAssignment(
+                "liquibase/**",
+                "application/vnd.io.installr.liquibase",
+                "UTF-8",
+                1
+            ),
+            new ContentAssignment(
                 "docker/*.network.json",
                 "application/vnd.io.installr.docker-network",
                 "UTF-8",
-                5
+                5,
+                Map.of( "platform", "docker-swarm" )
             ),
             new ContentAssignment(
                 "docker/**/*.network.json",
                 "application/vnd.io.installr.docker-network",
                 "UTF-8",
-                5
+                5,
+                Map.of( "platform", "docker-swarm" )
             ),
             new ContentAssignment(
                 "docker/**",
                 "application/vnd.io.installr.docker-stack",
                 "UTF-8",
-                10
+                10,
+                Map.of( "platform", "docker-swarm" )
+            ),
+            new ContentAssignment(
+                "kubernetes/**",
+                "application/vnd.io.installr.kubernetes",
+                "UTF-8",
+                10,
+                Map.of( "platform", "kubernetes" )
+            ),
+            new ContentAssignment(
+                "keycloak/*.realm.json",
+                "application/vnd.io.installr.kc-realm",
+                "UTF-8",
+                15
+            ),
+            new ContentAssignment(
+                "keycloak/*.scope.json",
+                "application/vnd.io.installr.kc-scope",
+                "UTF-8",
+                16
+            ),
+            new ContentAssignment(
+                "keycloak/*.role.json",
+                "application/vnd.io.installr.kc-role",
+                "UTF-8",
+                17
+            ),
+            new ContentAssignment(
+                "keycloak/*.user.json",
+                "application/vnd.io.installr.kc-user",
+                "UTF-8",
+                18
+            ),
+            new ContentAssignment(
+                "keycloak/*.client.json",
+                "application/vnd.io.installr.kc-client",
+                "UTF-8",
+                19
             )
         );
     }
@@ -128,6 +175,7 @@ public class InstallrPackager {
         content.setMediaType( contentAssignment.getMediaType() );
         content.setEncoding( contentAssignment.getEncoding() );
         content.setOrder( contentAssignment.getOrder() );
+        content.setLabels( contentAssignment.getLabels() );
         return content;
     }
 

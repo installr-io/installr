@@ -25,7 +25,7 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 
 @Data
-public class InstallFileResource {
+public class InstallFileResource implements InstallResource {
 
     @NotEmpty( message = "No packages selected." )
     @JsonProperty( "file" )

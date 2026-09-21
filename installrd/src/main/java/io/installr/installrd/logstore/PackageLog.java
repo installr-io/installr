@@ -19,10 +19,11 @@ package io.installr.installrd.logstore;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import io.installr.installrd.logstore.entity.PackageLogEntity;
-import io.installr.installrd.logstore.entity.TransactionLogEntity;
+import io.installr.installrd.logstore.entity.PackageLogId;
 import io.installr.lib.installrd.pkg.PackageLogRecord;
 import io.installr.lib.installrd.pkg.PackageLogRecord.Filter;
 import io.installr.lib.installrd.util.Pagination;
@@ -41,24 +42,25 @@ public class PackageLog {
 
     @Transactional
     public PackageLogRecord put( PackageLogRecord record ) {
-        final PackageLogEntity entity = record.getId() == null
-            ? new PackageLogEntity()
-            : PackageLogEntity.findById( record.getId() );
+        final PackageLogId id = new PackageLogId( record.getNamespace(), record.getTxId(), record.getPackageName() );
+        final PackageLogEntity entity = (PackageLogEntity)PackageLogEntity
+            .findByIdOptional( id )
+            .orElse( new PackageLogEntity() );
         entity.namespace = record.getNamespace();
+        entity.tx_id = record.getTxId();
         entity.package_name = record.getPackageName();
         entity.package_info = record.getPackageInfo();
         entity.repository_id = record.getRepositoryId();
         entity.action = record.getAction();
-        entity.action_by_tx = TransactionLogEntity.findById( record.getActionByTx() );
         entity.action_timestamp = record.getActionTimestamp();
         entity.status = record.getStatus();
         entity.persistAndFlush();
-        record.setId( entity.id ); // get newly created id from entity
         return record;
     }
 
-    public PackageLogRecord get( Long id ) {
-        return ( (PackageLogEntity)PackageLogEntity.findById( id ) ).toPackageLogRecord();
+    public PackageLogRecord get( String namespace, UUID txId, String packageName ) {
+        return ( (PackageLogEntity)PackageLogEntity.findById( new PackageLogId( namespace, txId, packageName ) ) )
+            .toPackageLogRecord();
     }
 
     public Optional<List<PackageLogRecord>> getByPackagename( String namespace, String packageName ) {
@@ -91,8 +93,8 @@ public class PackageLog {
         return PackageLogEntity
             .find(
                 qb.query(),
-                Sort.by( "id", Direction.Ascending ),
-                qb.params( "action_by_tx", v -> TransactionLogEntity.findById( v ) )
+                Sort.by( "action_timestamp", Direction.Ascending ),
+                qb.params()
             );
     }
 

@@ -29,13 +29,14 @@ import java.util.Optional;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import io.smallrye.config.SmallRyeConfigBuilder;
+import io.installr.installrd.logging.ConsoleLog;
+import io.installr.installrd.util.YamlConfigLoader;
 import io.smallrye.config.WithDefault;
 import io.smallrye.config.WithName;
-import io.smallrye.config.source.yaml.YamlConfigSource;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.ws.rs.core.UriBuilder;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
 import lombok.SneakyThrows;
 
 @ApplicationScoped
@@ -87,48 +88,43 @@ public class InstallrdConfiguration implements InstallrdConfigurationMapping {
         String name();
     }
 
+    @Inject
+    YamlConfigLoader yamlConfigLoader;
+
+    @Inject
+    NamespaceConfigurationLoader namespaceConfigurationLoader;
+
     @ConfigProperty( name = "installrd.config.location" )
     Path configLocation;
 
-    private InstallrdConfigurationMapping installrdConfig;
+    @Inject
+    ConsoleLog consoleLog;
+
+    private volatile InstallrdConfigurationMapping installrdConfig;
+
+    private volatile Map<String, NamespaceConfiguration> namespaceConfigs;
 
     @PostConstruct
-    @SneakyThrows
     void init() {
+        reload();
+    }
+
+    @SneakyThrows
+    void reload() {
         final Path location = configLocation.toAbsolutePath();
         Files.createDirectories( location );
         final Path configFile = location.resolve( "config.yaml" );
         if ( !Files.exists( configFile ) ) {
             Files.createFile( configFile );
         }
-        installrdConfig = readFile( configFile, InstallrdConfigurationMapping.class );
+        installrdConfig = yamlConfigLoader.load( configFile, InstallrdConfigurationMapping.class );
+        namespaceConfigs = namespaceConfigurationLoader.load( locationFor( LocationType.Namespace ) );
     }
 
-    @SneakyThrows
-    private <T> T readFile( Path file, Class<T> type ) {
-        return type.cast(
-            new SmallRyeConfigBuilder()
-                .addDiscoveredConverters()
-                .addDiscoveredCustomizers()
-                .addDiscoveredInterceptors()
-                .addDiscoveredSecretKeysHandlers()
-                .addDiscoveredSources()
-                .addDiscoveredValidator()
-                .addDefaultSources()
-                .addDefaultInterceptors()
-                .withSources(
-                    new YamlConfigSource(
-                        UriBuilder.fromPath( "/{configFile}" )
-                            .scheme( "file" )
-                            .build( file )
-                            .toURL()
-                    )
-                )
-                .withValidateUnknown( false )
-                .withMapping( type )
-                .build()
-                .getConfigMapping( type )
-        );
+    void onConfigReloaded( @Observes ConfigReloadedEvent event ) {
+        consoleLog.info( "Reloading configuration..." );
+        reload();
+        consoleLog.info( "Configuration reloaded." );
     }
 
     public Path location() {
@@ -169,10 +165,15 @@ public class InstallrdConfiguration implements InstallrdConfigurationMapping {
             Files.walk( repositoryLocation, 1, FileVisitOption.FOLLOW_LINKS )
                 .filter( Files::isRegularFile )
                 .sorted()
-                .map( x -> readFile( x, RepositoryConfiguration.class ) )
+                .map( x -> yamlConfigLoader.load( x, RepositoryConfiguration.class ) )
                 .toList()
         );
         return Optional.of( effectiveRepositoryList );
+    }
+
+    @Override
+    public Map<String, String> selector() {
+        return installrdConfig.selector();
     }
 
     @SneakyThrows
@@ -189,6 +190,14 @@ public class InstallrdConfiguration implements InstallrdConfigurationMapping {
             .sorted()
             .map( x -> (NamespaceDefinition)() -> x )
             .toList();
+    }
+
+    public Map<String, NamespaceConfiguration> namespaceConfigurations() {
+        return namespaceConfigs;
+    }
+
+    public Optional<NamespaceConfiguration> namespaceConfiguration( String name ) {
+        return Optional.ofNullable( namespaceConfigs.get( name ) );
     }
 
 }

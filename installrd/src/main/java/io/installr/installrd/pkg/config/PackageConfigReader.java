@@ -20,16 +20,15 @@ package io.installr.installrd.pkg.config;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
+import io.installr.installrd.util.MapUtil;
 import io.installr.lib.pkg.Package;
 import io.installr.lib.pkg.PackageId;
-import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.SmallRyeConfig;
 import io.smallrye.config.SmallRyeConfigBuilder;
-import io.smallrye.config.WithParentName;
 import io.smallrye.config.source.yaml.YamlConfigSource;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.SneakyThrows;
@@ -42,8 +41,10 @@ public class PackageConfigReader {
     public Map<String, String> readAll( Path namespaceLocation, Map<String, String> env, PackageId packageId ) {
         Map<String, String> all = new HashMap<>();
         all.putAll( readDefaults( namespaceLocation, env, packageId ) );
+        all.putAll( env );
         all.putAll( readCustom( namespaceLocation, env, packageId ) );
-        return all;
+        checkRequired( all );
+        return MapUtil.flatten( all );
     }
 
     public Map<String, String> readDefaults( Path namespaceLocation, Map<String, String> env, PackageId packageId ) {
@@ -59,48 +60,42 @@ public class PackageConfigReader {
         Path namespaceLocation, Map<String, String> env, String packagename, String filename
     ) {
         final Path file = namespaceLocation.resolve( Path.of( packagename, filename ) );
+        log.debugf( "reading '%s'...", file );
         if ( !Files.exists( file ) ) {
             log.debugf( "readFile: not found: %s", file );
             return Map.of();
         }
+        final YamlConfigSource yamlSource = new YamlConfigSource( file.toUri().toURL() );
         final SmallRyeConfig config = new SmallRyeConfigBuilder()
             .addDefaultInterceptors()
-            .withSources( new YamlConfigSource( file.toUri().toURL() ) )
+            .withSources( yamlSource )
             .withValidateUnknown( false )
-            .withMapping( PackageConfig.class )
             .withDefaultValues( env )
             .build();
-        return config.getConfigMapping( PackageConfig.class )
-            .map()
-            .entrySet()
-            .stream()
-            .collect( Collectors.toMap( this::transformKey, this::transformValue ) );
+        return resolve( yamlSource, config );
     }
 
-    private String transformKey( Map.Entry<String, PackageConfig.OptionalString> keySet ) {
-        return keySet.getKey().replace( "-", "_" );
+    private Map<String, String> resolve( YamlConfigSource yamlSource, SmallRyeConfig config ) {
+        return yamlSource.getProperties().keySet().stream()
+            .collect(
+                Collectors.toMap(
+                    key -> key.toLowerCase(),
+                    key -> {
+                        return config.getOptionalValue( key, String.class ).orElse( "" );
+                    }
+                )
+            );
     }
 
-    private String transformValue( Map.Entry<String, PackageConfig.OptionalString> keySet ) {
-        final Optional<String> value = keySet.getValue().value();
-        if ( value.isEmpty() ) {
-            return "";
+    private void checkRequired( Map<String, String> all ) {
+        final List<String> requiredKeys = all.entrySet().stream()
+            .filter( entry -> entry.getValue().equals( "REQUIRED" ) )
+            .map( Map.Entry::getKey )
+            .sorted()
+            .toList();
+        if ( !requiredKeys.isEmpty() ) {
+            throw new MissingConfigurationException( requiredKeys );
         }
-        return value.get();
-    }
-
-    @ConfigMapping
-    interface PackageConfig {
-
-        @WithParentName
-        // 'Map<String, Optional<String>> map();'' doesn't work, so we use an intermediate type...
-        Map<String, OptionalString> map();
-
-        interface OptionalString {
-            @WithParentName
-            Optional<String> value();
-        }
-
     }
 
 }

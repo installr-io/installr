@@ -31,11 +31,10 @@ import lombok.experimental.Accessors;
 @EqualsAndHashCode( callSuper = true )
 public class ItemLogRecord extends PackageContent {
 
-    private Long id;
     private String namespace;
+    private UUID txId;
     private String packageName;
     private Semver version;
-    private UUID installedBy;
     private Instant installedOn;
 
     @Accessors( fluent = true )

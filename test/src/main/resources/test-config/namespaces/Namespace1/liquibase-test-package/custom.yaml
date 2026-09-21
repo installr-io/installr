@@ -1,0 +1,5 @@
+## Set liquibase username and password at package level to ensure database resources can only be deployed with the
+## permissions of this specific user.
+liquibase:
+    username: sa
+    password:

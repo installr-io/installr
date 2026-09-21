@@ -24,9 +24,8 @@ import lombok.Data;
 @Data
 public class EventLogRecord {
 
-    public final Long id;
-    public final String namespace;
-    public final UUID transactionId;
-    public final Event event;
+    private final String namespace;
+    private final UUID txId;
+    private final Event event;
 
 }

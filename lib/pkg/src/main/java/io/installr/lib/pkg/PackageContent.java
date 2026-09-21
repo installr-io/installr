@@ -38,6 +38,8 @@ public class PackageContent {
     @JsonIgnore
     private Integer order;
     @JsonInclude( Include.NON_NULL )
+    private Map<String, String> labels;
+    @JsonInclude( Include.NON_NULL )
     @JsonProperty( "x-metadata" )
     private Map<String, Object> xmetadata;
     @JsonInclude( Include.NON_NULL )

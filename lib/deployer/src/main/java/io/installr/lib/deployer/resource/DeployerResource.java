@@ -53,13 +53,13 @@ public interface DeployerResource {
     @Path( "/Deployer.deploy/{name}" )
     @Consumes( MediaType.MULTIPART_FORM_DATA )
     @Produces( MediaType.APPLICATION_JSON )
-    RestResponse<DeploymentResponse> deploy( @BeanParam @Valid DeploymentSpec deployment );
+    RestResponse<DeploymentResponse> deploy( @BeanParam @Valid DeploymentSpec spec );
 
     @DELETE
     @Path( "/Deployer.undeploy/{name}" )
     @Consumes( MediaType.MULTIPART_FORM_DATA )
     @Produces( MediaType.APPLICATION_JSON )
-    RestResponse<DeploymentResponse> undeploy( @BeanParam @Valid DeploymentSpec deployment );
+    RestResponse<DeploymentResponse> undeploy( @BeanParam @Valid DeploymentSpec spec );
 
     @GET
     @Path( "/Deployer.status/{name}" )

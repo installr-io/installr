@@ -9,6 +9,12 @@ deployer:
     "application/vnd.io.installr.*":
         type: NoOpDeployer
 
+    "application/vnd.io.installr.liquibase":
+        type: LiquibaseDeployer
+        config:
+            url: "jdbc:h2:mem:liquibase_it;DB_CLOSE_DELAY=-1"
+            ## username and password configured per package
+
     "application/vnd.io.installr.http-test":
         type: HttpDeployer
         config:
@@ -19,6 +25,15 @@ deployer:
                 value-provider:
                     type: "header-value"
                     header-name: "x-auth-token"
+
+    "application/vnd.io.installr.kubernetes":
+        type: KubernetesDeployer
+
+    "application/vnd.io.installr.docker-stack":
+        type: DockerStackDeployer
+
+    "application/vnd.io.installr.docker-network":
+        type: DockerNetworkDeployer
 
 repositories:
     - id: test-repository

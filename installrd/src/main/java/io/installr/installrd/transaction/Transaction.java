@@ -17,6 +17,9 @@
  */
 package io.installr.installrd.transaction;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -31,7 +34,7 @@ import io.installr.lib.installrd.event.Events;
 import io.installr.lib.installrd.event.Status;
 import io.installr.lib.installrd.transaction.TransactionLogRecord;
 import io.installr.lib.installrd.transaction.TransactionStatus;
-import io.quarkus.arc.Arc;
+import io.installr.lib.util.FileUtil;
 import io.smallrye.mutiny.subscription.MultiEmitter;
 import lombok.extern.jbosslog.JBossLog;
 
@@ -41,22 +44,23 @@ public class Transaction {
     private final Namespace namespace;
     private final TransactionLog txLog;
     private final EventLog eventLog;
-    private UUID transactionId;
-    private Status transactionStatus;
+    private volatile UUID txId;
+    private volatile Status transactionStatus;
     private MultiEmitter<? super Event> emitter;
+    private Path tmpPath;
 
-    Transaction( Namespace namespace ) {
+    Transaction( Namespace namespace, TransactionLog txLog, EventLog eventLog ) {
         this.namespace = namespace;
-        this.txLog = Arc.container().instance( TransactionLog.class ).get();
-        this.eventLog = Arc.container().instance( EventLog.class ).get();
+        this.txLog = txLog;
+        this.eventLog = eventLog;
     }
 
-    UUID acquire() {
+    synchronized UUID acquire() {
         if ( isActive() ) {
-            log.errorf( "Namespace '%s' is locked by TX '%s'.", namespace.name(), transactionId );
+            log.errorf( "Namespace '%s' is locked by TX '%s'.", namespace.name(), txId );
             throw new LockException();
         }
-        return this.transactionId = UUID.randomUUID();
+        return this.txId = UUID.randomUUID();
     }
 
     public Namespace namespace() {
@@ -65,40 +69,54 @@ public class Transaction {
 
     public void begin( MultiEmitter<? super Event> emitter ) {
         this.emitter = emitter;
+        emitter.onCancellation(
+            () -> {
+                if ( emitter.isCancelled() ) {
+                    log.infof( "Client disconnected from transaction '%s', cancelling.", txId );
+                    this.transactionStatus = Status.Canceled;
+                }
+            }
+        );
         log.debug( "Starting transaction..." );
         txLog.put(
             new TransactionLogRecord(
-                transactionId,
                 namespace.name(),
+                txId,
                 Instant.now(),
                 null,
                 TransactionStatus.InProgress,
                 Installrd.version().getVersion()
             )
         );
-        log.debugf( "Transaction with id %s started.", transactionId );
-        emitEvent( new Events.TransactionStarted( transactionId ) );
+        log.debugf( "Transaction with id %s started.", txId );
+        emitEvent( new Events.TransactionStarted( txId ) );
     }
 
     public void end() {
         if ( transactionStatus == null ) {
             transactionStatus = Status.Success;
         }
-        log.debugf( "Ending transaction with id %s.", transactionId );
+        log.debugf( "Ending transaction with id %s.", txId );
         checkActive();
         try {
-            final TransactionLogRecord txLogRecord = txLog.get( transactionId );
+            final TransactionLogRecord txLogRecord = txLog.get( namespace.name(), txId );
             txLogRecord.setEndTimestamp( Instant.now() );
             txLogRecord.setStatus( TransactionStatus.fromEventStatus( transactionStatus ) );
             txLog.put( txLogRecord );
-            emitEvent( new Events.TransactionFinished( transactionId, transactionStatus ) );
-            emitter.complete();
+            if ( !emitter.isCancelled() ) {
+                emitEvent( new Events.TransactionFinished( txId, transactionStatus ) );
+                emitter.complete();
+            }
         }
         finally {
-            log.debugf( "Transaction '%s' finished with status '%s'.", transactionId, transactionStatus );
-            transactionId = null;
+            log.debugf( "Transaction '%s' finished with status '%s'.", txId, transactionStatus );
+            txId = null;
             transactionStatus = null;
             emitter = null;
+            if ( tmpPath != null ) {
+                FileUtil.rmdir( tmpPath );
+                tmpPath = null;
+            }
         }
     }
 
@@ -109,13 +127,15 @@ public class Transaction {
     }
 
     public boolean isActive() {
-        return transactionId != null;
+        return txId != null;
     }
 
     public void emitEvent( Event event ) {
         checkActive();
-        eventLog.put( new EventLogRecord( null, namespace.name(), transactionId, event ) );
-        emitter.emit( event );
+        eventLog.put( new EventLogRecord( namespace.name(), txId, event ) );
+        if ( !emitter.isCancelled() ) {
+            emitter.emit( event );
+        }
         if ( event.status().type() == Status.Type.Fatal ) {
             transactionStatus = event.status();
         }
@@ -125,7 +145,7 @@ public class Transaction {
     }
 
     public UUID id() {
-        return transactionId;
+        return txId;
     }
 
     public void cancel() {
@@ -138,16 +158,30 @@ public class Transaction {
     }
 
     public void fail( Throwable t ) {
-        transactionStatus = Status.Failed( t.toString() );
+        if ( isCanceled() ) {
+            return;
+        }
+        transactionStatus = Status.Failed( t );
         log.error( t.toString() );
         log.debugf( t, "Stacktrace" );
     }
 
     public void reset( Throwable t ) {
-        transactionId = null;
+        txId = null;
         log.error( "Transaction reset called!" );
         log.error( t.toString() );
         log.debugf( t, "Stacktrace" );
+    }
+
+    public Path tmpDir() throws IOException {
+        checkActive();
+        // Create a temporary path for this transaction, which can be used e.g. to extract archives.
+        // The temporary path will be removed when the transaction ends.
+        if ( tmpPath == null ) {
+            tmpPath = Path.of( "/tmp" ).resolve( UUID.randomUUID().toString() );
+            Files.createDirectory( tmpPath );
+        }
+        return tmpPath;
     }
 
 }

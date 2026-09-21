@@ -27,12 +27,15 @@ import io.installr.lib.installrd.util.Pagination;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
-@Path( "/namespaces/{namespace}" )
+@Path( "/" )
+@Produces( MediaType.APPLICATION_JSON )
 public interface PackageLogController {
 
     @GET
-    @Path( "/package-log" )
+    @Path( "/namespaces/{namespace}/package-log" )
     List<PackageLogRecord> packageLog(
         @RestPath String namespace, @BeanParam Pagination pagination, @BeanParam Filter filter
     );

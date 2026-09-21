@@ -21,29 +21,32 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import io.installr.lib.deployer.Deployer;
-import io.installr.lib.deployer.DeploymentSpec;
+import io.installr.installrd.deployment.deployer.BuiltInDeployer;
+import io.installr.lib.deployer.AbstractConfigurableDeployer;
 import io.installr.lib.deployer.DeploymentException;
+import io.installr.lib.deployer.DeploymentSpec;
 import io.installr.lib.util.FileUtil;
+import jakarta.enterprise.context.Dependent;
 
-public class LocalFileDeployer implements Deployer {
+@Dependent
+@BuiltInDeployer( "LocalFileDeployer" )
+public class LocalFileDeployer extends AbstractConfigurableDeployer<LocalFileDeployerConfig> {
 
-    private final LocalFileDeployerConfig config;
-
-    public LocalFileDeployer( LocalFileDeployerConfig config ) {
-        this.config = config;
+    @Override
+    public Class<LocalFileDeployerConfig> getConfigType() {
+        return LocalFileDeployerConfig.class;
     }
 
     @Override
-    public void deploy( DeploymentSpec deployment ) throws DeploymentException {
+    public void deploy( DeploymentSpec spec ) throws DeploymentException {
         try {
             final Path target = config.getDirectory();
             if ( !Files.exists( target ) ) {
                 Files.createDirectories( target );
             }
 
-            final Path file = target.resolve( deployment.getName() );
-            final byte[] data = deployment.getData();
+            final Path file = target.resolve( spec.getName() );
+            final byte[] data = spec.getData();
             Files.write( file, data );
             if ( FileUtil.isExecutable( data ) ) {
                 FileUtil.chmod( file, 754 );
@@ -55,10 +58,10 @@ public class LocalFileDeployer implements Deployer {
     }
 
     @Override
-    public void undeploy( DeploymentSpec deployment ) throws DeploymentException {
+    public void undeploy( DeploymentSpec spec ) throws DeploymentException {
         try {
             Files.deleteIfExists(
-                config.getDirectory().resolve( deployment.getName() )
+                config.getDirectory().resolve( spec.getName() )
             );
         }
         catch ( IOException ex ) {

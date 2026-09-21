@@ -23,26 +23,46 @@ import java.util.Optional;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.semver4j.Semver;
 
+import io.installr.lib.installrd.model.VersionInfo;
+
 public final class Installrd {
 
-    public static Semver version() {
-        return getConfigValue( "quarkus.application.version", Semver.class ).get();
-    }
-
-    public static String revision() {
-        return getConfigValue( "build.revision", String.class ).orElse( "unknown" );
-    }
-
-    public static Instant buildTimestamp() {
-        return Instant
-            .ofEpochMilli(
-                getConfigValue( "build.timestamp", Long.class )
-                    .orElse( System.currentTimeMillis() )
-            );
+    private static final VersionInfo versionInfo;
+    static {
+        versionInfo = new VersionInfo();
+        versionInfo.setVersion(
+            getConfigValue( "quarkus.application.version", String.class ).get()
+        );
+        versionInfo.setRevision(
+            getConfigValue( "build.revision", String.class ).orElse( "unknown" )
+        );
+        versionInfo.setBuildTimestamp(
+            Instant
+                .ofEpochMilli(
+                    getConfigValue( "build.timestamp", Long.class )
+                        .orElse( System.currentTimeMillis() )
+                )
+        );
     }
 
     private static <T> Optional<T> getConfigValue( String propertyName, Class<T> propertyType ) {
         return ConfigProvider.getConfig().getOptionalValue( propertyName, propertyType );
+    }
+
+    public static VersionInfo versionInfo() {
+        return versionInfo;
+    }
+
+    public static Semver version() {
+        return Semver.parse( versionInfo.getVersion() );
+    }
+
+    public static String revision() {
+        return versionInfo.getRevision();
+    }
+
+    public static Instant buildTimestamp() {
+        return versionInfo.getBuildTimestamp();
     }
 
 }

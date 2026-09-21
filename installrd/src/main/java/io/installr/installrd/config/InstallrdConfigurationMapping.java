@@ -39,4 +39,7 @@ public interface InstallrdConfigurationMapping {
     @WithName( "repositories" )
     Optional<List<RepositoryConfiguration>> repositories();
 
+    @WithName( "selector" )
+    Map<String, String> selector();
+
 }

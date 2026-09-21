@@ -105,8 +105,8 @@ public class Package {
         return new Package( pkgInfo, null, path, DEFAULT_REPOSITORY_ID );
     }
 
-    public Path extractArchive() throws IOException {
-        final Path targetDir = localPath.getParent().resolve( packageInfo.getPackageId().toPackageName() );
+    public Path extractArchive( Path targetBaseDir ) throws IOException {
+        final Path targetDir = targetBaseDir.resolve( packageInfo.getPackageId().toPackageName() );
         FileUtil.rmdir( targetDir );
         FileUtil.mkdir( targetDir );
         try (

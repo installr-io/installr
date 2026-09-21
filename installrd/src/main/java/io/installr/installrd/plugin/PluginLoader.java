@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 
 import io.installr.installrd.config.InstallrdConfiguration;
 import io.installr.installrd.config.InstallrdConfiguration.LocationType;
+import io.installr.lib.deployer.DeployerConfig;
 import io.installr.lib.deployer.DeployerPlugin;
 import io.installr.lib.installrd.PackageContentFilter;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -48,16 +49,17 @@ public class PluginLoader {
     InstallrdConfiguration config;
 
     private Map<String, PackageContentFilter> packageContentFilters;
-    private Map<String, DeployerPlugin> deployers;
+    private Map<String, DeployerPlugin<DeployerConfig>> deployers;
 
     public Optional<Map<String, PackageContentFilter>> getPackageContentFilters() {
         return Optional.ofNullable( packageContentFilters );
     }
 
-    public Optional<Map<String, DeployerPlugin>> getDeployers() {
+    public Optional<Map<String, DeployerPlugin<DeployerConfig>>> getDeployers() {
         return Optional.ofNullable( deployers );
     }
 
+    @SuppressWarnings( "unchecked" )
     public void load() {
         final Path pluginDir = config.locationFor( LocationType.Plugin );
         if ( !Files.exists( pluginDir ) ) {
@@ -76,7 +78,10 @@ public class PluginLoader {
             final ClassLoader ccl = Thread.currentThread().getContextClassLoader();
             try ( URLClassLoader classLoader = new URLClassLoader( "plugin-loader", pluginUrls, ccl ) ) {
                 packageContentFilters = loadServices( PackageContentFilter.class, classLoader );
-                deployers = loadServices( DeployerPlugin.class, classLoader );
+                deployers = (Map<String, DeployerPlugin<DeployerConfig>>)(Map<?, ?>)loadServices(
+                    DeployerPlugin.class,
+                    classLoader
+                );
             }
         }
         catch ( IOException ex ) {
