@@ -24,7 +24,7 @@
 
     <groupId>io.installr</groupId>
     <artifactId>installr-project</artifactId>
-    <version>0.2.0-SNAPSHOT</version>
+    <version>0.2.0</version>
     <packaging>pom</packaging>
 
     <organization>
@@ -116,7 +116,7 @@
         <commons-compress.version>1.28.0</commons-compress.version>
         <docker-client.version>2026-03-11T08-30-00-groovy-4</docker-client.version>
         <groovy.version>4.0.33</groovy.version>
-        <installr-code-format.version>0.2.0-SNAPSHOT</installr-code-format.version>
+        <installr-code-format.version>0.2.0</installr-code-format.version>
         <lombok.version>1.18.48</lombok.version>
         <semver4j.version>6.0.0</semver4j.version>
 
