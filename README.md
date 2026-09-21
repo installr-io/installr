@@ -98,6 +98,8 @@ At the moment, deployers exist for the following artifact types:
 
 * Local files
 * Docker Swarm
+* Kubernetes
+* Liquibase scripts
 * Generic HTTP interface for integrating external [Deployer](lib/deployer/src/main/java/io/installr/lib/deployer/Deployer.java) implementations
 
   * Keycloak resources
@@ -108,8 +110,6 @@ At the moment, deployers exist for the following artifact types:
 
 The following deployers are currently planned:
 
-* Deploy containers into **Kubernetes clusters**
-* Deploy **database changes using Liquibase**
 * Distribute files via **SSH**
 * Distribute files via **HTTP**
 
