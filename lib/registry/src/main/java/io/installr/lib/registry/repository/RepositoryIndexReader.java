@@ -25,8 +25,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.yaml.snakeyaml.LoaderOptions;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 import io.installr.lib.pkg.Package;
@@ -35,6 +37,17 @@ import lombok.extern.jbosslog.JBossLog;
 
 @JBossLog
 public class RepositoryIndexReader {
+
+    private static final YAMLMapper yamlMapper;
+    static {
+        LoaderOptions loaderOptions = new LoaderOptions();
+        loaderOptions.setCodePointLimit( 100 * 1024 * 1024 ); // 100 MB
+        yamlMapper = new YAMLMapper(
+            YAMLFactory.builder()
+                .loaderOptions( loaderOptions )
+                .build()
+        );
+    }
 
     private final String repoId;
     private final Path indexFile;
@@ -53,7 +66,7 @@ public class RepositoryIndexReader {
                 return Map.of();
             }
             try ( GzipCompressorInputStream is = new GzipCompressorInputStream( Files.newInputStream( indexFile ) ) ) {
-                return new YAMLMapper()
+                return yamlMapper
                     .readValue( is.readAllBytes(), new TypeReference<List<Package>>() {} )
                     .stream()
                     .map(
