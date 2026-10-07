@@ -352,7 +352,7 @@ public class InstallService {
                         return false;
                     }
                     if ( installedItem.getHash().equals( newItem.getHash() ) ) {
-                        log.trace( "=> equal hash => skip" );
+                        log.tracef( "=> equal hash: hasErrors = %s; action = %s", installedItem.hasError(), action );
                         return installedItem.hasError() || action == Action.ReInstall;
                     }
                     return true;
