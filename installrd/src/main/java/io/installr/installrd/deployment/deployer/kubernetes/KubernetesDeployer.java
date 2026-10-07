@@ -84,7 +84,18 @@ public class KubernetesDeployer extends AbstractConfigurableDeployer<KubernetesD
         log.debugf( "Deploying '%s' to namespace '%s'...", spec.getName(), namespace );
 
         final var loaded = client.load( loadSpec( spec ) );
+        log.debugf( "loaded items: %d", loaded.items().size() );
+        if ( loaded.items().isEmpty() ) {
+            throw new DeploymentException( "No items found. Empty file?" );
+        }
         for ( final HasMetadata resource : loaded.items() ) {
+            log.debugf(
+                "=> apiVersion=%s, kind=%s, name=%s, namespace=%s",
+                resource.getApiVersion(),
+                resource.getKind(),
+                resource.getMetadata().getName(),
+                resource.getMetadata().getNamespace()
+            );
             client.resource( resource ).inNamespace( namespace ).createOr( r -> r.update() );
         }
 
