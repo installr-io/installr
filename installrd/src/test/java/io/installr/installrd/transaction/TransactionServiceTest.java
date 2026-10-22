@@ -37,6 +37,8 @@ import io.installr.installrd.namespace.Namespace;
 @ExtendWith( MockitoExtension.class )
 class TransactionServiceTest {
 
+    static final String ACTOR = "CN=test,O=installr-test";
+
     @Mock
     Namespace namespace;
 
@@ -56,21 +58,21 @@ class TransactionServiceTest {
 
     @Test
     void acquireTransaction_should_return_active_transaction() {
-        final Transaction tx = txService.acquireTransaction();
+        final Transaction tx = txService.acquireTransaction( ACTOR );
 
         assertTrue( tx.isActive() );
     }
 
     @Test
     void acquireTransaction_should_throw_when_namespace_already_locked() {
-        txService.acquireTransaction();
+        txService.acquireTransaction( ACTOR );
 
-        assertThrows( LockException.class, () -> txService.acquireTransaction() );
+        assertThrows( LockException.class, () -> txService.acquireTransaction( ACTOR ) );
     }
 
     @Test
     void currentTransaction_should_return_same_instance_as_acquired() {
-        final Transaction acquired = txService.acquireTransaction();
+        final Transaction acquired = txService.acquireTransaction( ACTOR );
 
         assertSame( acquired, txService.currentTransaction() );
     }

@@ -33,5 +33,9 @@ public class TransactionLogRecord {
     private Instant endTimestamp;
     private TransactionStatus status;
     private String daemonVersion;
+    /*
+     * Subject DN of the client certificate, which started the transaction.
+     */
+    private String actor;
 
 }

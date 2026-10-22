@@ -225,10 +225,10 @@ class InstallrIT {
      * acquires the lock and the second is rejected with a {@link LockException}.
      *
      * <p>
-     * Guaranteed by {@code ConcurrentHashMap.computeIfAbsent} in {@code TransactionService.acquireTransaction()}
-     * (ensures both threads operate on the same {@code Transaction} instance) combined with
-     * {@code synchronized acquire()} and {@code volatile txId} in {@code Transaction} (ensures the check-then-act is
-     * atomic and the written {@code txId} is immediately visible to all threads).
+     * Guaranteed by {@code ConcurrentHashMap.computeIfAbsent} in {@code TransactionService.acquireTransaction} (ensures
+     * both threads operate on the same {@code Transaction} instance) combined with {@code synchronized acquire} and
+     * {@code volatile txId} in {@code Transaction} (ensures the check-then-act is atomic and the written {@code txId}
+     * is immediately visible to all threads).
      */
     @Test
     void concurrent_install_to_same_namespace_must_result_in_lock_exception() throws Exception {

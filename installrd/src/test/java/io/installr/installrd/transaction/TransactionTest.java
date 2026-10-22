@@ -53,6 +53,8 @@ import io.smallrye.mutiny.subscription.MultiEmitter;
 @ExtendWith( MockitoExtension.class )
 class TransactionTest {
 
+    static final String ACTOR = "CN=test,O=installr-test";
+
     @Mock
     Namespace namespace;
 
@@ -75,7 +77,7 @@ class TransactionTest {
 
     @Test
     void acquire_should_return_transaction_id() {
-        final UUID id = tx.acquire();
+        final UUID id = tx.acquire( ACTOR );
 
         assertNotNull( id );
         assertTrue( tx.isActive() );
@@ -83,14 +85,14 @@ class TransactionTest {
 
     @Test
     void acquire_should_throw_when_namespace_already_locked() {
-        tx.acquire();
+        tx.acquire( ACTOR );
 
-        assertThrows( LockException.class, () -> tx.acquire() );
+        assertThrows( LockException.class, () -> tx.acquire( ACTOR ) );
     }
 
     @Test
     void begin_should_emit_transaction_started_event() {
-        tx.acquire();
+        tx.acquire( ACTOR );
         givenEmitterActive();
 
         tx.begin( emitter );
@@ -100,7 +102,7 @@ class TransactionTest {
 
     @Test
     void end_should_emit_transaction_finished_and_complete_emitter() {
-        tx.acquire();
+        tx.acquire( ACTOR );
         givenEmitterActive();
         givenTransactionLogRecord();
 
@@ -113,7 +115,7 @@ class TransactionTest {
 
     @Test
     void end_should_persist_success_status_when_no_explicit_status_set() {
-        tx.acquire();
+        tx.acquire( ACTOR );
         givenEmitterActive();
         givenTransactionLogRecord();
         final ArgumentCaptor<TransactionLogRecord> captor = ArgumentCaptor.forClass( TransactionLogRecord.class );
@@ -131,7 +133,7 @@ class TransactionTest {
 
     @Test
     void end_should_clear_state_so_namespace_can_be_reused() {
-        tx.acquire();
+        tx.acquire( ACTOR );
         givenEmitterActive();
         givenTransactionLogRecord();
 
@@ -139,12 +141,12 @@ class TransactionTest {
         tx.end();
 
         assertFalse( tx.isActive() );
-        assertNotNull( tx.acquire() ); // namespace can be locked again
+        assertNotNull( tx.acquire( ACTOR ) ); // namespace can be locked again
     }
 
     @Test
     void fail_should_persist_failed_status() {
-        tx.acquire();
+        tx.acquire( ACTOR );
         givenEmitterActive();
         givenTransactionLogRecord();
         final ArgumentCaptor<TransactionLogRecord> captor = ArgumentCaptor.forClass( TransactionLogRecord.class );
@@ -163,7 +165,7 @@ class TransactionTest {
 
     @Test
     void fail_should_not_overwrite_canceled_status() {
-        tx.acquire();
+        tx.acquire( ACTOR );
         tx.cancel();
 
         tx.fail( new RuntimeException( "ignored" ) );
@@ -173,7 +175,7 @@ class TransactionTest {
 
     @Test
     void cancel_should_mark_transaction_as_canceled() {
-        tx.acquire();
+        tx.acquire( ACTOR );
 
         tx.cancel();
 
@@ -182,7 +184,7 @@ class TransactionTest {
 
     @Test
     void emitEvent_should_write_to_log_but_skip_emit_when_emitter_is_cancelled() {
-        tx.acquire();
+        tx.acquire( ACTOR );
         when( emitter.isCancelled() ).thenReturn( true );
         when( emitter.onCancellation( any() ) ).thenReturn( emitter );
 
@@ -197,7 +199,7 @@ class TransactionTest {
 
     @Test
     void end_should_not_complete_emitter_when_emitter_is_cancelled() {
-        tx.acquire();
+        tx.acquire( ACTOR );
         when( emitter.isCancelled() ).thenReturn( true );
         when( emitter.onCancellation( any() ) ).thenReturn( emitter );
         givenTransactionLogRecord();
@@ -210,7 +212,7 @@ class TransactionTest {
 
     @Test
     void begin_should_cancel_transaction_when_client_disconnects() {
-        tx.acquire();
+        tx.acquire( ACTOR );
         final ArgumentCaptor<Runnable> terminationCaptor = ArgumentCaptor.forClass( Runnable.class );
         when( emitter.onCancellation( terminationCaptor.capture() ) ).thenReturn( emitter );
         // first call: during begin's emitEvent; second call: inside the disconnect callback
@@ -237,7 +239,8 @@ class TransactionTest {
                 Instant.now(),
                 null,
                 TransactionStatus.InProgress,
-                "test"
+                "test",
+                ACTOR
             )
         );
     }

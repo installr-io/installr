@@ -43,13 +43,16 @@ public class TransactionService {
 
     private final Map<String, Transaction> transactions = new ConcurrentHashMap<>();
 
-    public Transaction acquireTransaction() {
+    /**
+     * @param actor subject DN of the client, which started the transaction
+     */
+    public Transaction acquireTransaction( String actor ) {
         log.infof( "Acquiring transaction for namespace '%s'", namespace.name() );
         final Transaction transaction = transactions.computeIfAbsent(
             namespace.name(),
             name -> new Transaction( namespace, txLog, eventLog )
         );
-        final UUID txId = transaction.acquire();
+        final UUID txId = transaction.acquire( actor );
         log.infof( "Transaction acquired. ID = %s", txId );
         return transaction;
     }

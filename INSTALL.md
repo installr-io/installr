@@ -196,6 +196,7 @@ Rules:
 
 * The role name `admin` is reserved. Unknown operations or roles make the configuration invalid.
 * Global operations of a role bound in a namespace are ignored (with a warning in the log).
+* The client, which started a transaction, is recorded in the transaction log (`ACTOR`).
 
 #### Database
 

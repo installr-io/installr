@@ -12,6 +12,7 @@ entity TRANSACTION_LOG {
       END_TIMESTAMP   : TIMESTAMP
     * STATUS          : ENUM
     * DAEMON_VERSION  : VARCHAR
+    * ACTOR           : VARCHAR
 }
 
 entity EVENT_LOG {

@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 import io.installr.installrd.Installrd;
@@ -45,6 +46,7 @@ public class Transaction {
     private final TransactionLog txLog;
     private final EventLog eventLog;
     private volatile UUID txId;
+    private volatile String actor;
     private volatile Status transactionStatus;
     private MultiEmitter<? super Event> emitter;
     private Path tmpPath;
@@ -55,11 +57,12 @@ public class Transaction {
         this.eventLog = eventLog;
     }
 
-    synchronized UUID acquire() {
+    synchronized UUID acquire( String actor ) {
         if ( isActive() ) {
             log.errorf( "Namespace '%s' is locked by TX '%s'.", namespace.name(), txId );
             throw new LockException();
         }
+        this.actor = Objects.requireNonNull( actor, "actor" );
         return this.txId = UUID.randomUUID();
     }
 
@@ -85,7 +88,8 @@ public class Transaction {
                 Instant.now(),
                 null,
                 TransactionStatus.InProgress,
-                Installrd.version().getVersion()
+                Installrd.version().getVersion(),
+                actor
             )
         );
         log.debugf( "Transaction with id %s started.", txId );
@@ -111,6 +115,7 @@ public class Transaction {
         finally {
             log.debugf( "Transaction '%s' finished with status '%s'.", txId, transactionStatus );
             txId = null;
+            actor = null;
             transactionStatus = null;
             emitter = null;
             if ( tmpPath != null ) {

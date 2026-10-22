@@ -57,8 +57,19 @@ public class TransactionLogEntity extends PanacheEntityBase {
     @Column( name = "daemon_version", nullable = false )
     public String daemon_version;
 
+    @Column( name = "actor", nullable = false )
+    public String actor;
+
     public TransactionLogRecord toTransactionLogRecord() {
-        return new TransactionLogRecord( namespace, tx_id, begin_timestamp, end_timestamp, status, daemon_version );
+        return new TransactionLogRecord(
+            namespace,
+            tx_id,
+            begin_timestamp,
+            end_timestamp,
+            status,
+            daemon_version,
+            actor
+        );
     }
 
 }

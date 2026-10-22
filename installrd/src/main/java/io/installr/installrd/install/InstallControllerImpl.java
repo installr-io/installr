@@ -22,6 +22,7 @@ import java.util.function.Consumer;
 import org.eclipse.microprofile.context.ManagedExecutor;
 
 import io.installr.installrd.config.InstallrdConfiguration;
+import io.installr.installrd.security.AccessService;
 import io.installr.installrd.security.NamespacePermission;
 import io.installr.installrd.security.Operation.Names;
 import io.installr.installrd.transaction.Transaction;
@@ -31,6 +32,8 @@ import io.installr.lib.installrd.event.Event;
 import io.installr.lib.installrd.resource.InstallFileResource;
 import io.installr.lib.installrd.resource.InstallPackageResource;
 import io.quarkus.security.PermissionsAllowed;
+import io.quarkus.security.UnauthorizedException;
+import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.subscription.MultiEmitter;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -50,6 +53,12 @@ public class InstallControllerImpl implements InstallController {
 
     @Inject
     InstallService installer;
+
+    @Inject
+    SecurityIdentity identity;
+
+    @Inject
+    AccessService accessService;
 
     @Override
     @PermissionsAllowed( value = Names.PKG_INSTALL, permission = NamespacePermission.class, params = "namespace" )
@@ -80,7 +89,8 @@ public class InstallControllerImpl implements InstallController {
     }
 
     private Multi<Event> handleInstall( String namespace, Consumer<Transaction> consumer ) {
-        final Transaction tx = txService.acquireTransaction();
+        final String actor = accessService.subjectName( identity ).orElseThrow( UnauthorizedException::new );
+        final Transaction tx = txService.acquireTransaction( actor );
         final Multi<Event> multiEvent = Multi.createFrom().emitter(
             emitter -> asyncExec( tx, consumer, emitter )
         );

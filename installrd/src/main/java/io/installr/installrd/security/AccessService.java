@@ -53,6 +53,13 @@ public class AccessService {
             .toList();
     }
 
+    /**
+     * Returns the subject DN of the identity, e.g. to record who executed a transaction.
+     */
+    public Optional<String> subjectName( SecurityIdentity identity ) {
+        return subjectOf( identity ).map( X500Principal::getName );
+    }
+
     static Optional<X500Principal> subjectOf( SecurityIdentity identity ) {
         if ( identity == null || identity.isAnonymous() ) {
             return Optional.empty();

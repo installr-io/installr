@@ -51,6 +51,7 @@ public class TransactionLog {
         entity.end_timestamp = record.getEndTimestamp();
         entity.status = record.getStatus();
         entity.daemon_version = record.getDaemonVersion();
+        entity.actor = record.getActor();
         entity.persistAndFlush();
         return record;
     }

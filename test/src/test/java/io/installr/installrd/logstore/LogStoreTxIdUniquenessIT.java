@@ -36,6 +36,7 @@ import jakarta.transaction.Transactional;
 class LogStoreTxIdUniquenessIT {
 
     static final String NS = "ns-txid-uniqueness";
+    static final String ACTOR = "CN=test,O=installr-test";
 
     @Inject
     TransactionLog txLog;
@@ -52,10 +53,26 @@ class LogStoreTxIdUniquenessIT {
         final UUID txId = UUID.randomUUID();
 
         txLog.put(
-            new TransactionLogRecord( NS, txId, Instant.now(), null, TransactionStatus.InProgress, "0.0.0-test" )
+            new TransactionLogRecord(
+                NS,
+                txId,
+                Instant.now(),
+                null,
+                TransactionStatus.InProgress,
+                "0.0.0-test",
+                ACTOR
+            )
         );
         txLog.put(
-            new TransactionLogRecord( NS, txId, Instant.now(), Instant.now(), TransactionStatus.Canceled, "0.0.0-test" )
+            new TransactionLogRecord(
+                NS,
+                txId,
+                Instant.now(),
+                Instant.now(),
+                TransactionStatus.Canceled,
+                "0.0.0-test",
+                ACTOR
+            )
         );
 
         assertEquals( 1L, TransactionLogEntity.count( "namespace = ?1 and tx_id = ?2", NS, txId ) );

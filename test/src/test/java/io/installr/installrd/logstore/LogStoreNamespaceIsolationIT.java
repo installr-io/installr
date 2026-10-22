@@ -50,6 +50,7 @@ class LogStoreNamespaceIsolationIT {
 
     static final String NS_ALPHA = "namespace-alpha";
     static final String NS_BETA = "namespace-beta";
+    static final String ACTOR = "CN=test,O=installr-test";
 
     @Inject
     TransactionLog txLog;
@@ -77,10 +78,26 @@ class LogStoreNamespaceIsolationIT {
 
         // --- TRANSACTION_LOG ---
         txLog.put(
-            new TransactionLogRecord( NS_ALPHA, txId, Instant.now(), null, TransactionStatus.InProgress, "0.0.0-test" )
+            new TransactionLogRecord(
+                NS_ALPHA,
+                txId,
+                Instant.now(),
+                null,
+                TransactionStatus.InProgress,
+                "0.0.0-test",
+                ACTOR
+            )
         );
         txLog.put(
-            new TransactionLogRecord( NS_BETA, txId, Instant.now(), null, TransactionStatus.InProgress, "0.0.0-test" )
+            new TransactionLogRecord(
+                NS_BETA,
+                txId,
+                Instant.now(),
+                null,
+                TransactionStatus.InProgress,
+                "0.0.0-test",
+                ACTOR
+            )
         );
 
         assertEquals( NS_ALPHA, txLog.get( NS_ALPHA, txId ).getNamespace() );
