@@ -32,8 +32,11 @@ quarkus:
 
     datasource:
         db-kind: h2
+        credentials-provider: installrd-database
+        credentials-provider-name: installrd-database
         jdbc:
-            url: jdbc:h2:./target/test-db
+            ## located in the config location, so the H2 TCP listener (baseDir = config location) can serve it
+            url: jdbc:h2:${installrd.config.location}/installrd
 
     liquibase:
         migrate-at-start: true
@@ -60,4 +63,5 @@ installrd:
     config:
         location: ./target/classes/test-config
     database-listener:
-        enabled: false
+        enabled: true
+        port: 9421

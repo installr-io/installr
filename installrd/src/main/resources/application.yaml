@@ -48,6 +48,9 @@ quarkus:
     ## this is the default data store used by installrd to store transaction and package logs
     datasource:
         db-kind: h2
+        ## user INSTALLRD, password from ${installrd.config.location}/.db-credentials (generated on first start)
+        credentials-provider: installrd-database
+        credentials-provider-name: installrd-database
         jdbc:
             url: jdbc:h2:${installrd.config.location}/installrd;RETENTION_TIME=0;COMPRESS=true;
             acquisition-timeout: 120s

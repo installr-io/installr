@@ -91,7 +91,23 @@ touch ~/.installrd/namespaces/demo/config.yaml
 
 ---
 
-### 4. Update the `PATH`
+### 4. Database Access
+
+The H2 database accepts TCP connections on port `9416` from other hosts, e.g. for external tools. It is protected by
+the user `INSTALLRD` and a password, which is generated on first start and stored in `~/.installrd/.db-credentials`
+(readable by the user `installr` and its group only):
+
+```bash
+cat ~/.installrd/.db-credentials
+## JDBC URL: jdbc:h2:tcp://<host>:9416/installrd, user: INSTALLRD
+```
+
+In an existing database created by an older version (without password), the user `INSTALLRD` is created on first
+start and the previous user is locked. External processes that access the database need these credentials from now on.
+
+---
+
+### 5. Update the `PATH`
 
 Add `/opt/installr-io/bin` to `installr`'s PATH:
 
@@ -105,7 +121,7 @@ EOF
 
 ---
 
-### 5. Logout
+### 6. Logout
 
 For now, logout user `installr`.
 
