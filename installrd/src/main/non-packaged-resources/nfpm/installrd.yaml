@@ -12,6 +12,7 @@ license: AGPL-3.0-only
 
 depends:
     - java-21-openjdk-headless
+    - openssl
 
 contents:
     - dst: ${installrd-bin.directory}
@@ -23,6 +24,13 @@ contents:
 
     - src: target/${project.build.finalName} 
       dst: ${installrd-bin.directory}/${project.build.finalName}
+      file_info:
+          mode: 0750
+          owner: ${installrd-user}
+          group: ${installrd-user}
+
+    - src: target/non-packaged-resources/scripts/installrd-certs
+      dst: ${installrd-bin.directory}/installrd-certs
       file_info:
           mode: 0750
           owner: ${installrd-user}

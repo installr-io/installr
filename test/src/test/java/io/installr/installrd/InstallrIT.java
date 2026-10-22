@@ -54,6 +54,7 @@ import io.installr.lib.pkg.InvalidPackageIdException;
 import io.installr.lib.pkg.PackageId;
 import io.quarkus.rest.client.reactive.QuarkusRestClientBuilder;
 import io.quarkus.test.junit.QuarkusMock;
+import io.quarkus.tls.TlsConfigurationRegistry;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MultivaluedHashMap;
@@ -74,6 +75,9 @@ class InstallrIT {
 
     @Inject
     ItemLog itemLog;
+
+    @Inject
+    TlsConfigurationRegistry tlsRegistry;
 
     @Test
     void install_should_throw_NamespaceNotFoundException() {
@@ -384,7 +388,8 @@ class InstallrIT {
             .forEach(
                 namespace -> {
                     final InstallController installr = QuarkusRestClientBuilder.newBuilder()
-                        .baseUri( URI.create( "http://localhost:9321" ) )
+                        .baseUri( URI.create( "https://localhost:9322" ) )
+                        .tlsConfiguration( tlsRegistry.get( "admin-client" ).orElseThrow() )
                         .clientHeadersFactory( ( incomingHeaders, clientOutgoingHeaders ) -> {
                             MultivaluedMap<String, String> headers = new MultivaluedHashMap<>();
                             headers.add( "x-auth-token", namespace );

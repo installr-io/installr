@@ -26,7 +26,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@RegisterRestClient( baseUri = "http://localhost:9321" )
+@RegisterRestClient( configKey = "installrd" )
 public interface InstallrClient extends InstallController {
 
     @Data

@@ -119,13 +119,39 @@ This prepares a namespace where applications can be installed later.
 
 For now `~/.installrd/namespaces/demo/config.yaml` can be left empty.
 
-### 3.5 Start installrd
+### 3.5 Create dev certificates
+
+`installrd` only accepts HTTPS requests with a client certificate (mTLS), also in dev mode. Create a dev CA, a server
+certificate for `localhost` and a client certificate for yourself:
+
+```bash
+./scripts/dev-certs
+```
+
+The script copies `server.crt`, `server.key` and `ca.crt` to `~/.installrd/tls/`. The CA key and your client
+certificate stay in `~/.installr-dev-pki/`. It prints the subject of your client certificate; add it as admin to
+`~/.installrd/config.yaml`:
+
+```yaml
+security:
+    admins:
+        - "CN=<your user>,O=installr-dev"
+```
+
+See [INSTALL.md](../INSTALL.md), section "Set up Security", for roles and certificates in general.
+
+### 3.6 Start installrd
 
 ```bash
 mvn -f installrd/pom.xml quarkus:dev
 ```
 
-This starts `installrd` in dev mode.
+This starts `installrd` in dev mode on `https://localhost:9316`. Check the setup with your client certificate:
+
+```bash
+curl --cert ~/.installr-dev-pki/${USER}.crt --key ~/.installr-dev-pki/${USER}.key \
+    --cacert ~/.installr-dev-pki/ca.crt https://localhost:9316/namespaces
+```
 
 If you prefer to run the binary, run
 ```bash

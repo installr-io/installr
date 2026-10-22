@@ -22,10 +22,13 @@ import java.util.UUID;
 
 import io.installr.installrd.logstore.EventLog;
 import io.installr.installrd.logstore.TransactionLog;
+import io.installr.installrd.security.NamespacePermission;
+import io.installr.installrd.security.Operation.Names;
 import io.installr.lib.installrd.controller.TransactionController;
 import io.installr.lib.installrd.event.EventLogRecord;
 import io.installr.lib.installrd.transaction.TransactionLogRecord;
 import io.installr.lib.installrd.util.Pagination;
+import io.quarkus.security.PermissionsAllowed;
 import jakarta.inject.Inject;
 
 public class TransactionControllerImpl implements TransactionController {
@@ -40,6 +43,7 @@ public class TransactionControllerImpl implements TransactionController {
     TransactionService txService;
 
     @Override
+    @PermissionsAllowed( value = Names.TX_READ, permission = NamespacePermission.class, params = "namespace" )
     public List<TransactionLogRecord> transactions( String namespace, Pagination pagination ) {
         if ( pagination.getPage() == -1 ) {
             return txLog.getAll( namespace );
@@ -48,11 +52,13 @@ public class TransactionControllerImpl implements TransactionController {
     }
 
     @Override
+    @PermissionsAllowed( value = Names.TX_READ, permission = NamespacePermission.class, params = "namespace" )
     public TransactionLogRecord transaction( String namespace, UUID txId ) {
         return txLog.get( namespace, txId );
     }
 
     @Override
+    @PermissionsAllowed( value = Names.TX_READ, permission = NamespacePermission.class, params = "namespace" )
     public List<EventLogRecord> events( String namespace, UUID txId ) {
         return eventLog.getAll( namespace, txId );
     }

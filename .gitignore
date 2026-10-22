@@ -44,3 +44,5 @@ nb-configuration.xml
 
 # keys
 *.key
+## test keys (test CA, server and clients; no secrets)
+!test/src/main/resources/**/*.key

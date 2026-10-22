@@ -58,3 +58,23 @@ repositories:
       url: http://localhost:9317/repositories/demo
       package-cache:
           expires-after: 1s
+
+## configure access control (client certificates: see INSTALL.md, section "Set up Security")
+security:
+    ## built-in role 'admin': all operations, globally
+    admins:
+        - "CN=alice,O=installr"
+
+    ## custom roles: operations like 'pkg:install', or wildcards like 'pkg:*' and '*'
+    roles:
+        - name: developer
+          operations: [ "pkg:install", "pkg:reinstall", "pkg:read", "tx:*", "ns:read" ]
+        - name: viewer
+          operations: [ "ns:read", "pkg:read", "tx:read" ]
+        - name: ns-manager
+          operations: [ "ns:create", "ns:delete" ]
+
+    ## global bindings apply to all namespaces; namespace bindings go to 'access' in the namespace's config.yaml
+    bindings:
+        - subject: "CN=ops,O=installr"
+          roles: [ ns-manager, viewer ]

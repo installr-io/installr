@@ -1,10 +1,36 @@
 # quarkus configuration
 quarkus:
     http:
-        port: ${installrd.port}
+        ssl-port: ${installrd.port}
+        ## plain HTTP is disabled; clients authenticate with a client certificate (mTLS)
+        insecure-requests: disabled
+        ssl:
+            ## 'request' instead of 'required', so /version stays reachable without a certificate
+            client-auth: request
+        auth:
+            permission:
+                "authenticated":
+                    paths: /*
+                    policy: authenticated
+                "public":
+                    paths: /version,/version-info
+                    policy: permit
         access-log:
             enabled: true
             pattern: combined
+
+    ## server certificate and the CA used to verify client certificates
+    ## (see INSTALL.md, section "Security")
+    tls:
+        key-store:
+            pem:
+                "server":
+                    cert: ${installrd.config.location}/tls/server.crt
+                    key: ${installrd.config.location}/tls/server.key
+        trust-store:
+            pem:
+                certs: ${installrd.config.location}/tls/ca.crt
+        reload-period: 1h
 
     log:
         level: WARN

@@ -30,6 +30,7 @@ import java.util.Optional;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import io.installr.installrd.logging.ConsoleLog;
+import io.installr.installrd.security.AccessPolicy;
 import io.installr.installrd.util.YamlConfigLoader;
 import io.smallrye.config.WithDefault;
 import io.smallrye.config.WithName;
@@ -104,6 +105,8 @@ public class InstallrdConfiguration implements InstallrdConfigurationMapping {
 
     private volatile Map<String, NamespaceConfiguration> namespaceConfigs;
 
+    private volatile AccessPolicy accessPolicy = AccessPolicy.empty();
+
     @PostConstruct
     void init() {
         reload();
@@ -119,6 +122,7 @@ public class InstallrdConfiguration implements InstallrdConfigurationMapping {
         }
         installrdConfig = yamlConfigLoader.load( configFile, InstallrdConfigurationMapping.class );
         namespaceConfigs = namespaceConfigurationLoader.load( locationFor( LocationType.Namespace ) );
+        accessPolicy = AccessPolicy.of( installrdConfig.security(), namespaceConfigs );
     }
 
     void onConfigReloaded( @Observes ConfigReloadedEvent event ) {
@@ -174,6 +178,15 @@ public class InstallrdConfiguration implements InstallrdConfigurationMapping {
     @Override
     public Map<String, String> selector() {
         return installrdConfig.selector();
+    }
+
+    @Override
+    public Optional<SecurityConfiguration> security() {
+        return installrdConfig.security();
+    }
+
+    public AccessPolicy accessPolicy() {
+        return accessPolicy;
     }
 
     @SneakyThrows

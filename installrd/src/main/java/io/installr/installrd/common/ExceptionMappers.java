@@ -21,6 +21,7 @@ import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.RestResponse.ResponseBuilder;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 
+import io.quarkus.security.AuthenticationFailedException;
 import io.quarkus.security.UnauthorizedException;
 import jakarta.validation.ValidationException;
 import jakarta.ws.rs.BadRequestException;
@@ -61,7 +62,17 @@ class ExceptionMappers {
     }
 
     @ServerExceptionMapper
+    public RestResponse<ErrorResponse> mapAuthenticationFailedException( AuthenticationFailedException ex ) {
+        return toErrorResponse( Status.UNAUTHORIZED, ex );
+    }
+
+    @ServerExceptionMapper
     public RestResponse<ErrorResponse> mapForbiddenException( ForbiddenException ex ) {
+        return toErrorResponse( Status.FORBIDDEN, ex );
+    }
+
+    @ServerExceptionMapper
+    public RestResponse<ErrorResponse> mapSecurityForbiddenException( io.quarkus.security.ForbiddenException ex ) {
         return toErrorResponse( Status.FORBIDDEN, ex );
     }
 

@@ -22,12 +22,15 @@ import java.util.function.Consumer;
 import org.eclipse.microprofile.context.ManagedExecutor;
 
 import io.installr.installrd.config.InstallrdConfiguration;
+import io.installr.installrd.security.NamespacePermission;
+import io.installr.installrd.security.Operation.Names;
 import io.installr.installrd.transaction.Transaction;
 import io.installr.installrd.transaction.TransactionService;
 import io.installr.lib.installrd.controller.InstallController;
 import io.installr.lib.installrd.event.Event;
 import io.installr.lib.installrd.resource.InstallFileResource;
 import io.installr.lib.installrd.resource.InstallPackageResource;
+import io.quarkus.security.PermissionsAllowed;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.subscription.MultiEmitter;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -49,21 +52,29 @@ public class InstallControllerImpl implements InstallController {
     InstallService installer;
 
     @Override
+    @PermissionsAllowed( value = Names.PKG_INSTALL, permission = NamespacePermission.class, params = "namespace" )
     public Multi<Event> install( String namespace, InstallPackageResource resource ) {
         return handleInstall( namespace, ( tx ) -> installer.install( tx, resource.getPackageIds() ) );
     }
 
     @Override
+    @PermissionsAllowed( value = Names.PKG_INSTALL_FILE, permission = NamespacePermission.class, params = "namespace" )
     public Multi<Event> install( String namespace, InstallFileResource resource ) {
         return handleInstall( namespace, ( tx ) -> installer.installFile( tx, resource.getFiles() ) );
     }
 
     @Override
+    @PermissionsAllowed( value = Names.PKG_REINSTALL, permission = NamespacePermission.class, params = "namespace" )
     public Multi<Event> reinstall( String namespace, InstallPackageResource resource ) {
         return handleInstall( namespace, ( tx ) -> installer.reinstall( tx, resource.getPackageIds() ) );
     }
 
     @Override
+    @PermissionsAllowed(
+        value = Names.PKG_REINSTALL_FILE,
+        permission = NamespacePermission.class,
+        params = "namespace"
+    )
     public Multi<Event> reinstall( String namespace, InstallFileResource resource ) {
         return handleInstall( namespace, ( tx ) -> installer.reinstallFile( tx, resource.getFiles() ) );
     }
@@ -102,6 +113,7 @@ public class InstallControllerImpl implements InstallController {
     }
 
     @Override
+    @PermissionsAllowed( value = Names.TX_CANCEL, permission = NamespacePermission.class, params = "namespace" )
     public void cancel( String namespace ) {
         txService.currentTransaction().cancel();
     }

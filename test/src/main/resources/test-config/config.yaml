@@ -44,3 +44,20 @@ repositories:
 namespaces:
     - name: Namespace1
     - name: Namespace2
+
+security:
+    admins:
+        - "CN=admin,O=installr-test"
+    roles:
+        - name: developer
+          operations: [ "pkg:install", "pkg:reinstall", "pkg:read", "tx:*", "ns:read" ]
+        - name: viewer
+          operations: [ "ns:read", "pkg:read", "tx:read" ]
+        - name: ns-manager
+          operations: [ "ns:create", "ns:delete" ]
+        ## global operations are ignored in namespace bindings
+        - name: sneaky
+          operations: [ "ns:read", "daemon:stop", "ns:create" ]
+    bindings:
+        - subject: "CN=ops,O=installr-test"
+          roles: [ ns-manager ]

@@ -1,10 +1,37 @@
 quarkus:
     http:
         host-enabled: true
+        ## plain HTTP is only enabled for the mock servers (registry, deployer), which installrd calls itself;
+        ## the installrd API requires an authenticated client certificate on the HTTPS port
         port: 9321
         test-port: 9321
+        ssl-port: 9322
+        test-ssl-port: 9322
+        insecure-requests: enabled
+        auth:
+            permission:
+                "mocks":
+                    paths: /repositories/*,/deployer-mock/*,/test/*
+                    policy: permit
         access-log:
-            enabled: true 
+            enabled: true
+
+    ## client certificate of the test admin, used by InstallrClient
+    tls:
+        "admin-client":
+            key-store:
+                pem:
+                    "admin":
+                        cert: certs/admin.crt
+                        key: certs/admin.key
+            trust-store:
+                pem:
+                    certs: certs/ca.crt
+
+    rest-client:
+        "installrd":
+            url: https://localhost:9322
+            tls-configuration-name: admin-client
 
     log:
         level: WARN

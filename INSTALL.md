@@ -91,7 +91,113 @@ touch ~/.installrd/namespaces/demo/config.yaml
 
 ---
 
-### 4. Database Access
+### 4. Set up Security (mTLS & Roles)
+
+`installrd` only accepts HTTPS requests on port `9316`. Clients authenticate with a **client certificate** (mTLS); the
+subject DN of the certificate is the identity used for authorization. Security is always enabled. Only `/version` and
+`/version-info` are reachable without a certificate.
+
+#### Certificates
+
+`installrd` expects the following PEM files in `~/.installrd/tls/`:
+
+| File | Content |
+|---|---|
+| `server.crt` | Server certificate (with the host name in the SAN), optionally followed by intermediate certificates |
+| `server.key` | Private key of the server certificate |
+| `ca.crt` | CA certificate(s) used to verify client certificates |
+
+`installrd` does not start if one of these files is missing. Changed files are picked up within one hour, without
+a restart.
+
+If your organization runs a CA, request the server certificate there and use its CA certificate as `ca.crt`.
+Otherwise, a self-signed CA can be created with `openssl`. Do this **outside** of `~/.installrd`, ideally on a
+separate machine: whoever has `ca.key` can issue client certificates for any subject, i.e. also for an admin.
+
+```bash
+## on the machine that holds the CA (not in ~/.installrd)
+mkdir -p ~/installr-pki && chmod 700 ~/installr-pki && cd ~/installr-pki
+HOST=installrd.example.org   # host name of the installrd server
+
+## CA
+openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -keyout ca.key -out ca.crt \
+  -subj "/O=installr/CN=installr CA" -addext "basicConstraints=critical,CA:TRUE"
+
+## server certificate
+openssl req -newkey rsa:2048 -nodes -keyout server.key -out server.csr -subj "/O=installr/CN=${HOST}"
+printf "subjectAltName=DNS:${HOST},DNS:localhost,IP:127.0.0.1\nextendedKeyUsage=serverAuth\n" > server.ext
+openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -days 825 -out server.crt -extfile server.ext
+
+## client certificate for an admin
+openssl req -newkey rsa:2048 -nodes -keyout alice.key -out alice.csr -subj "/O=installr/CN=alice"
+printf "extendedKeyUsage=clientAuth\n" > client.ext
+openssl x509 -req -in alice.csr -CA ca.crt -CAkey ca.key -CAcreateserial -days 825 -out alice.crt -extfile client.ext
+```
+
+Then distribute the files:
+
+| File | Destination |
+|---|---|
+| `server.crt`, `server.key`, `ca.crt` | installrd host: `~/.installrd/tls/` (user `installr`, `chmod 600 server.key`) |
+| `alice.crt`, `alice.key`, `ca.crt` | client of `alice` (e.g. the machine running `ic`, or the CI secret store) |
+| `ca.key` | stays with the CA; never on the installrd host or a client |
+
+#### Roles
+
+Access is configured in `~/.installrd/config.yaml` and in the `config.yaml` of each namespace. Changes are applied
+without a restart.
+
+```yaml
+security:
+  ## built-in role 'admin': all operations, globally
+  admins:
+    - "CN=alice,O=installr"
+
+  ## custom roles: a list of operations; wildcards like 'pkg:*' or '*' are allowed
+  roles:
+    - name: developer
+      operations: [ "pkg:install", "pkg:reinstall", "pkg:read", "tx:*", "ns:read" ]
+    - name: viewer
+      operations: [ "ns:read", "pkg:read", "tx:read" ]
+    - name: ns-manager
+      operations: [ "ns:create", "ns:delete" ]
+
+  ## global bindings: apply to all namespaces and are the only way to grant global operations
+  bindings:
+    - subject: "CN=ops,O=installr"
+      roles: [ ns-manager, viewer ]
+```
+
+```yaml
+## ~/.installrd/namespaces/demo/config.yaml
+access:
+  - subject: "CN=ci-pipeline,O=installr"
+    roles: [ developer ]
+```
+
+Subject DNs are written in RFC 2253 order (most specific first, e.g. `CN=alice,O=installr`), as printed by
+`openssl x509 -noout -subject -nameopt RFC2253`. Case and whitespace don't matter.
+
+| Operation | Scope | Endpoint |
+|---|---|---|
+| `ns:read` | namespace | `GET /namespaces/{ns}`, visibility in `GET /namespaces` |
+| `pkg:install` | namespace | `POST /namespaces/{ns}/install` |
+| `pkg:reinstall` | namespace | `POST /namespaces/{ns}/reinstall` |
+| `pkg:install-file` | namespace | `POST /namespaces/{ns}/install-file` (package files on the daemon host) |
+| `pkg:reinstall-file` | namespace | `POST /namespaces/{ns}/reinstall-file` (package files on the daemon host) |
+| `pkg:read` | namespace | `GET /namespaces/{ns}/package-log` |
+| `tx:read` | namespace | `GET /namespaces/{ns}/transactions[/...]` |
+| `tx:cancel` | namespace | `POST /namespaces/{ns}/cancel` |
+| `ns:create` | global | `POST /namespaces` |
+| `ns:delete` | global | `DELETE /namespaces/{ns}` |
+| `daemon:stop` | global | `POST /stop` |
+
+Rules:
+
+* The role name `admin` is reserved. Unknown operations or roles make the configuration invalid.
+* Global operations of a role bound in a namespace are ignored (with a warning in the log).
+
+#### Database
 
 The H2 database accepts TCP connections on port `9416` from other hosts, e.g. for external tools. It is protected by
 the user `INSTALLRD` and a password, which is generated on first start and stored in `~/.installrd/.db-credentials`

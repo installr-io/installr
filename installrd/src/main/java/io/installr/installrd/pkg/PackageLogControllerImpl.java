@@ -20,10 +20,13 @@ package io.installr.installrd.pkg;
 import java.util.List;
 
 import io.installr.installrd.logstore.PackageLog;
+import io.installr.installrd.security.NamespacePermission;
+import io.installr.installrd.security.Operation.Names;
 import io.installr.lib.installrd.controller.PackageLogController;
 import io.installr.lib.installrd.pkg.PackageLogRecord;
 import io.installr.lib.installrd.pkg.PackageLogRecord.Filter;
 import io.installr.lib.installrd.util.Pagination;
+import io.quarkus.security.PermissionsAllowed;
 import jakarta.inject.Inject;
 
 public class PackageLogControllerImpl implements PackageLogController {
@@ -32,6 +35,7 @@ public class PackageLogControllerImpl implements PackageLogController {
     PackageLog packageLog;
 
     @Override
+    @PermissionsAllowed( value = Names.PKG_READ, permission = NamespacePermission.class, params = "namespace" )
     public List<PackageLogRecord> packageLog( String namespace, Pagination pagination, Filter filter ) {
         if ( pagination.getPage() == -1 ) {
             return packageLog.getAll( namespace, filter );

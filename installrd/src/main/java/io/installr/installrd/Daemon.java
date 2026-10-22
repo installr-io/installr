@@ -28,12 +28,15 @@ import io.installr.installrd.config.InstallrdConfiguration;
 import io.installr.installrd.config.InstallrdConfiguration.DeployerConfiguration;
 import io.installr.installrd.config.InstallrdConfiguration.NamespaceDefinition;
 import io.installr.installrd.config.NamespaceConfiguration;
+import io.installr.installrd.config.SecurityConfiguration;
 import io.installr.installrd.logging.ConsoleLog;
 import io.installr.installrd.plugin.PluginLoader;
+import io.installr.installrd.security.Operation.Names;
 import io.installr.lib.installrd.controller.DaemonController;
 import io.installr.lib.installrd.model.VersionInfo;
 import io.quarkus.runtime.Quarkus;
 import io.quarkus.runtime.Startup;
+import io.quarkus.security.PermissionsAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -47,8 +50,8 @@ public class Daemon implements DaemonController {
     @Inject
     PluginLoader pluginLoader;
 
-    @ConfigProperty( name = "quarkus.http.port" )
-    int httpPort;
+    @ConfigProperty( name = "quarkus.http.ssl-port" )
+    int httpsPort;
 
     @ConfigProperty( name = "installrd.log.timezone" )
     String logTimezone;
@@ -64,7 +67,7 @@ public class Daemon implements DaemonController {
         // set 'installrd' as default "namespace", to prevent empty brackets in the logs
         MDC.put( "namespace", "installrd" );
 
-        consoleLog.infof( "Installrd %s running on port %d\n", Installrd.version(), httpPort );
+        consoleLog.infof( "Installrd %s running on port %d (HTTPS, mTLS)\n", Installrd.version(), httpsPort );
 
         consoleLog.info( "Installrd:" );
         consoleLog.infof( "- Revision: %s", Installrd.revision() );
@@ -73,6 +76,21 @@ public class Daemon implements DaemonController {
 
         consoleLog.info( "Config:" );
         consoleLog.infof( "- Location: %s", config.location() );
+
+        consoleLog.info( "Security:" );
+        if ( !config.accessPolicy().hasAdmins() ) {
+            consoleLog.warn( "- No admins configured ('security.admins'); only role bindings grant access" );
+        }
+        config.security()
+            .flatMap( SecurityConfiguration::admins )
+            .ifPresent( admins -> admins.forEach( admin -> consoleLog.infof( "- Admin: %s", admin ) ) );
+        config.security()
+            .flatMap( SecurityConfiguration::roles )
+            .ifPresent(
+                roles -> roles.forEach(
+                    role -> consoleLog.infof( "- Role: %s %s", role.name(), role.operations() )
+                )
+            );
 
         consoleLog.info( "Log:" );
         consoleLog.infof( "- Location: %s", logLocation );
@@ -128,6 +146,7 @@ public class Daemon implements DaemonController {
 
     @POST
     @Path( "/stop" )
+    @PermissionsAllowed( Names.DAEMON_STOP )
     public void stop() {
         Quarkus.asyncExit();
     }

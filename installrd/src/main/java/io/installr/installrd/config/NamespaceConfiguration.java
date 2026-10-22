@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import io.installr.installrd.config.InstallrdConfiguration.DeployerConfiguration;
 import io.installr.installrd.config.InstallrdConfiguration.RepositoryConfiguration;
+import io.installr.installrd.config.SecurityConfiguration.RoleBinding;
 import io.installr.installrd.util.MapUtil;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithName;
@@ -41,5 +42,11 @@ public interface NamespaceConfiguration {
 
     @WithName( "env" )
     Map<String, Optional<String>> rawEnv();
+
+    /**
+     * Role bindings of this namespace; global operations of the bound roles are ignored.
+     */
+    @WithName( "access" )
+    Optional<List<RoleBinding>> access();
 
 }

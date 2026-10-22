@@ -1,0 +1,257 @@
+#!/bin/bash
+##
+## Manages the certificates of installrd (mTLS):
+##
+##   init          creates a CA, a server certificate and an admin client certificate; the admin certificate is
+##                 written as ic config to ${INSTALLRD_CONFIG_LOCATION}/admin.yaml
+##   issue         issues a client certificate and prints it as ic config
+##   renew-server  renews the server certificate (installrd picks it up without restart)
+##
+## Files in ${INSTALLRD_CONFIG_LOCATION} (default: ~/.installrd):
+##   pki/          CA certificate, CA key and the subject alternative names of the server certificate
+##   tls/          server.crt, server.key and ca.crt, as read by installrd
+##   admin.yaml    ic config with the admin certificate
+##
+## Whoever has pki/ca.key can issue certificates for any subject, i.e. also for an admin.
+##
+
+set -e
+
+CONFIG_LOCATION=$(realpath -m "${INSTALLRD_CONFIG_LOCATION:-${HOME}/.installrd}")
+PKI_DIR=${CONFIG_LOCATION}/pki
+TLS_DIR=${CONFIG_LOCATION}/tls
+ADMIN_CONFIG=${CONFIG_LOCATION}/admin.yaml
+PORT=9316
+
+DEFAULT_ORG=installr.io
+ADMIN_CN=admin
+CA_DAYS=3650
+SERVER_DAYS=365
+CLIENT_DAYS=365
+
+usage() {
+    cat << EOF
+usage: $(basename "$0") <command> [options]
+
+commands:
+  init [--san <dns-name|ip>]... [--url <url>] [--name <config>]
+      Create a CA, a server certificate and an admin certificate (CN=${ADMIN_CN},O=${DEFAULT_ORG}).
+      The server certificate is valid for localhost, 127.0.0.1, ::1, the host name and all --san.
+      The admin certificate is written as ic config to ${ADMIN_CONFIG}
+      (url: --url, default: https://localhost:${PORT}; config name: --name, default: local).
+
+  issue <common-name> [--org <organization>] [--days <days>] [--url <url>] [--name <config>]
+      Issue a client certificate CN=<common-name>,O=<organization> (default: ${DEFAULT_ORG}, ${CLIENT_DAYS} days)
+      and print it as ic config (url: --url, default: https://<host name>:${PORT};
+      config name: --name, default: short host name).
+
+  renew-server [--san <dns-name|ip>]...
+      Renew the server certificate for the previous and the given subject alternative names.
+
+environment:
+  INSTALLRD_CONFIG_LOCATION  config location of installrd (default: ~/.installrd)
+EOF
+    exit 1
+}
+
+fail() {
+    echo "$*" >&2
+    exit 1
+}
+
+## creates <name>.key and <name>.crt in the current directory, signed by the CA in ${PKI_DIR}
+## args: name, subject (openssl format), days, extensions
+issue_cert() {
+    local NAME=$1 SUBJECT=$2 DAYS=$3 EXTENSIONS=$4
+    openssl req -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes -keyout "${NAME}.key" -out "${NAME}.csr" \
+        -subj "${SUBJECT}" 2> /dev/null
+    printf "%b" "${EXTENSIONS}" > "${NAME}.ext"
+    openssl x509 -req -in "${NAME}.csr" -CA "${PKI_DIR}/ca.crt" -CAkey "${PKI_DIR}/ca.key" \
+        -CAserial "${PKI_DIR}/ca.srl" -CAcreateserial -days "${DAYS}" -out "${NAME}.crt" \
+        -extfile "${NAME}.ext" 2> /dev/null
+    rm -f "${NAME}.csr" "${NAME}.ext"
+}
+
+## prints an ic config; args: config name, url, cert file, key file
+ic_config() {
+    local NAME=$1 URL=$2 CERT=$3 KEY=$4
+    echo "default-config: ${NAME}"
+    echo "configs:"
+    echo "    ${NAME}:"
+    echo "        url: ${URL}"
+    echo "        ca: |";   sed 's/^/            /' "${PKI_DIR}/ca.crt"
+    echo "        cert: |"; sed 's/^/            /' "${CERT}"
+    echo "        key: |";  sed 's/^/            /' "${KEY}"
+}
+
+subject_of() {
+    openssl x509 -in "$1" -noout -subject -nameopt RFC2253 | sed 's/^subject=//'
+}
+
+## reads the SANs (one per line) from stdin and prints them as subjectAltName value
+san_extension() {
+    local SAN ENTRIES=()
+    while read -r SAN; do
+        [[ -z ${SAN} ]] && continue
+        if [[ ${SAN} =~ ^[0-9.]+$ || ${SAN} == *:* ]]; then
+            ENTRIES+=( "IP:${SAN}" )
+        else
+            ENTRIES+=( "DNS:${SAN}" )
+        fi
+    done
+    local IFS=,
+    echo "${ENTRIES[*]}"
+}
+
+## issues the server certificate for the SANs in ${PKI_DIR}/server-sans and replaces the one in ${TLS_DIR}
+issue_server_cert() {
+    local WORK_DIR
+    WORK_DIR=$(mktemp -d)
+    trap 'rm -rf "${WORK_DIR}"' RETURN
+    local SAN
+    SAN=$(san_extension < "${PKI_DIR}/server-sans")
+    (
+        cd "${WORK_DIR}"
+        issue_cert server "/O=${DEFAULT_ORG}/CN=$(hostname -f 2> /dev/null || hostname)" "${SERVER_DAYS}" \
+            "subjectAltName=${SAN}\nextendedKeyUsage=serverAuth\n"
+    )
+    ## move the key first: installrd reloads both files, the certificate completes the pair
+    mv "${WORK_DIR}/server.key" "${TLS_DIR}/server.key.new"
+    mv "${WORK_DIR}/server.crt" "${TLS_DIR}/server.crt.new"
+    mv "${TLS_DIR}/server.key.new" "${TLS_DIR}/server.key"
+    mv "${TLS_DIR}/server.crt.new" "${TLS_DIR}/server.crt"
+}
+
+## appends the SANs given as arguments to ${PKI_DIR}/server-sans (without duplicates)
+add_sans() {
+    local SAN
+    for SAN in "$@"; do
+        grep -qxF -- "${SAN}" "${PKI_DIR}/server-sans" 2> /dev/null || echo "${SAN}" >> "${PKI_DIR}/server-sans"
+    done
+}
+
+cmd_init() {
+    local URL=https://localhost:${PORT} CONFIG_NAME=local SANS=()
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --san)  [[ $# -ge 2 ]] || usage; SANS+=( "$2" ); shift 2 ;;
+            --url)  [[ $# -ge 2 ]] || usage; URL=$2; shift 2 ;;
+            --name) [[ $# -ge 2 ]] || usage; CONFIG_NAME=$2; shift 2 ;;
+            *) usage ;;
+        esac
+    done
+
+    local FILE
+    for FILE in "${PKI_DIR}/ca.key" "${TLS_DIR}/server.crt" "${TLS_DIR}/server.key" "${TLS_DIR}/ca.crt" \
+        "${ADMIN_CONFIG}"; do
+        [[ -e ${FILE} ]] && fail "${FILE} already exists; remove the existing certificates first."
+    done
+
+    mkdir -p "${PKI_DIR}" "${TLS_DIR}"
+
+    ## CA
+    openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes -days "${CA_DAYS}" \
+        -keyout "${PKI_DIR}/ca.key" -out "${PKI_DIR}/ca.crt" -subj "/O=${DEFAULT_ORG}/CN=installrd CA" \
+        -addext "basicConstraints=critical,CA:TRUE" -addext "keyUsage=critical,keyCertSign,cRLSign" 2> /dev/null
+    cp "${PKI_DIR}/ca.crt" "${TLS_DIR}/ca.crt"
+
+    ## server certificate
+    : > "${PKI_DIR}/server-sans"
+    add_sans localhost 127.0.0.1 ::1 "$(hostname)" "$(hostname -f 2> /dev/null || hostname)" "${SANS[@]}"
+    issue_server_cert
+
+    ## admin certificate as ic config
+    local WORK_DIR
+    WORK_DIR=$(mktemp -d)
+    trap 'rm -rf "${WORK_DIR}"' EXIT
+    (
+        cd "${WORK_DIR}"
+        issue_cert admin "/O=${DEFAULT_ORG}/CN=${ADMIN_CN}" "${CLIENT_DAYS}" "extendedKeyUsage=clientAuth\n"
+    )
+    ic_config "${CONFIG_NAME}" "${URL}" "${WORK_DIR}/admin.crt" "${WORK_DIR}/admin.key" > "${ADMIN_CONFIG}"
+    local SUBJECT
+    SUBJECT=$(subject_of "${WORK_DIR}/admin.crt")
+
+    cat << EOF
+Certificates created.
+
+  CA:                 ${PKI_DIR}/{ca.crt,ca.key}
+  server (installrd): ${TLS_DIR}/{server.crt,server.key,ca.crt}
+                      valid for: $(paste -sd ' ' "${PKI_DIR}/server-sans")
+  admin (ic config):  ${ADMIN_CONFIG}
+
+1. Grant the admin certificate admin rights in ${CONFIG_LOCATION}/config.yaml:
+
+security:
+    admins:
+        - "${SUBJECT}"
+
+2. Use the ic config (or merge its '${CONFIG_NAME}' config into an existing ~/.ic/config.yaml):
+
+mkdir -p ~/.ic && install -m 600 ${ADMIN_CONFIG} ~/.ic/config.yaml
+
+Keep ${PKI_DIR}/ca.key secret: whoever has it can issue certificates for any subject.
+EOF
+}
+
+cmd_issue() {
+    [[ $# -ge 1 && $1 != -* ]] || usage
+    local CN=$1 ORG=${DEFAULT_ORG} DAYS=${CLIENT_DAYS} URL CONFIG_NAME
+    URL=https://$(hostname -f 2> /dev/null || hostname):${PORT}
+    CONFIG_NAME=$(hostname -s 2> /dev/null || hostname)
+    shift
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --org)  [[ $# -ge 2 ]] || usage; ORG=$2; shift 2 ;;
+            --days) [[ $# -ge 2 ]] || usage; DAYS=$2; shift 2 ;;
+            --url)  [[ $# -ge 2 ]] || usage; URL=$2; shift 2 ;;
+            --name) [[ $# -ge 2 ]] || usage; CONFIG_NAME=$2; shift 2 ;;
+            *) usage ;;
+        esac
+    done
+    [[ -f ${PKI_DIR}/ca.key ]] || fail "${PKI_DIR}/ca.key not found; run '$(basename "$0") init' first."
+
+    local WORK_DIR
+    WORK_DIR=$(mktemp -d)
+    trap 'rm -rf "${WORK_DIR}"' EXIT
+    (
+        cd "${WORK_DIR}"
+        issue_cert client "/O=${ORG}/CN=${CN}" "${DAYS}" "extendedKeyUsage=clientAuth\n"
+    )
+    ic_config "${CONFIG_NAME}" "${URL}" "${WORK_DIR}/client.crt" "${WORK_DIR}/client.key"
+
+    cat >&2 << EOF
+Certificate for '$(subject_of "${WORK_DIR}/client.crt")' issued (valid for ${DAYS} days).
+The ic config above contains the private key: store it with mode 600, e.g. as ~/.ic/config.yaml.
+Grant access by binding this subject to roles in config.yaml ('security.bindings' or 'access' of a namespace).
+EOF
+}
+
+cmd_renew_server() {
+    local SANS=()
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --san) [[ $# -ge 2 ]] || usage; SANS+=( "$2" ); shift 2 ;;
+            *) usage ;;
+        esac
+    done
+    [[ -f ${PKI_DIR}/ca.key && -f ${PKI_DIR}/server-sans ]] \
+        || fail "${PKI_DIR}/ca.key not found; run '$(basename "$0") init' first."
+
+    add_sans "${SANS[@]}"
+    issue_server_cert
+    echo "Server certificate renewed, valid for: $(paste -sd ' ' "${PKI_DIR}/server-sans")"
+    echo "installrd picks it up within the reload period (1h); restart installrd to apply it immediately."
+}
+
+umask 077
+
+[[ $# -ge 1 ]] || usage
+COMMAND=$1
+shift
+case ${COMMAND} in
+    init)         cmd_init "$@" ;;
+    issue)        cmd_issue "$@" ;;
+    renew-server) cmd_renew_server "$@" ;;
+    *)            usage ;;
+esac

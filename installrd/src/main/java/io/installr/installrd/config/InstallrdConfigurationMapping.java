@@ -42,4 +42,7 @@ public interface InstallrdConfigurationMapping {
     @WithName( "selector" )
     Map<String, String> selector();
 
+    @WithName( "security" )
+    Optional<SecurityConfiguration> security();
+
 }

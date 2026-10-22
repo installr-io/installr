@@ -88,6 +88,10 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
             <artifactId>quarkus-credentials</artifactId>
         </dependency>
         <dependency>
@@ -259,6 +263,7 @@
                                     <filtering>true</filtering>
                                     <excludes>
                                         <exclude>config/**</exclude>
+                                        <exclude>scripts/**</exclude>
                                     </excludes>
                                 </resource>
                                 <resource>
@@ -266,6 +271,7 @@
                                     <filtering>false</filtering>
                                     <includes>
                                         <include>config/**</include>
+                                        <include>scripts/**</include>
                                     </includes>
                                 </resource>
                             </resources>

@@ -1,3 +1,9 @@
 ##
 ## Configuration for test namespace: Namespace1
 ##
+
+access:
+    - subject: "CN=developer,O=installr-test"
+      roles: [ developer, sneaky ]
+    - subject: "cn=viewer, o=installr-test"
+      roles: [ viewer ]
