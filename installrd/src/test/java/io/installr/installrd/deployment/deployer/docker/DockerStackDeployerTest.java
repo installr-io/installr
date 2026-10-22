@@ -43,7 +43,9 @@ import io.installr.installrd.util.ThreadUtil;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentSpec;
 import lombok.SneakyThrows;
+import lombok.extern.jbosslog.JBossLog;
 
+@JBossLog
 @ExtendWith( MockitoExtension.class )
 public class DockerStackDeployerTest {
 
@@ -100,7 +102,14 @@ public class DockerStackDeployerTest {
                 DeploymentException.class,
                 () -> deployer.deploy( spec )
             );
-            assertEquals( "No such image: localhost/not-found:1.0.0", ex.getMessage() );
+            log.info( ex.getMessage() );
+            // Newer versions of docker respond with something like "Error response from daemon: manifest unknown".
+            if ( ex.getMessage().contains( "manifest unknown" ) ) {
+                assertTrue( ex.getMessage().contains( "manifest unknown" ), "manifest unknown" );
+            }
+            else {
+                assertEquals( "No such image: ghcr.io/installr-io/uci:not-found", ex.getMessage() );
+            }
         }
         finally {
             deployer.undeploy( spec );
