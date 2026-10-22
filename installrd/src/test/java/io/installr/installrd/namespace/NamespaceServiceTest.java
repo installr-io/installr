@@ -42,6 +42,7 @@ import io.installr.installrd.config.InstallrdConfiguration.LocationType;
 import io.installr.installrd.config.InstallrdConfiguration.NamespaceDefinition;
 import io.installr.lib.installrd.model.NamespaceInfo;
 import jakarta.enterprise.event.Event;
+import jakarta.ws.rs.BadRequestException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -106,7 +107,20 @@ class NamespaceServiceTest {
         assertThrows( NamespaceAlreadyExistsException.class, () -> namespaceService.create( "alpha" ) );
     }
 
+    @Test
+    void create_should_reject_invalid_names() {
+        for ( final String name : List.of( "../escape", "a/b", ".hidden", "", " alpha", "1alpha" ) ) {
+            assertThrows( BadRequestException.class, () -> namespaceService.create( name ), name );
+        }
+        assertFalse( Files.exists( tempDir.resolveSibling( "escape" ) ) );
+    }
+
     // --- delete ---
+
+    @Test
+    void delete_should_reject_invalid_names() {
+        assertThrows( BadRequestException.class, () -> namespaceService.delete( "../" ) );
+    }
 
     @Test
     void delete_should_remove_namespace_directory() throws IOException {

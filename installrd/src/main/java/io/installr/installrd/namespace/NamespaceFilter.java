@@ -44,6 +44,9 @@ class NamespaceFilter {
         final List<String> params = rc.getUriInfo().getPathParameters().get( "namespace" );
         if ( params != null && !params.isEmpty() ) {
             final String name = params.get( 0 );
+            if ( !NamespaceService.isValidName( name ) ) {
+                throw new NamespaceNotFoundException( name );
+            }
             final Path location = config.locationFor( LocationType.Namespace ).resolve( name ).toAbsolutePath();
             if ( !Files.exists( location ) ) {
                 throw new NamespaceNotFoundException( name );

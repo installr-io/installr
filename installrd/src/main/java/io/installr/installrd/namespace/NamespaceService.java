@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import io.installr.installrd.config.ConfigReloadedEvent;
 import io.installr.installrd.config.InstallrdConfiguration;
@@ -29,12 +30,18 @@ import io.installr.lib.installrd.model.NamespaceInfo;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.BadRequestException;
 import lombok.SneakyThrows;
 import lombok.extern.jbosslog.JBossLog;
 
 @ApplicationScoped
 @JBossLog
 public class NamespaceService {
+
+    /*
+     * Namespace names are used as directory names, so they must not contain path separators or dots.
+     */
+    private static final Pattern NAME_PATTERN = Pattern.compile( "^[A-Za-z][A-Za-z0-9_-]{0,63}$" );
 
     @Inject
     InstallrdConfiguration config;
@@ -44,6 +51,7 @@ public class NamespaceService {
 
     @SneakyThrows
     public NamespaceInfo create( String name ) {
+        validateName( name );
         final Path location = config.locationFor( LocationType.Namespace ).resolve( name ).toAbsolutePath();
         if ( Files.exists( location ) ) {
             throw new NamespaceAlreadyExistsException( name );
@@ -57,12 +65,25 @@ public class NamespaceService {
 
     @SneakyThrows
     public void delete( String name ) {
+        validateName( name );
         final Path location = config.locationFor( LocationType.Namespace ).resolve( name ).toAbsolutePath();
         Files.walk( location )
             .sorted( Comparator.reverseOrder() )
             .forEach( this::deleteSilently );
         reloadEvent.fire( new ConfigReloadedEvent() );
         log.infof( "Namespace '%s' deleted", name );
+    }
+
+    public static boolean isValidName( String name ) {
+        return name != null && NAME_PATTERN.matcher( name ).matches();
+    }
+
+    private static void validateName( String name ) {
+        if ( !isValidName( name ) ) {
+            throw new BadRequestException(
+                String.format( "Invalid namespace name '%s'; allowed pattern: %s", name, NAME_PATTERN.pattern() )
+            );
+        }
     }
 
     @SneakyThrows
