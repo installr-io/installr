@@ -162,6 +162,33 @@ We recommend running both commands before submitting a pull request to avoid unn
 
 ---
 
+## Branching Model
+
+The project follows a simple trunk-based model with an "upstream first" policy for bug fixes.
+
+### Branches and Tags
+
+- **`main`** is the development branch. It always carries the next version as a snapshot (e.g. `0.3.0-SNAPSHOT`).
+- **Releases** are tags on `main` (e.g. `0.2.0`). There is no separate release branch for the current version.
+- **Maintenance branches** (`release/X.Y.x`, e.g. `release/0.2.x`) are created from a release tag only when a patch
+  release is needed. They are never merged back into `main`.
+
+### Contributing Changes
+
+1. Create a short-lived branch from `main` (e.g. `feature/ssh-deployer` or `fix/null-pointer-in-liquibase-deployer`).
+2. Open a pull request against `main`.
+3. Once reviewed and CI passes, the PR is merged into `main`.
+
+### Bug Fixes (Upstream First)
+
+All bug fixes go into `main` first, even if they affect an older release. Maintainers then backport them to the relevant
+maintenance branches using `git cherry-pick -x`, so each backported commit references its origin.
+
+Only open a pull request directly against a `release/X.Y.x` branch if the bug does not exist on `main`
+(e.g. the affected code has since been removed or rewritten). Please mention this in the PR description.
+
+---
+
 ## Use of AI Coding Assistants
 
 AI tools are permitted and can be a helpful aid when contributing to `Installr`. However, human contributors remain fully responsible for every contribution they submit.
