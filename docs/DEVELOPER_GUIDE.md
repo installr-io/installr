@@ -121,21 +121,21 @@ For now `~/.installrd/namespaces/demo/config.yaml` can be left empty.
 
 ### 3.5 Create dev certificates
 
-`installrd` only accepts HTTPS requests with a client certificate (mTLS), also in dev mode. Create a dev CA, a server
-certificate for `localhost` and a client certificate for yourself:
+`installrd` only accepts HTTPS requests with a client certificate (mTLS), also in dev mode. Create a CA, a server
+certificate for `localhost` and an admin certificate with the same script as in production:
 
 ```bash
-./scripts/dev-certs
+./installrd/src/main/non-packaged-resources/scripts/installrd-certs init
 ```
 
-The script copies `server.crt`, `server.key` and `ca.crt` to `~/.installrd/tls/`. The CA key and your client
-certificate stay in `~/.installr-dev-pki/`. It prints the subject of your client certificate; add it as admin to
-`~/.installrd/config.yaml`:
+The script creates the CA in `~/.installrd/pki/`, the server certificate in `~/.installrd/tls/` and an `ic` config
+with the admin certificate in `~/.installrd/admin.yaml` (used in step 7). The example config copied in 3.3 already
+grants this certificate admin rights in `~/.installrd/config.yaml`:
 
 ```yaml
 security:
     admins:
-        - "CN=<your user>,O=installr-dev"
+        - "CN=admin,O=installr.io"
 ```
 
 See [INSTALL.md](../INSTALL.md), section "Set up Security", for roles and certificates in general.
@@ -146,11 +146,11 @@ See [INSTALL.md](../INSTALL.md), section "Set up Security", for roles and certif
 mvn -f installrd/pom.xml quarkus:dev
 ```
 
-This starts `installrd` in dev mode on `https://localhost:9316`. Check the setup with your client certificate:
+This starts `installrd` in dev mode on `https://localhost:9316`. Check the server certificate (`/version` is reachable
+without a client certificate):
 
 ```bash
-curl --cert ~/.installr-dev-pki/${USER}.crt --key ~/.installr-dev-pki/${USER}.key \
-    --cacert ~/.installr-dev-pki/ca.crt https://localhost:9316/namespaces
+curl --cacert ~/.installrd/tls/ca.crt https://localhost:9316/version
 ```
 
 If you prefer to run the binary, run
@@ -258,6 +258,15 @@ This uploads the package to the local `atrium` registry.
 ---
 
 ## 7. Install the Application
+
+`ic` connects to `installrd` with a client certificate. `installrd-certs init` (see 3.5) created an `ic` config with
+the admin certificate; use it as `~/.ic/config.yaml` (or merge its `local` config into an existing one):
+
+```bash
+mkdir -p ~/.ic && install -m 600 ~/.installrd/admin.yaml ~/.ic/config.yaml
+```
+
+See the [ic README](https://github.com/installr-io/ic#configuration) for the config format.
 
 Now we install the demo-app with `ic`:
 

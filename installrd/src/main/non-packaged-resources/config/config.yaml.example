@@ -62,8 +62,9 @@ repositories:
 ## configure access control (client certificates: see INSTALL.md, section "Set up Security")
 security:
     ## built-in role 'admin': all operations, globally
+    ## (CN=admin,O=installr.io: certificate created by 'installrd-certs init', see ~/.installrd/admin.yaml)
     admins:
-        - "CN=alice,O=installr"
+        - "CN=admin,O=installr.io"
 
     ## custom roles: operations like 'pkg:install', or wildcards like 'pkg:*' and '*'
     roles:
@@ -76,5 +77,5 @@ security:
 
     ## global bindings apply to all namespaces; namespace bindings go to 'access' in the namespace's config.yaml
     bindings:
-        - subject: "CN=ops,O=installr"
+        - subject: "CN=ops,O=installr.io"
           roles: [ ns-manager, viewer ]

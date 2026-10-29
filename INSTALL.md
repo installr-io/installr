@@ -110,37 +110,52 @@ subject DN of the certificate is the identity used for authorization. Security i
 `installrd` does not start if one of these files is missing. Changed files are picked up within one hour, without
 a restart.
 
-If your organization runs a CA, request the server certificate there and use its CA certificate as `ca.crt`.
-Otherwise, a self-signed CA can be created with `openssl`. Do this **outside** of `~/.installrd`, ideally on a
-separate machine: whoever has `ca.key` can issue client certificates for any subject, i.e. also for an admin.
+The package creates them on installation (and on upgrade, if `~/.installrd/tls/` does not exist yet) with the script
+`installrd-certs init`, together with a CA and an admin certificate. The server certificate is valid for `localhost`,
+`127.0.0.1`, `::1` and the host name; add all further names and IPs, under which clients reach installrd:
 
 ```bash
-## on the machine that holds the CA (not in ~/.installrd)
-mkdir -p ~/installr-pki && chmod 700 ~/installr-pki && cd ~/installr-pki
-HOST=installrd.example.org   # host name of the installrd server
-
-## CA
-openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -keyout ca.key -out ca.crt \
-  -subj "/O=installr/CN=installr CA" -addext "basicConstraints=critical,CA:TRUE"
-
-## server certificate
-openssl req -newkey rsa:2048 -nodes -keyout server.key -out server.csr -subj "/O=installr/CN=${HOST}"
-printf "subjectAltName=DNS:${HOST},DNS:localhost,IP:127.0.0.1\nextendedKeyUsage=serverAuth\n" > server.ext
-openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -days 825 -out server.crt -extfile server.ext
-
-## client certificate for an admin
-openssl req -newkey rsa:2048 -nodes -keyout alice.key -out alice.csr -subj "/O=installr/CN=alice"
-printf "extendedKeyUsage=clientAuth\n" > client.ext
-openssl x509 -req -in alice.csr -CA ca.crt -CAkey ca.key -CAcreateserial -days 825 -out alice.crt -extfile client.ext
+/opt/installr-io/bin/installrd-certs renew-server --san installrd.example.org
 ```
 
-Then distribute the files:
-
-| File | Destination |
+| File | Content |
 |---|---|
-| `server.crt`, `server.key`, `ca.crt` | installrd host: `~/.installrd/tls/` (user `installr`, `chmod 600 server.key`) |
-| `alice.crt`, `alice.key`, `ca.crt` | client of `alice` (e.g. the machine running `ic`, or the CI secret store) |
-| `ca.key` | stays with the CA; never on the installrd host or a client |
+| `~/.installrd/pki/ca.crt`, `ca.key` | CA (valid for 10 years) |
+| `~/.installrd/tls/server.crt`, `server.key`, `ca.crt` | Server certificate (valid for 1 year) and CA certificate for installrd |
+| `~/.installrd/admin.yaml` | `ic` config with the admin certificate `CN=admin,O=installr.io` (valid for 1 year), see "Configure `ic`" |
+
+Grant the admin certificate `CN=admin,O=installr.io` the `admin` role in
+`~/.installrd/config.yaml` (see "Roles"):
+
+```yaml
+security:
+  admins:
+    - "CN=admin,O=installr.io"
+```
+
+Further client certificates (valid for 1 year, `--days` to change) are issued as ready-to-use `ic` config; the private
+key is only contained in this output. The config is named after the installrd host (short host name, `--name` to
+change), so a user can merge the configs of several hosts. Grant the printed subject access via roles:
+
+```bash
+installrd-certs issue alice --name prod > alice.yaml         # CN=alice,O=installr.io, config 'prod'
+installrd-certs issue ci-pipeline --org acme > ci.yaml       # CN=ci-pipeline,O=acme
+```
+
+Renew the server certificate before it expires (or to add names); installrd picks it up without restart:
+
+```bash
+installrd-certs renew-server [--san other.example.org]
+```
+
+Whoever has `~/.installrd/pki/ca.key` can issue certificates for any subject, i.e. also for an admin. On the installrd
+host, this is the user `installr`, who can change `config.yaml` anyway. Issued client certificates cannot be revoked
+yet; remove their subject from `config.yaml` instead.
+
+If your organization runs a CA, use it instead of `installrd-certs`: request the server certificate (with all host
+names as SAN) and the client certificates there and replace `server.crt`, `server.key` and `ca.crt` (the CA
+certificate) in `~/.installrd/tls/`. To recreate the certificates with `installrd-certs init` (options `--san`, `--url`,
+`--name`), remove `~/.installrd/pki/`, `~/.installrd/tls/` and `~/.installrd/admin.yaml` first.
 
 #### Roles
 
@@ -151,7 +166,7 @@ without a restart.
 security:
   ## built-in role 'admin': all operations, globally
   admins:
-    - "CN=alice,O=installr"
+    - "CN=admin,O=installr.io"
 
   ## custom roles: a list of operations; wildcards like 'pkg:*' or '*' are allowed
   roles:
@@ -164,18 +179,18 @@ security:
 
   ## global bindings: apply to all namespaces and are the only way to grant global operations
   bindings:
-    - subject: "CN=ops,O=installr"
+    - subject: "CN=ops,O=installr.io"
       roles: [ ns-manager, viewer ]
 ```
 
 ```yaml
 ## ~/.installrd/namespaces/demo/config.yaml
 access:
-  - subject: "CN=ci-pipeline,O=installr"
+  - subject: "CN=ci-pipeline,O=acme"
     roles: [ developer ]
 ```
 
-Subject DNs are written in RFC 2253 order (most specific first, e.g. `CN=alice,O=installr`), as printed by
+Subject DNs are written in RFC 2253 order (most specific first, e.g. `CN=alice,O=installr.io`), as printed by
 `openssl x509 -noout -subject -nameopt RFC2253`. Case and whitespace don't matter.
 
 | Operation | Scope | Endpoint |
@@ -214,7 +229,24 @@ start and the previous user is locked. External processes that access the databa
 
 ---
 
-### 5. Update the `PATH`
+### 5. Configure `ic`
+
+`ic` reads its connections to `installrd` from `~/.ic/config.yaml`. Each named config contains the URL and the
+client certificate, its key and the CA certificate as embedded PEM. For the demo, `ic` runs as user `installr` on the
+installrd host and uses the admin config created during installation:
+
+```bash
+mkdir -p ~/.ic && install -m 600 ~/.installrd/admin.yaml ~/.ic/config.yaml
+```
+
+The file contains private keys, so `ic` refuses to use it if it is accessible by group or others (`chmod 600`).
+Further configs, e.g. for remote installrd hosts or created with `installrd-certs issue`, are added below `configs` and
+selected with `ic -c <name>`. If the server certificate is issued by a CA from the Java trust store, `ca` can be
+omitted.
+
+---
+
+### 6. Update the `PATH`
 
 Add `/opt/installr-io/bin` to `installr`'s PATH:
 
@@ -228,7 +260,7 @@ EOF
 
 ---
 
-### 6. Logout
+### 7. Logout
 
 For now, logout user `installr`.
 
