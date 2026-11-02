@@ -36,7 +36,7 @@ quarkus:
         credentials-provider-name: installrd-database
         jdbc:
             ## located in the config location, so the H2 TCP listener (baseDir = config location) can serve it
-            url: jdbc:h2:${installrd.config.location}/installrd
+            url: jdbc:h2:${installrd.config.location}/installrd;DB_CLOSE_ON_EXIT=FALSE
 
     liquibase:
         migrate-at-start: true

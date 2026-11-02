@@ -52,7 +52,8 @@ quarkus:
         credentials-provider: installrd-database
         credentials-provider-name: installrd-database
         jdbc:
-            url: jdbc:h2:${installrd.config.location}/installrd;RETENTION_TIME=0;COMPRESS=true;
+            ## closed by Quarkus on shutdown, not by H2's shutdown hook: a stop during startup must not abort Liquibase
+            url: jdbc:h2:${installrd.config.location}/installrd;RETENTION_TIME=0;COMPRESS=true;DB_CLOSE_ON_EXIT=FALSE
             acquisition-timeout: 120s
 
     liquibase:
