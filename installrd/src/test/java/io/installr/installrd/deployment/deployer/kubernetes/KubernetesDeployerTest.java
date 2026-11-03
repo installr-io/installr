@@ -71,6 +71,7 @@ public class KubernetesDeployerTest {
     DeploymentSpec genSpec( String name ) {
         final DeploymentSpec spec = new DeploymentSpec();
         spec.setName( name );
+        spec.setNamespace( NAMESPACE );
         spec.setVersion( Semver.parse( "0.1.0" ) );
         spec.setMediaType( "application/vnd.io.installr.kubernetes" );
         spec.setEnv( Map.of( "namespace", NAMESPACE ) );
@@ -125,6 +126,31 @@ public class KubernetesDeployerTest {
             .get();
         assertNotNull( cm );
         assertEquals( "value", cm.getData().get( "key" ), "ConfigMap data should be updated" );
+    }
+
+    @Test
+    void deploy_should_use_overridden_target_namespace() {
+        final KubernetesDeployer deployer = deployer();
+        final DeploymentSpec spec = genSpec( "test-k8s-1" );
+        spec.setEnv( Map.of( "namespace", "Other-Namespace" ) );
+
+        assertDoesNotThrow( () -> deployer.deploy( spec ) );
+
+        assertNotNull( client.configMaps().inNamespace( "other-namespace" ).withName( "test-k8s-1" ).get() );
+        assertNull( client.configMaps().inNamespace( NAMESPACE ).withName( "test-k8s-1" ).get() );
+    }
+
+    @Test
+    void deploy_and_undeploy_should_respect_namespace_of_resource() {
+        final KubernetesDeployer deployer = deployer();
+        final DeploymentSpec spec = genSpec( "test-k8s-3" );
+
+        assertDoesNotThrow( () -> deployer.deploy( spec ) );
+        assertNotNull( client.configMaps().inNamespace( "explicit-namespace" ).withName( "test-k8s-3" ).get() );
+        assertNull( client.configMaps().inNamespace( NAMESPACE ).withName( "test-k8s-3" ).get() );
+
+        assertDoesNotThrow( () -> deployer.undeploy( spec ) );
+        assertNull( client.configMaps().inNamespace( "explicit-namespace" ).withName( "test-k8s-3" ).get() );
     }
 
     @Test

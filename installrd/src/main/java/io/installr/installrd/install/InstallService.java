@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -252,9 +253,11 @@ public class InstallService {
 
         // Prepare the environment for the deployment artifacts of this package:
         // The environment consists of the environment configured for the namespace (aka global env) and the package
-        // specific configuration.
-        final Map<String, String> env = tx.namespace().config().env();
+        // specific configuration. 'namespace' defaults to the installrd namespace; the namespace env or custom.yaml
+        // may override it to deploy into another target (e.g. Kubernetes) namespace.
+        final Map<String, String> env = new HashMap<>();
         env.put( "namespace", tx.namespace().name() );
+        env.putAll( tx.namespace().config().env() );
         env.putAll( packageConfigReader.readAll( tx.namespace().location(), env, packageId ) );
         log.debug( "environment:" );
         MapUtil.dump( log, env );
@@ -272,7 +275,7 @@ public class InstallService {
                 log.debugf( "%s:", item.getPath() );
                 Status itemStatus = Status.Success;
                 try {
-                    deploymentService.deploy( toDeploymentSpec( item, pkg, env ) );
+                    deploymentService.deploy( toDeploymentSpec( tx.namespace().name(), item, pkg, env ) );
                     itemStatus = Status.Success;
                     packageStatusRef.compareAndSet( Status.Success, Status.Success );
                 }
@@ -372,8 +375,9 @@ public class InstallService {
             .allMatch( entry -> entry.getValue().equals( labels.get( entry.getKey() ) ) );
     }
 
-    private DeploymentSpec toDeploymentSpec( PackageContent content, Package pkg, final Map<String, String> env )
-        throws IOException {
+    private DeploymentSpec toDeploymentSpec(
+        String namespace, PackageContent content, Package pkg, final Map<String, String> env
+    ) throws IOException {
         final PackageId packageId = pkg.getPackageInfo().getPackageId();
         final Path file = pkg.getLocalPath().getParent()
             .resolve( packageId.toPackageName() )
@@ -384,6 +388,7 @@ public class InstallService {
         }
         final DeploymentSpec spec = new DeploymentSpec();
         spec.setName( prefixName( packageId, content.getPath() ) );
+        spec.setNamespace( namespace );
         spec.setVersion( packageId.version() );
         spec.setData( Files.readAllBytes( file ) );
         spec.setHash( content.getHash() );

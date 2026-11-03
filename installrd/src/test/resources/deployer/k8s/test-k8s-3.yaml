@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-k8s-3
+  namespace: explicit-namespace
+data:
+  key: value

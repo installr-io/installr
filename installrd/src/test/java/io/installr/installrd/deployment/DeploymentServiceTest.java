@@ -228,8 +228,32 @@ class DeploymentServiceTest {
 
         // BINARY_MEDIA_TYPE has no global deployer — only a namespace-level one
         final DeploymentSpec spec = spec( BINARY_MEDIA_TYPE );
-        spec.setEnv( Map.of( "namespace", namespace ) );
+        spec.setNamespace( namespace );
         assertDoesNotThrow( () -> service.deploy( spec ) );
+    }
+
+    @Test
+    void deploy_should_select_deployer_by_installrd_namespace_not_by_env() {
+        final String namespace = "my-namespace";
+        final NamespaceConfiguration nsConfig = mock( NamespaceConfiguration.class );
+        when( nsConfig.deployerConfigurations() ).thenReturn(
+            Map.of( BINARY_MEDIA_TYPE, deployerConfig( "NoOpDeployer", Map.of() ) )
+        );
+
+        whenBuiltInDeployerFound( new NoOpDeployer() );
+        when( config.deployerConfigurations() ).thenReturn( Map.of() );
+        when( config.namespaceConfigurations() ).thenReturn( Map.of( namespace, nsConfig ) );
+        service.init();
+
+        // an overridden target namespace in the env must not change the deployer selection
+        final DeploymentSpec spec = spec( BINARY_MEDIA_TYPE );
+        spec.setNamespace( namespace );
+        spec.setEnv( Map.of( "namespace", "other-namespace" ) );
+        assertDoesNotThrow( () -> service.deploy( spec ) );
+
+        final DeploymentSpec envOnly = spec( BINARY_MEDIA_TYPE );
+        envOnly.setEnv( Map.of( "namespace", namespace ) );
+        assertThrows( MediaTypeNotSupportedException.class, () -> service.deploy( envOnly ) );
     }
 
     @Test

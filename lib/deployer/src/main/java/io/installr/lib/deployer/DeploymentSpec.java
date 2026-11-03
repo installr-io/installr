@@ -36,6 +36,13 @@ public class DeploymentSpec {
     @PathParam( "name" )
     private String name;
 
+    /**
+     * The installrd namespace the deployment belongs to; selects namespace-specific deployers. The deployment target
+     * (e.g. the Kubernetes namespace) is given by the env variable {@code namespace}, which may differ.
+     */
+    @FormParam( "namespace" )
+    private String namespace;
+
     @NotNull
     @FormParam( "version" )
     private Semver version;

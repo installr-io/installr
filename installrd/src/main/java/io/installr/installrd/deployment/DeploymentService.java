@@ -178,7 +178,7 @@ public class DeploymentService {
         ConfigurableDeployer<?> deployer = null;
 
         // namespace deployer have precedence over global deployers
-        if ( spec.getEnv() != null && spec.getEnv().containsKey( "namespace" ) ) {
+        if ( spec.getNamespace() != null ) {
             deployer = findNamespaceDeployer( spec );
         }
         // global deployers
@@ -198,7 +198,7 @@ public class DeploymentService {
     }
 
     private ConfigurableDeployer<?> findNamespaceDeployer( DeploymentSpec spec ) {
-        final String namespace = spec.getEnv().get( "namespace" );
+        final String namespace = spec.getNamespace();
         final MediaTypeMatcher matcher = MediaTypeMatcher.matcher(
             namespaceDeployerMap.getOrDefault( namespace, Map.of() ).keySet(),
             spec.getMediaType()

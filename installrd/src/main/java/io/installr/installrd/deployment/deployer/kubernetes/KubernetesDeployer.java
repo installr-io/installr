@@ -96,7 +96,7 @@ public class KubernetesDeployer extends AbstractConfigurableDeployer<KubernetesD
                 resource.getMetadata().getName(),
                 resource.getMetadata().getNamespace()
             );
-            client.resource( resource ).inNamespace( namespace ).createOr( r -> r.update() );
+            client.resource( resource ).inNamespace( namespaceOf( resource, namespace ) ).createOr( r -> r.update() );
         }
 
         final List<HasMetadata> resources = loaded.items();
@@ -122,7 +122,9 @@ public class KubernetesDeployer extends AbstractConfigurableDeployer<KubernetesD
 
         final var loaded = client.load( loadSpec( spec ) );
         final List<HasMetadata> resources = loaded.items();
-        loaded.inNamespace( namespace ).delete();
+        for ( final HasMetadata resource : resources ) {
+            client.resource( resource ).inNamespace( namespaceOf( resource, namespace ) ).delete();
+        }
 
         final boolean gone = new PeriodicEvaluator<>( () -> resources, checkAllGone( namespace ) )
             .withInterval( config.getPollingInterval() )
@@ -139,12 +141,24 @@ public class KubernetesDeployer extends AbstractConfigurableDeployer<KubernetesD
         log.debug( "  => done" );
     }
 
+    /**
+     * The target namespace is taken from the env, not from {@link DeploymentSpec#getNamespace()}: it defaults to the
+     * installrd namespace but may be overridden to deploy into another Kubernetes namespace.
+     */
     private String namespace( DeploymentSpec spec ) {
         final String namespace = spec.getEnv().get( "namespace" );
         if ( namespace == null || namespace.isBlank() ) {
             throw new IllegalStateException( "Namespace must be provided via env." );
         }
         return namespace.toLowerCase();
+    }
+
+    /**
+     * A namespace set in the resource's metadata takes precedence over the target namespace.
+     */
+    private static String namespaceOf( HasMetadata resource, String defaultNamespace ) {
+        final String namespace = resource.getMetadata().getNamespace();
+        return namespace == null || namespace.isBlank() ? defaultNamespace : namespace;
     }
 
     private InputStream loadSpec( DeploymentSpec spec ) {
@@ -154,11 +168,11 @@ public class KubernetesDeployer extends AbstractConfigurableDeployer<KubernetesD
     }
 
     private Predicate<List<HasMetadata>> checkAllReady( String namespace ) {
-        return resources -> resources.stream().allMatch( r -> isReady( r, namespace ) );
+        return resources -> resources.stream().allMatch( r -> isReady( r, namespaceOf( r, namespace ) ) );
     }
 
     private Predicate<List<HasMetadata>> checkAllGone( String namespace ) {
-        return resources -> resources.stream().allMatch( r -> isGone( r, namespace ) );
+        return resources -> resources.stream().allMatch( r -> isGone( r, namespaceOf( r, namespace ) ) );
     }
 
     private boolean isGone( HasMetadata resource, String namespace ) {

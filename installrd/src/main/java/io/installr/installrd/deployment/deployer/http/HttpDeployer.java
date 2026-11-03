@@ -92,6 +92,7 @@ public class HttpDeployer extends AbstractConfigurableDeployer<HttpDeployerConfi
     private DeploymentSpec encodeSpec( DeploymentSpec spec ) {
         final DeploymentSpec encoded = new DeploymentSpec();
         encoded.setName( Base64.getEncoder().encodeToString( spec.getName().getBytes() ) );
+        encoded.setNamespace( spec.getNamespace() );
         encoded.setVersion( spec.getVersion() );
         encoded.setData( spec.getData() );
         encoded.setHash( spec.getHash() );
