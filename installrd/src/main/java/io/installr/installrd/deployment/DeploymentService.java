@@ -17,6 +17,7 @@
  */
 package io.installr.installrd.deployment;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ServiceLoader.Provider;
@@ -212,8 +213,11 @@ public class DeploymentService {
         if ( deployer.getConfig().isPresent() ) {
             final Optional<Map<String, String>> deployerEnv = deployer.getConfig().get().env();
             if ( deployerEnv.isPresent() ) {
-                final Map<String, String> env = deployerEnv.get();
-                env.putAll( spec.getEnv() );
+                // copy: the deployer config is shared across deployments and must not collect their env
+                final Map<String, String> env = new HashMap<>( deployerEnv.get() );
+                if ( spec.getEnv() != null ) {
+                    env.putAll( spec.getEnv() );
+                }
                 spec.setEnv( env );
                 log.debug( "extended environment:" );
                 MapUtil.dump( log, env );

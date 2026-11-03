@@ -37,12 +37,12 @@ public class EnvironmentInterpolator {
             String key = matcher.group( 1 );
             String val = env.get( key );
             String def = matcher.group( 3 );
-            log.debugf( "interpolate => key=%s; val=%s (def=%s);", key, val, def );
             if ( val == null || val.isBlank() ) {
+                log.debugf( "interpolate => key=%s not set, using default", key );
                 val = def == null ? "" : def;
             }
-            log.debugf( "interpolate => effective value: %s", val );
-            matcher.appendReplacement( resultBuilder, val );
+            // values are literal text: '$' and '\' must not be read as group references
+            matcher.appendReplacement( resultBuilder, Matcher.quoteReplacement( val ) );
         }
         matcher.appendTail( resultBuilder );
         return resultBuilder.toString();

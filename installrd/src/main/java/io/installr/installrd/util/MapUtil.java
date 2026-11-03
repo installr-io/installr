@@ -20,12 +20,16 @@ package io.installr.installrd.util;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.jboss.logging.Logger;
 
 public class MapUtil {
+
+    private static final Pattern SENSITIVE_KEY = Pattern
+        .compile( "password|passwd|secret|token|credential|private|api[._-]?key", Pattern.CASE_INSENSITIVE );
 
     private MapUtil() {
     }
@@ -92,6 +96,9 @@ public class MapUtil {
         return key.replace( ".", "_" ).replace( "-", "_" ).toLowerCase();
     }
 
+    /**
+     * Logs all entries at debug level; values of keys that look like credentials are masked.
+     */
     public static void dump( Logger log, Map<String, String> map ) {
         if ( map == null ) {
             log.debugf( "dump: map is null" );
@@ -99,8 +106,17 @@ public class MapUtil {
         else {
             map.entrySet().stream()
                 .sorted( Map.Entry.comparingByKey() )
-                .forEach( entry -> log.debugf( "  %s = %s", entry.getKey(), entry.getValue() ) );
+                .forEach(
+                    entry -> log.debugf( "  %s = %s", entry.getKey(), mask( entry.getKey(), entry.getValue() ) )
+                );
         }
+    }
+
+    static String mask( String key, String value ) {
+        if ( value == null || value.isEmpty() || !SENSITIVE_KEY.matcher( key ).find() ) {
+            return value;
+        }
+        return "****";
     }
 
 }

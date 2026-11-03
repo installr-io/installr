@@ -232,6 +232,33 @@ class DeploymentServiceTest {
         assertDoesNotThrow( () -> service.deploy( spec ) );
     }
 
+    @Test
+    void deploy_should_not_leak_env_into_deployer_config( @TempDir Path tempDir ) {
+        final LocalFileDeployer deployer = new LocalFileDeployer();
+        whenBuiltInDeployerFound( deployer );
+        when( config.deployerConfigurations() ).thenReturn(
+            Map.of(
+                BINARY_MEDIA_TYPE,
+                deployerConfig( "LocalFileDeployer", Map.of( "directory", tempDir.toString(), "env.global", "g" ) )
+            )
+        );
+        service.init();
+
+        final DeploymentSpec first = spec( BINARY_MEDIA_TYPE );
+        first.setData( new byte[ 0 ] );
+        first.setEnv( Map.of( "first", "1" ) );
+        service.deploy( first );
+
+        final DeploymentSpec second = spec( BINARY_MEDIA_TYPE );
+        second.setData( new byte[ 0 ] );
+        second.setEnv( Map.of( "second", "2" ) );
+        service.deploy( second );
+
+        assertEquals( Map.of( "global", "g", "first", "1" ), first.getEnv() );
+        assertEquals( Map.of( "global", "g", "second", "2" ), second.getEnv() );
+        assertEquals( Map.of( "global", "g" ), deployer.getConfig().get().env().get() );
+    }
+
     @SuppressWarnings( "rawtypes" )
     private void whenBuiltInDeployerFound( ConfigurableDeployer deployer ) {
         when( allBeans.select( any( Annotation.class ) ) ).thenReturn( selectedInstance );
