@@ -123,8 +123,7 @@ public class Daemon implements DaemonController {
             .map( Map.Entry::getValue )
             .map( NamespaceConfiguration::deployerConfigurations )
             .forEach( this::logDeployerConfigurations );
-        // currently disabled
-        // pluginLoader.load();
+        pluginLoader.load();
     }
 
     private void logDeployerConfigurations( Map<String, DeployerConfiguration> deployerConfigurations ) {

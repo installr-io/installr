@@ -22,6 +22,11 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ServiceLoader;
@@ -33,14 +38,12 @@ import io.installr.installrd.config.InstallrdConfiguration.LocationType;
 import io.installr.lib.deployer.DeployerConfig;
 import io.installr.lib.deployer.DeployerPlugin;
 import io.installr.lib.installrd.PackageContentFilter;
+import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.SneakyThrows;
 import lombok.extern.jbosslog.JBossLog;
 
-/**
- * Currently, this is a proof of concept...
- */
 @ApplicationScoped
 @JBossLog
 public class PluginLoader {
@@ -50,6 +53,16 @@ public class PluginLoader {
 
     private Map<String, PackageContentFilter> packageContentFilters;
     private Map<String, DeployerPlugin<DeployerConfig>> deployers;
+
+    private URLClassLoader pcl;
+
+    @PreDestroy
+    @SneakyThrows
+    void destroy() {
+        if ( pcl != null ) {
+            pcl.close();
+        }
+    }
 
     public Optional<Map<String, PackageContentFilter>> getPackageContentFilters() {
         return Optional.ofNullable( packageContentFilters );
@@ -75,14 +88,14 @@ public class PluginLoader {
                 .map( this::toUrl )
                 .toArray( URL[]::new );
             log.infof( "Found %d plugin(s).", pluginUrls.length );
-            final ClassLoader ccl = Thread.currentThread().getContextClassLoader();
-            try ( URLClassLoader classLoader = new URLClassLoader( "plugin-loader", pluginUrls, ccl ) ) {
-                packageContentFilters = loadServices( PackageContentFilter.class, classLoader );
-                deployers = (Map<String, DeployerPlugin<DeployerConfig>>)(Map<?, ?>)loadServices(
-                    DeployerPlugin.class,
-                    classLoader
-                );
-            }
+            final ClassLoader qcl = this.getClass().getClassLoader(); // this is the quarkus class loader
+            pcl = new URLClassLoader( "plugin-loader", pluginUrls, qcl ); // plugin class loader
+            packageContentFilters = loadServices( PackageContentFilter.class, pcl );
+            deployers = (Map<String, DeployerPlugin<DeployerConfig>>)(Map<?, ?>)loadServices(
+                DeployerPlugin.class,
+                pcl
+            );
+            loadDatabaseDrivers( pcl );
         }
         catch ( IOException ex ) {
             throw new IllegalStateException( ex );
@@ -109,6 +122,40 @@ public class PluginLoader {
             clazz.getSimpleName()
         );
         return services;
+    }
+
+    private void loadDatabaseDrivers( final URLClassLoader pcl ) {
+        List<String> registeredDrivers = Collections.list( DriverManager.getDrivers() )
+            .stream()
+            .map( Driver::getClass )
+            .map( Class::getName )
+            .toList();
+        loadServices( java.sql.Driver.class, pcl )
+            .forEach(
+                ( k, v ) -> {
+                    try {
+                        if ( registeredDrivers.contains( k ) ) {
+                            log.tracef( "- Driver already register: %s", k );
+                            return;
+                        }
+                        registerDriver( pcl, k );
+                    }
+                    catch ( SQLException ex ) {
+                        throw new IllegalStateException( ex );
+                    }
+                }
+            );
+    }
+
+    @SneakyThrows
+    private void registerDriver( final URLClassLoader pcl, String driverName )
+        throws SQLException {
+        // Since we use a different class loader we cannot use DriverManager.registerDriver with the driver loaded by
+        // the ServiceLoader. Instead we use instantiate the driver "per hand" a register it with shim.
+        final Class<?> driverClass = Class.forName( driverName, true, pcl );
+        final Driver driver = (Driver)driverClass.getDeclaredConstructor().newInstance();
+        DriverManager.registerDriver( new DriverShim( driver ) );
+        log.infof( "- Driver registered: %s", driverName );
     }
 
 }
