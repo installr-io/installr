@@ -18,6 +18,7 @@
 package io.installr.installrd.deployment;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import java.util.ServiceLoader.Provider;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,8 +46,11 @@ import io.installr.installrd.config.NamespaceConfiguration;
 import io.installr.installrd.deployment.deployer.local.LocalFileDeployer;
 import io.installr.installrd.deployment.deployer.noop.NoOpDeployer;
 import io.installr.installrd.plugin.PluginLoader;
+import io.installr.lib.deployer.AbstractConfigurableDeployer;
+import io.installr.lib.deployer.AbstractDeployerConfig;
 import io.installr.lib.deployer.ConfigurableDeployer;
 import io.installr.lib.deployer.DeployerConfig;
+import io.installr.lib.deployer.DeployerPlugin;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentSpec;
 import jakarta.enterprise.inject.Instance;
@@ -143,6 +148,33 @@ class DeploymentServiceTest {
 
     @Test
     @SuppressWarnings( "unchecked" )
+    void init_should_create_a_plugin_deployer_per_media_type() {
+        final Provider<DeployerPlugin<DeployerConfig>> provider = mock( Provider.class );
+        when( provider.get() ).thenAnswer( invocation -> new TestPluginDeployer() );
+        whenBuiltInDeployerNotFound();
+        when( pluginLoader.getDeployers() ).thenReturn( Optional.of( Map.of( "TestPluginDeployer", provider ) ) );
+        when( config.deployerConfigurations() ).thenReturn(
+            Map.of(
+                NOOP_MEDIA_TYPE,
+                deployerConfig( "TestPluginDeployer", Map.of( "target", "noop" ) ),
+                BINARY_MEDIA_TYPE,
+                deployerConfig( "TestPluginDeployer", Map.of( "target", "binary" ) )
+            )
+        );
+        service.init();
+
+        assertEquals(
+            "[TestPluginDeployer] noop",
+            assertThrows( DeploymentException.class, () -> service.deploy( spec( NOOP_MEDIA_TYPE ) ) ).getMessage()
+        );
+        assertEquals(
+            "[TestPluginDeployer] binary",
+            assertThrows( DeploymentException.class, () -> service.deploy( spec( BINARY_MEDIA_TYPE ) ) ).getMessage()
+        );
+    }
+
+    @Test
+    @SuppressWarnings( "unchecked" )
     void deploy_should_delegate_to_translateException_for_runtime_exceptions() {
         final ConfigurableDeployer<DeployerConfig> deployer = mock( ConfigurableDeployer.class );
         final RuntimeException runtimeError = new RuntimeException( "low-level error" );
@@ -231,6 +263,42 @@ class DeploymentServiceTest {
                 return cfg;
             }
         };
+    }
+
+    /**
+     * Reports its configured target as the message of a {@link DeploymentException}.
+     */
+    public static class TestPluginDeployer extends AbstractConfigurableDeployer<TestPluginConfig>
+        implements DeployerPlugin<TestPluginConfig> {
+
+        @Override
+        public Class<TestPluginConfig> getConfigType() {
+            return TestPluginConfig.class;
+        }
+
+        @Override
+        public void deploy( DeploymentSpec spec ) {
+            throw new DeploymentException( config.getTarget() );
+        }
+
+        @Override
+        public void undeploy( DeploymentSpec spec ) {
+        }
+
+    }
+
+    public static class TestPluginConfig extends AbstractDeployerConfig {
+
+        private String target;
+
+        public String getTarget() {
+            return target;
+        }
+
+        public void setTarget( String target ) {
+            this.target = target;
+        }
+
     }
 
 }

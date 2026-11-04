@@ -19,6 +19,7 @@ package io.installr.installrd.deployment;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.ServiceLoader.Provider;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -132,15 +133,15 @@ public class DeploymentService {
     private DeployerPlugin<DeployerConfig> findExternalDeployer(
         String deployerName, String mediaType, Map<String, String> config
     ) {
-        final Optional<Map<String, DeployerPlugin<DeployerConfig>>> plugins = pluginLoader.getDeployers();
+        final Optional<Map<String, Provider<DeployerPlugin<DeployerConfig>>>> plugins = pluginLoader.getDeployers();
         if ( !plugins.isPresent() ) {
             throw new IllegalStateException( String.format( "No deployer found for media-type '%s'.", mediaType ) );
         }
-        final Map<String, DeployerPlugin<DeployerConfig>> deployers = plugins.get();
+        final Map<String, Provider<DeployerPlugin<DeployerConfig>>> deployers = plugins.get();
         if ( !deployers.containsKey( deployerName ) ) {
             throw new IllegalStateException( "Deployer not found: " + deployerName );
         }
-        final DeployerPlugin<DeployerConfig> deployer = deployers.get( deployerName );
+        final DeployerPlugin<DeployerConfig> deployer = deployers.get( deployerName ).get();
         deployer.init( deserializeConfig( deployer, config ) );
         return deployer;
     }

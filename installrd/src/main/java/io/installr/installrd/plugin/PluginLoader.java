@@ -52,7 +52,7 @@ public class PluginLoader {
     InstallrdConfiguration config;
 
     private Map<String, PackageContentFilter> packageContentFilters;
-    private Map<String, DeployerPlugin<DeployerConfig>> deployers;
+    private Map<String, Provider<DeployerPlugin<DeployerConfig>>> deployers;
 
     private URLClassLoader pcl;
 
@@ -68,7 +68,10 @@ public class PluginLoader {
         return Optional.ofNullable( packageContentFilters );
     }
 
-    public Optional<Map<String, DeployerPlugin<DeployerConfig>>> getDeployers() {
+    /**
+     * Each provider creates a new instance, so that a deployer plugin can be configured for several media types.
+     */
+    public Optional<Map<String, Provider<DeployerPlugin<DeployerConfig>>>> getDeployers() {
         return Optional.ofNullable( deployers );
     }
 
@@ -91,7 +94,7 @@ public class PluginLoader {
             final ClassLoader qcl = this.getClass().getClassLoader(); // this is the quarkus class loader
             pcl = new URLClassLoader( "plugin-loader", pluginUrls, qcl ); // plugin class loader
             packageContentFilters = loadServices( PackageContentFilter.class, pcl );
-            deployers = (Map<String, DeployerPlugin<DeployerConfig>>)(Map<?, ?>)loadServices(
+            deployers = (Map<String, Provider<DeployerPlugin<DeployerConfig>>>)(Map<?, ?>)loadProviders(
                 DeployerPlugin.class,
                 pcl
             );
@@ -111,17 +114,22 @@ public class PluginLoader {
         return file.toUri().toURL();
     }
 
-    private <S> Map<String, S> loadServices( Class<S> clazz, ClassLoader classLoader ) {
-        final Map<String, S> services = ServiceLoader.load( clazz, classLoader )
+    private <S> Map<String, Provider<S>> loadProviders( Class<S> clazz, ClassLoader classLoader ) {
+        final Map<String, Provider<S>> providers = ServiceLoader.load( clazz, classLoader )
             .stream()
-            .map( Provider::get )
-            .collect( Collectors.toMap( k -> k.getClass().getName(), v -> v ) );
+            .collect( Collectors.toMap( k -> k.type().getName(), v -> v ) );
         log.infof(
             "Found %d service(s) of type '%s'.",
-            services.size(),
+            providers.size(),
             clazz.getSimpleName()
         );
-        return services;
+        return providers;
+    }
+
+    private <S> Map<String, S> loadServices( Class<S> clazz, ClassLoader classLoader ) {
+        return loadProviders( clazz, classLoader ).entrySet()
+            .stream()
+            .collect( Collectors.toMap( Map.Entry::getKey, entry -> entry.getValue().get() ) );
     }
 
     private void loadDatabaseDrivers( final URLClassLoader pcl ) {
