@@ -34,6 +34,7 @@ import io.installr.lib.deployer.DeployerConfig;
 import io.installr.lib.deployer.DeployerPlugin;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentSpec;
+import io.installr.lib.deployer.DeploymentWarning;
 import io.installr.installrd.config.ConfigReloadedEvent;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;

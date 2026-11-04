@@ -29,11 +29,11 @@ import de.gesellix.docker.remote.api.ConfigReference;
 import de.gesellix.docker.remote.api.IPAM;
 import de.gesellix.docker.remote.api.Network;
 import de.gesellix.docker.remote.api.NetworkCreateRequest;
-import io.installr.installrd.deployment.DeploymentWarning;
 import io.installr.installrd.deployment.deployer.BuiltInDeployer;
 import io.installr.installrd.util.interpolation.EnvironmentInterpolator;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentSpec;
+import io.installr.lib.deployer.DeploymentWarning;
 import jakarta.enterprise.context.Dependent;
 
 @Dependent

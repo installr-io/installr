@@ -37,7 +37,6 @@ import org.semver4j.Semver;
 
 import io.installr.installrd.config.InstallrdConfiguration;
 import io.installr.installrd.deployment.DeploymentService;
-import io.installr.installrd.deployment.DeploymentWarning;
 import io.installr.installrd.pkg.PackageCache;
 import io.installr.installrd.pkg.PackageDatabase;
 import io.installr.installrd.pkg.TransactionCanceledException;
@@ -51,6 +50,7 @@ import io.installr.installrd.transaction.Transaction;
 import io.installr.installrd.util.MapUtil;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentSpec;
+import io.installr.lib.deployer.DeploymentWarning;
 import io.installr.lib.installrd.event.Events;
 import io.installr.lib.installrd.event.Status;
 import io.installr.lib.installrd.pkg.Action;

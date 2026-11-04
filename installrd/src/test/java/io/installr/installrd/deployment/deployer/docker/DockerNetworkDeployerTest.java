@@ -34,8 +34,8 @@ import org.semver4j.Semver;
 import de.gesellix.docker.client.DockerClient;
 import de.gesellix.docker.client.DockerClientImpl;
 import de.gesellix.docker.remote.api.Network;
-import io.installr.installrd.deployment.DeploymentWarning;
 import io.installr.lib.deployer.DeploymentSpec;
+import io.installr.lib.deployer.DeploymentWarning;
 import lombok.SneakyThrows;
 
 public class DockerNetworkDeployerTest {

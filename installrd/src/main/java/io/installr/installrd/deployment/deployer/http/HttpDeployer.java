@@ -26,13 +26,13 @@ import java.util.function.Function;
 import org.jboss.resteasy.reactive.RestResponse;
 
 import io.installr.installrd.common.http.HttpClientBuilder;
-import io.installr.installrd.deployment.DeploymentWarning;
 import io.installr.installrd.deployment.deployer.BuiltInDeployer;
 import io.installr.installrd.util.PeriodicEvaluator;
 import io.installr.lib.deployer.AbstractConfigurableDeployer;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentResponse;
 import io.installr.lib.deployer.DeploymentSpec;
+import io.installr.lib.deployer.DeploymentWarning;
 import io.smallrye.faulttolerance.api.Guard;
 import jakarta.enterprise.context.Dependent;
 import jakarta.ws.rs.NotFoundException;

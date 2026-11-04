@@ -34,12 +34,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import io.installr.installrd.deployment.DeploymentWarning;
 import io.installr.lib.deployer.AbstractConfigurableDeployer;
 import io.installr.lib.deployer.DeploymentException;
 import io.installr.lib.deployer.DeploymentResponse;
 import io.installr.lib.deployer.DeploymentSpec;
 import io.installr.lib.deployer.DeploymentStatus;
+import io.installr.lib.deployer.DeploymentWarning;
 import jakarta.ws.rs.NotFoundException;
 
 @ExtendWith( MockitoExtension.class )
