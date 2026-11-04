@@ -1,0 +1,67 @@
+Installr Linking Exception, version 1.0
+
+Additional permissions under GNU Affero General Public License version 3 section 7
+
+The following additional permissions apply to the Program, i.e. all parts of
+Installr licensed under the GNU Affero General Public License version 3. They
+do not apply to the libraries located in the lib/ directory, which are
+licensed under the GNU Lesser General Public License version 3.
+
+
+1. Database Drivers
+
+As a special exception to the terms and conditions of the GNU Affero General
+Public License version 3, the copyright holders of this Program give you
+permission to combine this Program with third-party libraries providing
+database connectivity or database drivers (e.g. JDBC drivers), regardless of
+their license terms.
+
+For the purposes of this exception, "combine" means linking or loading such
+libraries at compile time or runtime, including dynamic loading within the
+same process.
+
+
+2. Plugins
+
+As a special exception to the terms and conditions of the GNU Affero General
+Public License version 3, the copyright holders of this Program give you
+permission to combine this Program with independently developed plugins loaded
+through the Program's plugin interface, regardless of the license terms of
+those plugins, provided that:
+
+- The plugin is loaded exclusively through the Program's officially defined
+  plugin API
+- The plugin does not use or call any functions, classes, or methods of the
+  Program directly, but only interacts with the Program through the plugin API
+- Communication from the plugin to the Program is exclusively through
+  mechanisms defined in the plugin API, such as return values, exceptions, or
+  callbacks defined therein
+- The plugin does not modify the Program's runtime state except through
+  mechanisms explicitly provided by the plugin API
+
+For the purposes of this exception, "plugin" means a software module that is
+dynamically loaded by the Program at runtime and whose sole purpose is to
+extend or customize the functionality of the Program through the plugin API.
+
+The plugin API consists of the libraries located in the lib/ directory, which
+are licensed under the GNU Lesser General Public License version 3. This
+exception does not permit you to sublicense or relicense the plugin API
+itself. The plugin API remains under its own license terms.
+
+
+3. Scope of These Exceptions
+
+These exceptions do not apply to modifications of the Program itself. Any
+modified version of the Program must still be distributed under the GNU Affero
+General Public License version 3, including the requirement of section 13 to
+make the corresponding source code available to users interacting with the
+Program over a network.
+
+These exceptions do not permit you to sublicense or relicense the third-party
+libraries or plugins themselves. Each of them remains under its own license
+terms.
+
+If you modify this Program and incorporate it into a larger work, these
+exceptions do not extend to those portions of the larger work that are not
+part of this Program. These exceptions do not extend to software that embeds
+or wraps the Program as a whole.

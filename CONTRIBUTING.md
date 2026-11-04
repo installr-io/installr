@@ -57,8 +57,9 @@ This project uses the **Developer Certificate of Origin (DCO)**.
 
 By contributing, you certify that:
 * You have the right to submit your contribution.
-* The work is your own, or you have the right to pass it on under the project's license (AGPL).
-* You agree that your contribution may be distributed under the project's license.
+* The work is your own, or you have the right to pass it on under the project's licenses.
+* You agree that your contribution may be distributed under the project's licenses: the AGPL with the additional
+  permissions of the [Installr Linking Exception](LINKING-EXCEPTION), or the LGPL for the libraries in `lib/`.
 
 ### Sign-Off Requirement
 

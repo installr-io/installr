@@ -119,6 +119,8 @@ The following deployers are currently planned:
 
 `Installr` is licensed under the **GNU Affero General Public License (AGPL)**, with the exception of all libraries located under `lib/`, which are licensed under the **GNU Lesser General Public License (LGPL)**.
 
+Additional permissions allow combining `installrd` with database drivers and plugins under other licenses (e.g. proprietary JDBC drivers), see the Installr Linking Exception in [LINKING-EXCEPTION](LINKING-EXCEPTION).
+
 ---
 
 ## Installation

@@ -10,3 +10,6 @@ custom deployers, as well as for integration with installrd. These libraries are
 [ipf](https://github.com/installr-io/ipf), and [atrium](https://github.com/installr-io/atrium).
 
 All libraries located in this directory (the `lib/` directory), are licensed under the terms of the **GNU Lesser General Public License (LGPL)**.
+
+Plugins for `installrd` built on these libraries may be distributed under other licenses, provided they meet the
+conditions of the Installr Linking Exception in [LINKING-EXCEPTION](../LINKING-EXCEPTION).
