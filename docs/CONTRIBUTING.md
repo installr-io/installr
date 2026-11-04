@@ -59,7 +59,7 @@ By contributing, you certify that:
 * You have the right to submit your contribution.
 * The work is your own, or you have the right to pass it on under the project's licenses.
 * You agree that your contribution may be distributed under the project's licenses: the AGPL with the additional
-  permissions of the [Installr Linking Exception](LINKING-EXCEPTION), or the LGPL for the libraries in `lib/`.
+  permissions of the [Installr Linking Exception](https://github.com/installr-io/installr/blob/main/LINKING-EXCEPTION), or the LGPL for the libraries in `lib/`.
 
 ### Sign-Off Requirement
 
@@ -127,7 +127,7 @@ Each commit must represent exactly one **logical change**. A logical change is a
 
 If you find yourself writing "and" in the subject line, your commit likely contains more than one change and should be split.
 
-What constitutes a single logical change is a matter of judgment. As a rule of thumb: a bug fix and its test belong together. A refactoring and a behaviour change do not. Conversely, if a single logical change touches many files, all those changes belong in one commit - the number of files changed is not a reason to split.
+What constitutes a single logical change is a matter of judgment. As a rule of thumb: a bug fix and its test belong together. A refactoring and a behavior change do not. Conversely, if a single logical change touches many files, all those changes belong in one commit - the number of files changed is not a reason to split.
 
 Every commit in a series **must** leave the codebase in a buildable and passing state.
 
@@ -155,7 +155,7 @@ Consistent code formatting is enforced using a Maven formatter plugin. To format
 mvn formatter:format
 ```
 
-The formatter is uses the **Eclipse code formatter**, with a custom style defined [here](code-format/src/main/resources/java-code-format.xml). Please run this command before committing changes to keep the codebase clean and consistent.
+The formatter uses the **Eclipse code formatter**, with a custom style defined [here](https://github.com/installr-io/installr/blob/main/code-format/src/main/resources/java-code-format.xml). Please run this command before committing changes to keep the codebase clean and consistent.
 
 ---
 
@@ -225,7 +225,7 @@ This helps track the evolving role of AI in the project's development history an
 
 ## Getting Started
 
-To get up and running quickly, check out the [Developer Guide](docs/DEVELOPER_GUIDE.md), which walks you through everything you need to know to get started.
+To get up and running quickly, check out the [Developer Guide](DEVELOPER_GUIDE.md), which walks you through everything you need to know to get started.
 
 ---
 

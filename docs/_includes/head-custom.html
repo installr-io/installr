@@ -1,0 +1,35 @@
+<style>
+  body #header_wrap {
+    background: #fff;
+    border-bottom: 1px solid #d6d6d6;
+  }
+
+  body #project_title {
+    width: 446px;
+    max-width: 100%;
+    aspect-ratio: 575 / 90;
+    background: url("{{ '/images/installr-logo.png' | relative_url }}") no-repeat left center / contain;
+    color: transparent;
+    text-shadow: none;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  body #project_tagline {
+    color: #494949;
+  }
+</style>
+
+<script>
+  document.addEventListener( "DOMContentLoaded", function () {
+    var footer = document.querySelector( "#footer_wrap footer" );
+    if ( footer ) {
+      var paragraph = document.createElement( "p" );
+      var link = document.createElement( "a" );
+      link.href = "{{ '/IMPRESSUM.html' | relative_url }}";
+      link.textContent = "Impressum";
+      paragraph.appendChild( link );
+      footer.appendChild( paragraph );
+    }
+  } );
+</script>

@@ -11,7 +11,7 @@ It consists of several components:
 * `ipf` – bundles your software into installable packages
 * `atrium` – distributes and provides packages
 * `installrd` – the installation daemon — the heart of the system
-* `inctl` – a command-line interface used to control `installrd`
+* `ic` – a command-line interface used to control `installrd`
 
 With `Installr`, you can package everything required to run your software, including:
 
@@ -58,9 +58,9 @@ A *Deployer* is responsible for installing and managing a specific type of artif
 
 This modular architecture allows `Installr` to support different technologies without being tightly coupled to them.
 
-### inctl
+### ic
 
-`inctl` is the **command-line interface** used to interact with and control `installrd`.
+`ic` is the **command-line interface** used to interact with and control `installrd`.
 
 ---
 
@@ -124,4 +124,4 @@ Additional permissions allow combining `installrd` with database drivers and plu
 ---
 
 ## Installation
-👉 See the [Installation & Setup Guide](INSTALL.md) for setup instructions.
+👉 See the [Installation & Setup Guide](docs/INSTALL.md) for setup instructions.

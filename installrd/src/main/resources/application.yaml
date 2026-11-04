@@ -20,7 +20,7 @@ quarkus:
             pattern: combined
 
     ## server certificate and the CA used to verify client certificates
-    ## (see INSTALL.md, section "Security")
+    ## (see docs/INSTALL.md, section "Set up Security")
     tls:
         key-store:
             pem:

@@ -1,0 +1,52 @@
+name: Publish homepage
+
+on:
+    workflow_call:
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: pages
+    cancel-in-progress: false
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: Configure GitHub Pages
+              uses: actions/configure-pages@v5
+
+            - name: Add the versions of the latest releases
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                installrd=$( gh release view --repo installr-io/installr --json tagName --jq .tagName )
+                ic=$( gh release view --repo installr-io/ic --json tagName --jq .tagName )
+                printf 'installrd_version: "%s"\nic_version: "%s"\n' "$installrd" "$ic" >> docs/_config.yml
+
+            - name: Build with Jekyll
+              uses: actions/jekyll-build-pages@v1
+              with:
+                  source: ./docs
+                  destination: ./_site
+
+            - name: Upload site
+              uses: actions/upload-pages-artifact@v4
+
+    deploy:
+        needs: build
+        permissions:
+            pages: write
+            id-token: write
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+        runs-on: ubuntu-latest
+        steps:
+            - name: Deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v5

@@ -1,0 +1,6 @@
+theme: jekyll-theme-slate
+title: Installr
+description: A multi-purpose package installer
+show_downloads: false
+exclude:
+    - DATAMODEL.md

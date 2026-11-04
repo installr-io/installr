@@ -96,3 +96,11 @@ jobs:
                     --fail-on-no-commits \
                     --verify-tag \
                     "$tag" ./installrd-*.rpm
+
+    publish-homepage:
+        needs: create-release
+        permissions:
+            contents: read
+            pages: write
+            id-token: write
+        uses: ./.github/workflows/homepage.yaml

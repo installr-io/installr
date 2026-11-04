@@ -13,7 +13,7 @@ Before starting the installation, ensure the following requirements are met:
 * A Linux system using `dnf` (e.g., Fedora, RHEL, CentOS Stream)
 * `sudo` or root privileges
 * A running Docker Swarm cluster
-  (see the [Developer Guide](https://github.com/installr-io/installr/blob/main/docs/DEVELOPER_GUIDE.md#11-docker) for setup instructions)
+  (see the [Developer Guide](DEVELOPER_GUIDE.md#11-docker) for setup instructions)
 
 ---
 
@@ -31,12 +31,12 @@ sudo rpm --import https://raw.githubusercontent.com/installr-io/installr/refs/he
 
 ### 2. Install `installrd` and `ic`
 
-Install the required RPM packages:
+Install the RPM packages of the latest releases:
 
 ```bash
 sudo dnf install \
-  https://github.com/installr-io/installr/releases/download/0.1.0/installrd-0.1.0-1.noarch.rpm \
-  https://github.com/installr-io/ic/releases/download/0.1.0/ic-0.1.0-1.noarch.rpm
+  https://github.com/installr-io/installr/releases/download/{{ site.installrd_version }}/installrd-{{ site.installrd_version }}-1.noarch.rpm \
+  https://github.com/installr-io/ic/releases/download/{{ site.ic_version }}/ic-{{ site.ic_version }}-1.noarch.rpm
 ```
 
 ---
@@ -112,7 +112,7 @@ a restart.
 
 The package creates them on installation (and on upgrade, if `~/.installrd/tls/` does not exist yet) with the script
 `installrd-certs init`, together with a CA and an admin certificate. The server certificate is valid for `localhost`,
-`127.0.0.1`, `::1` and the host name; add all further names and IPs, under which clients reach installrd:
+`127.0.0.1`, `::1` and the host name; add all further names and IPs under which clients reach installrd:
 
 ```bash
 /opt/installr-io/bin/installrd-certs renew-server --san installrd.example.org
@@ -211,7 +211,7 @@ Rules:
 
 * The role name `admin` is reserved. Unknown operations or roles make the configuration invalid.
 * Global operations of a role bound in a namespace are ignored (with a warning in the log).
-* The client, which started a transaction, is recorded in the transaction log (`ACTOR`).
+* The client that started a transaction is recorded in the transaction log (`ACTOR`).
 
 #### Database
 
@@ -260,9 +260,9 @@ EOF
 
 ---
 
-### 7. Logout
+### 7. Log Out
 
-For now, logout user `installr`.
+For now, log out as user `installr`.
 
 ---
 
@@ -321,7 +321,7 @@ Apr 13 14:47:04 mt installrd[68986]: INFO  - application/vnd.io.installr.docker-
 ---
 
 ## Install the Demo Application
-If `installrd` is running, we can now install a demo application to test, if the setup works as expected.
+If `installrd` is running, we can now install a demo application to test whether the setup works as expected.
 
 ### 1. Switch to `installr` User
 
@@ -356,7 +356,7 @@ auh493y3wegy   demo-demo-app_srv   replicated   1/1        ghcr.io/installr-io/d
 
 ### 4. Test the Demo Application
 
-Open in browser or use curl:
+Open it in a browser or use curl:
 
 ```bash
 curl http://127.0.0.1:8088

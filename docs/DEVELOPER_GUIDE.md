@@ -14,7 +14,7 @@ Before you start, make sure all required tools are installed and working.
 
 Docker is required to run the demo application.
 
-To install Docker follow the steps for your distribution: [https://docs.docker.com/engine/install](https://docs.docker.com/engine/install)
+To install Docker, follow the steps for your distribution: [https://docs.docker.com/engine/install](https://docs.docker.com/engine/install)
 
 After installation, verify Docker is working:
 
@@ -41,7 +41,7 @@ To build the project you need the following tools:
 
 #### Option A: Using mise-en-place (recommended)
 
-To install mise-en-place follow this guide: [https://mise.jdx.dev/getting-started.html](https://mise.jdx.dev/getting-started.html)
+To install mise-en-place, follow this guide: [https://mise.jdx.dev/getting-started.html](https://mise.jdx.dev/getting-started.html)
 
 #### Option B: Manual installation
 
@@ -86,9 +86,9 @@ This installs the correct Java and Maven versions automatically.
 mvn clean install
 ```
 
-### 3.3 Setup local database
+### 3.3 Set up the local database
 
-`installrd` uses a local H2 database to store installation meta data. The database is located at:
+`installrd` uses a local H2 database to store installation metadata. The database is located at:
 `~/.installrd`
 
 Create the initial configuration and empty database:
@@ -138,7 +138,7 @@ security:
         - "CN=admin,O=installr.io"
 ```
 
-See [INSTALL.md](../INSTALL.md), section "Set up Security", for roles and certificates in general.
+See [INSTALL.md](INSTALL.md), section "Set up Security", for roles and certificates in general.
 
 ### 3.6 Start installrd
 
@@ -170,7 +170,7 @@ Open a **new terminal**.
 cd atrium/
 ```
 
-If you work with `mise-en-place` run
+If you work with `mise-en-place`, run
 ```bash
 mise trust
 ```
@@ -181,7 +181,7 @@ mise trust
 mvn clean install
 ```
 
-### 4.2 Setup configuration
+### 4.2 Set up the configuration
 
 ```bash
 mkdir ~/.atrium/ && cp -r src/main/non-packaged-resources/config/* ~/.atrium/
@@ -208,7 +208,7 @@ Open **another terminal**.
 Now we build two required tooling components:
 
 * ipf: The packaging tool
-* ic: installrd's command line client
+* ic: installrd's command-line client
 
 ### 5.1 Build `ipf`
 
@@ -289,14 +289,14 @@ Verify the application is running:
 docker service ls
 ```
 
-This should show the running docker container `demo-demo-app_srv`.
+This should show the running Docker service `demo-demo-app_srv`.
 
 
 ```bash
 curl http://127.0.0.1:8088
 ```
 
-This should greet you with an html saying: `Hello 'installrd' World :)`
+This should greet you with an HTML page saying: `Hello 'installrd' World :)`
 
 ---
 
@@ -304,7 +304,7 @@ This should greet you with an html saying: `Hello 'installrd' World :)`
 
 ### Docker issues
 
-* Ensure Docker daemon is running
+* Ensure the Docker daemon is running
 * Re-run `docker swarm init` if needed
 
 ### Port conflicts
