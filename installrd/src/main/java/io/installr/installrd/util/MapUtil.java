@@ -18,6 +18,7 @@
 package io.installr.installrd.util;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -37,7 +38,8 @@ public class MapUtil {
     /**
      * Returns a new map containing all entries of the given map, plus an additional entry for each key whose dots and
      * hyphens are replaced by underscores (e.g. {@code my.key-name} → {@code my_key_name}). If a key already has no
-     * dots or hyphens, no duplicate entry is added.
+     * dots or hyphens, no duplicate entry is added. Nested maps are flattened to keys joined by dots, lists to indexed
+     * keys (e.g. {@code tags[0]}); {@code null} becomes an empty string.
      */
     public static Map<String, String> flatten( Map<String, ?> map ) {
         if ( map == null ) {
@@ -54,20 +56,13 @@ public class MapUtil {
         if ( v instanceof Optional<?> opt ) {
             v = opt.isEmpty() ? "" : opt.get();
         }
-        if ( v instanceof Map ) {
-            @SuppressWarnings( "unchecked" )
-            Map<String, ?> map = (Map<String, ?>)v;
-            map.forEach(
-                ( sk, sv ) -> {
-                    String nko = k + "." + sk;
-                    if ( sv instanceof Map ) {
-                        flatten( dest, nko, sv );
-                    }
-                    else {
-                        dest.put( nko, toString( sv ) );
-                    }
-                }
-            );
+        if ( v instanceof Map<?, ?> map ) {
+            map.forEach( ( sk, sv ) -> flatten( dest, k + "." + sk, sv ) );
+        }
+        else if ( v instanceof List<?> list ) {
+            for ( int i = 0; i < list.size(); i++ ) {
+                flatten( dest, k + "[" + i + "]", list.get( i ) );
+            }
         }
         else {
             dest.put( k, toString( v ) );
@@ -75,10 +70,7 @@ public class MapUtil {
     }
 
     private static String toString( Object value ) {
-        if ( value == null ) {
-            return null;
-        }
-        return value.toString();
+        return value == null ? "" : value.toString();
     }
 
     private static Map<String, String> expand( Map<String, String> map ) {

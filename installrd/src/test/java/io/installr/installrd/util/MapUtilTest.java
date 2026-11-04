@@ -19,6 +19,10 @@ package io.installr.installrd.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 
 class MapUtilTest {
@@ -35,6 +39,29 @@ class MapUtilTest {
         assertEquals( "ns", MapUtil.mask( "namespace", "ns" ) );
         assertEquals( "", MapUtil.mask( "password", "" ) );
         assertEquals( null, MapUtil.mask( "password", null ) );
+    }
+
+    @Test
+    void flatten_should_flatten_maps_lists_and_null() {
+        final Map<String, Object> tree = new HashMap<>();
+        tree.put( "web", Map.of( "replicas", 2, "env", List.of( Map.of( "name", "LOG_LEVEL" ) ) ) );
+        tree.put( "unset", null );
+
+        assertEquals(
+            Map.of(
+                "web.replicas",
+                "2",
+                "web_replicas",
+                "2",
+                "web.env[0].name",
+                "LOG_LEVEL",
+                "web_env[0]_name",
+                "LOG_LEVEL",
+                "unset",
+                ""
+            ),
+            MapUtil.flatten( tree )
+        );
     }
 
 }
