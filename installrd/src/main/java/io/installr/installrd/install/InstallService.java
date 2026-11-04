@@ -358,7 +358,7 @@ public class InstallService {
                     return true;
                 }
             )
-            .toList();
+            .collect( Collectors.toCollection( ArrayList::new ) );
     }
 
     boolean matchesSelector( Map<String, String> labels, Map<String, String> selector ) {
