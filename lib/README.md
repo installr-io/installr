@@ -13,3 +13,5 @@ All libraries located in this directory (the `lib/` directory), are licensed und
 
 Plugins for `installrd` built on these libraries may be distributed under other licenses, provided they meet the
 conditions of the Installr Linking Exception in [LINKING-EXCEPTION](../LINKING-EXCEPTION).
+
+See [Plugins](../docs/PLUGINS.md) for how to develop plugins for `installrd`.
