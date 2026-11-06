@@ -83,7 +83,7 @@
         <!-- platform version -->
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-        <quarkus.platform.version>3.33.3.2</quarkus.platform.version>
+        <quarkus.platform.version>3.33.4.1</quarkus.platform.version>
 
         <!-- plugin versions -->
         <buildnumber-maven-plugin.version>3.3.1</buildnumber-maven-plugin.version>
@@ -91,28 +91,28 @@
         <extra-enforcer-rules.version>1.12.1</extra-enforcer-rules.version>
         <flatten-maven-plugin.version>1.8.0</flatten-maven-plugin.version>
         <formatter-maven-plugin.version>2.29.0</formatter-maven-plugin.version>
-        <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
+        <jacoco-maven-plugin.version>0.8.16</jacoco-maven-plugin.version>
         <license-maven-plugin.version>5.1.2</license-maven-plugin.version>
         <maven-antrun-plugin.version>3.2.0</maven-antrun-plugin.version>
         <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
         <maven-compiler-plugin.version>3.16.0</maven-compiler-plugin.version>
         <maven-dependency-plugin.version>3.11.0</maven-dependency-plugin.version>
-        <maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
-        <maven-enforcer-plugin.version>3.6.3</maven-enforcer-plugin.version>
-        <maven-failsafe-plugin.version>3.6.0</maven-failsafe-plugin.version>
-        <maven-install-plugin.version>3.1.4</maven-install-plugin.version>
+        <maven-deploy-plugin.version>3.2.0</maven-deploy-plugin.version>
+        <maven-enforcer-plugin.version>3.7.0</maven-enforcer-plugin.version>
+        <maven-failsafe-plugin.version>3.6.1</maven-failsafe-plugin.version>
+        <maven-install-plugin.version>3.2.0</maven-install-plugin.version>
         <maven-jar-plugin.version>3.5.1</maven-jar-plugin.version>
         <maven-resources-plugin.version>3.5.0</maven-resources-plugin.version>
-        <maven-surefire-plugin.version>3.6.0</maven-surefire-plugin.version>
-        <maven-surefire-junit5-tree-reporter.version>1.5.1</maven-surefire-junit5-tree-reporter.version>
-        <mojo-license-maven-plugin.version>2.7.1</mojo-license-maven-plugin.version>
+        <maven-surefire-plugin.version>3.6.1</maven-surefire-plugin.version>
+        <maven-surefire-junit5-tree-reporter.version>2.2.0</maven-surefire-junit5-tree-reporter.version>
+        <mojo-license-maven-plugin.version>2.8.0</mojo-license-maven-plugin.version>
         <quarkus-maven-plugin.version>${quarkus.platform.version}</quarkus-maven-plugin.version>
         <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
-        <versions-maven-plugin.version>2.22.0</versions-maven-plugin.version>
+        <versions-maven-plugin.version>2.24.0</versions-maven-plugin.version>
         <wagon-maven-plugin.version>3.1.0</wagon-maven-plugin.version>
 
         <!-- dependency versions -->
-        <commons-codec.version>1.22.1</commons-codec.version>
+        <commons-codec.version>1.23.0</commons-codec.version>
         <commons-compress.version>1.28.0</commons-compress.version>
         <docker-client.version>2026-03-11T08-30-00-groovy-4</docker-client.version>
         <groovy.version>4.0.33</groovy.version>
