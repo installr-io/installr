@@ -57,7 +57,7 @@
         <installrd-bin.directory>/opt/installr-io/bin</installrd-bin.directory>
         <installrd-doc.directory>/opt/installr-io/share/doc/installrd</installrd-doc.directory>
         <installrd-user>installr</installrd-user>
-	<?SORTPOM RESUME?>
+        <?SORTPOM RESUME?>
 
         <!-- skip install & deploy -->
         <maven.install.skip>true</maven.install.skip>
@@ -157,7 +157,7 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
         <dependency>
-	    <!-- used by the build-in Liquibase Deployer -->
+            <!-- used by the build-in Liquibase Deployer -->
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
         </dependency>
@@ -338,7 +338,7 @@
                                 </exec>
                                 <chmod file="${project.build.directory}/${project.build.finalName}" perm="0750" />
                             </target>
-			    <?SORTPOM RESUME?>
+                            <?SORTPOM RESUME?>
                         </configuration>
                     </execution>
                 </executions>
