@@ -46,7 +46,7 @@ quarkus:
                 "access-log-handler":
                     format: "%s%n"
                     stderr: false
-            
+
         category:
             "console-log":
                 level: INFO

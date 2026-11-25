@@ -3,7 +3,7 @@ name: Build installr/d
 on:
     push:
         branches: ["main"]
-    
+
     pull_request:
         branches: ["main"]
 

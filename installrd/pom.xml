@@ -38,10 +38,8 @@
             <name>GNU Affero General Public License v3.0</name>
             <url>https://www.gnu.org/licenses/agpl-3.0.html</url>
             <distribution>repo</distribution>
-            <comments>
-                With the Installr Linking Exception (additional permissions under AGPL section 7):
-                https://github.com/installr-io/installr/blob/main/LINKING-EXCEPTION
-            </comments>
+            <comments>With the Installr Linking Exception (additional permissions under AGPL section 7):
+                https://github.com/installr-io/installr/blob/main/LINKING-EXCEPTION</comments>
         </license>
     </licenses>
 

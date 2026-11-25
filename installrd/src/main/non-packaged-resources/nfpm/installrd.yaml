@@ -23,7 +23,7 @@ contents:
           owner: ${installrd-user}
           group: ${installrd-user}
 
-    - src: target/${project.build.finalName} 
+    - src: target/${project.build.finalName}
       dst: ${installrd-bin.directory}/${project.build.finalName}
       file_info:
           mode: 0750

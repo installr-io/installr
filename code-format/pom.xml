@@ -41,7 +41,7 @@
     <build>
         <plugins>
             <plugin>
-                <!-- 
+                <!--
                     Since formatter plugin is dependent on us, skip execution.
                  -->
                 <groupId>net.revelc.code.formatter</groupId>

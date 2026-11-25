@@ -543,7 +543,7 @@
                 </executions>
             </plugin>
             <plugin>
-                <!-- 
+                <!--
                     Since the dependent 'installr-code-format' is not yet build (fresh build), we do not execute the
                     the plugin on the parent.
                  -->
