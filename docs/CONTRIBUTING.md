@@ -149,13 +149,24 @@ This command applies the configured license template to all relevant files and e
 
 ### Code Formatting
 
-Consistent code formatting is enforced using a Maven formatter plugin. To format the codebase, run:
+The build checks the formatting of all files:
+
+- **Java sources** follow the **Eclipse code formatter** with a custom style
+  defined [here](https://github.com/installr-io/installr/blob/main/code-format/src/main/resources/java-code-format.xml)
+  (checked in the `package` phase).
+- **All text files** follow the basic rules in [`.editorconfig`](../.editorconfig):
+  UTF-8, LF line endings, 4 spaces for indentation, no trailing whitespace and a
+  final newline (checked in the `validate` phase). Most editors and IDEs apply
+  these rules automatically.
+- **POMs** are sorted and formatted with sortpom (checked in the `validate` phase).
+
+To fix all formatting issues, run:
 
 ```bash
-mvn formatter:format
+mvn formatter:format editorconfig:format sortpom:sort
 ```
 
-The formatter uses the **Eclipse code formatter**, with a custom style defined [here](https://github.com/installr-io/installr/blob/main/code-format/src/main/resources/java-code-format.xml). Please run this command before committing changes to keep the codebase clean and consistent.
+Please run this command before committing changes to keep the codebase clean and consistent.
 
 ---
 

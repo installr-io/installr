@@ -87,6 +87,7 @@
 
         <!-- plugin versions -->
         <buildnumber-maven-plugin.version>3.3.1</buildnumber-maven-plugin.version>
+        <editorconfig-maven-plugin.version>0.2.0</editorconfig-maven-plugin.version>
         <exec-maven-plugin.version>3.6.4</exec-maven-plugin.version>
         <extra-enforcer-rules.version>1.12.1</extra-enforcer-rules.version>
         <flatten-maven-plugin.version>1.8.0</flatten-maven-plugin.version>
@@ -195,6 +196,33 @@
                         <scmBranchPropertyName>build.branch</scmBranchPropertyName>
                         <getRevisionOnlyOnce>true</getRevisionOnlyOnce>
                         <shortRevisionLength>7</shortRevisionLength>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.ec4j.maven</groupId>
+                    <artifactId>editorconfig-maven-plugin</artifactId>
+                    <version>${editorconfig-maven-plugin.version}</version>
+                    <configuration>
+                        <excludes>
+                            <!-- build output -->
+                            <exclude>**/target-ide/**</exclude>
+                            <exclude>**/.flattened-pom.xml</exclude>
+                            <!-- IDE metadata (see .gitignore) -->
+                            <exclude>**/bin/**</exclude>
+                            <exclude>**/.idea/**</exclude>
+                            <exclude>**/.settings/**</exclude>
+                            <exclude>**/.project</exclude>
+                            <exclude>**/.classpath</exclude>
+                            <exclude>**/.factorypath</exclude>
+                            <exclude>**/*.iml</exclude>
+                            <exclude>**/nb-configuration.xml</exclude>
+                            <!-- binary files -->
+                            <exclude>**/*.ipf</exclude>
+                            <exclude>**/*.png</exclude>
+                            <exclude>**/*.gpg</exclude>
+                            <!-- patches must apply as they are (e.g. whitespace in context lines) -->
+                            <exclude>**/*.patch</exclude>
+                        </excludes>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -456,6 +484,8 @@
                         <expandEmptyElements>false</expandEmptyElements>
                         <nrOfIndentSpace>4</nrOfIndentSpace>
                         <indentAttribute>schemaLocation</indentAttribute>
+                        <verifyFail>Stop</verifyFail>
+                        <verifyFailOn>strict</verifyFailOn>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -539,6 +569,30 @@
                             <goal>check</goal>
                         </goals>
                         <phase>package</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.ec4j.maven</groupId>
+                <artifactId>editorconfig-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <phase>validate</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.github.ekryd.sortpom</groupId>
+                <artifactId>sortpom-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>verify</goal>
+                        </goals>
+                        <phase>validate</phase>
                     </execution>
                 </executions>
             </plugin>
